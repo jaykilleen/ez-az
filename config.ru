@@ -1,7 +1,9 @@
 require "json"
 require "sqlite3"
 
-DB_PATH ||= File.expand_path("data/leaderboard.sqlite3", __dir__)
+# Use shared directory in production (persists across deploys) or local in dev
+shared_db = File.expand_path("../../shared/data/leaderboard.sqlite3", __dir__)
+DB_PATH ||= File.exist?(File.dirname(shared_db)) ? shared_db : File.expand_path("data/leaderboard.sqlite3", __dir__)
 
 FileUtils.mkdir_p(File.dirname(DB_PATH))
 
