@@ -1,6 +1,7 @@
 const CACHE_NAME = 'ez-az-20260413-1000';
 const SHELL = [
   '/',
+  '/controls.js',
   '/games/space-dodge.html',
   '/games/bloom.html',
   '/games/cat-vs-mouse.html',
