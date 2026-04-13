@@ -458,7 +458,7 @@
   </div>
 
   <div class="hours-info">
-    Fri 4pm-7:30pm<br>
+    Mon-Fri 4pm-7:30pm<br>
     Sat 7:30am-7:30pm<br>
     Sun 7:30am-5pm<br>
     Your local time
@@ -477,41 +477,50 @@
       var day = now.getDay();
       var hm = now.getHours() * 60 + now.getMinutes();
 
-      // Open windows: Fri 16:00-19:30, Sat 7:30-19:30, Sun 7:30-17:00
-      // If we're in a closed overnight gap, next opening is the morning
+      // Open windows: Mon-Fri 16:00-19:30, Sat 7:30-19:30, Sun 7:30-17:00
+      // Friday after 7:30pm, next open is Saturday 7:30am
       if (day === 5 && hm >= 1170) {
-        // Friday after 7:30pm, next open is Saturday 7:30am
         var next = new Date(now);
         next.setDate(now.getDate() + 1);
         next.setHours(7, 30, 0, 0);
         return next;
       }
+      // Saturday before 7:30am
       if (day === 6 && hm < 450) {
-        // Saturday before 7:30am
         var next = new Date(now);
         next.setHours(7, 30, 0, 0);
         return next;
       }
+      // Saturday after 7:30pm, next open is Sunday 7:30am
       if (day === 6 && hm >= 1170) {
-        // Saturday after 7:30pm, next open is Sunday 7:30am
         var next = new Date(now);
         next.setDate(now.getDate() + 1);
         next.setHours(7, 30, 0, 0);
         return next;
       }
+      // Sunday before 7:30am
       if (day === 0 && hm < 450) {
-        // Sunday before 7:30am
         var next = new Date(now);
         next.setHours(7, 30, 0, 0);
         return next;
       }
+      // Sunday after 5pm or weekday (Mon-Thu) after 7:30pm, next open is tomorrow 4pm
+      if ((day >= 0 && day <= 4) && hm >= 1170 || (day === 0 && hm >= 1020)) {
+        var next = new Date(now);
+        next.setDate(now.getDate() + 1);
+        next.setHours(16, 0, 0, 0);
+        return next;
+      }
+      // Weekday (Mon-Fri) before 4pm, next open is today 4pm
+      if (day >= 1 && day <= 5 && hm < 960) {
+        var next = new Date(now);
+        next.setHours(16, 0, 0, 0);
+        return next;
+      }
 
-      // Otherwise, next opening is Friday 4pm
-      var daysUntilFriday = (5 - day + 7) % 7;
-      if (daysUntilFriday === 0 && hm >= 960) daysUntilFriday = 7;
-
+      // Fallback: next open is tomorrow 4pm
       var next = new Date(now);
-      next.setDate(now.getDate() + daysUntilFriday);
+      next.setDate(now.getDate() + 1);
       next.setHours(16, 0, 0, 0);
       return next;
     }
