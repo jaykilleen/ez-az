@@ -1,7 +1,11 @@
 source "https://rubygems.org"
 
-gem "rack"
+gem "rails", "~> 8.0"
 gem "puma"
 gem "sqlite3"
-gem "rack-test", group: :test
-gem "minitest", group: :test
+gem "rqrcode", "~> 3.0"
+
+group :test do
+  gem "minitest"
+  gem "rack-test"
+end

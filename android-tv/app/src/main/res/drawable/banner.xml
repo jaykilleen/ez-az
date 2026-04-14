@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Leanback launcher banner: 320 x 180 dp -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Background -->
+    <path
+        android:fillColor="#0a0a12"
+        android:pathData="M0,0 L320,0 L320,180 L0,180 Z" />
+
+    <!-- Glow -->
+    <path
+        android:pathData="M50,90 m-100,0 a100,100 0 1,0 200,0 a100,100 0 1,0 -200,0"
+        android:fillColor="#1a3030" />
+
+    <!-- "EZ-AZ" text approximated with bold rectangles -->
+    <!-- E -->
+    <path android:fillColor="#00ffc8" android:pathData="M30,55 h26 v8 h-18 v15 h16 v8 h-16 v17 h18 v8 h-26 z" />
+    <!-- Z -->
+    <path android:fillColor="#00ffc8" android:pathData="M62,55 h28 v8 l-18,30 h18 v8 h-28 v-8 l18,-30 h-18 z" />
+
+    <!-- Hyphen -->
+    <path android:fillColor="#ff00aa" android:pathData="M96,80 h12 v6 h-12 z" />
+
+    <!-- A -->
+    <path android:fillColor="#00ffc8" android:pathData="M118,111 l8,-56 h10 l8,56 h-8 l-1.5,-12 h-7 l-1.5,12 z M127,91 h6 l-3,-22 z" />
+    <!-- Z -->
+    <path android:fillColor="#00ffc8" android:pathData="M148,55 h28 v8 l-18,30 h18 v8 h-28 v-8 l18,-30 h-18 z" />
+
+    <!-- Tagline -->
+    <path
+        android:fillColor="#8ab4c8"
+        android:pathData="M30,140 h180 v3 h-180 z" />
+
+    <!-- Az dinosaur silhouette (small, top right) -->
+    <path
+        android:fillColor="#4caf50"
+        android:pathData="M250,75 m-25,0 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0" />
+    <path
+        android:fillColor="#66bb6a"
+        android:pathData="M255,55 m-15,0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0" />
+    <!-- Eyes -->
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M250,52 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M260,52 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M250,52 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M260,52 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
+</vector>

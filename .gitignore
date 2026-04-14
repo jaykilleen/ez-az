@@ -2,3 +2,9 @@ node_modules/
 test-results/
 playwright-report/
 data/*.sqlite3
+db/*.sqlite3
+db/*.sqlite3-journal
+log/
+tmp/
+storage/
+.env

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EZ-AZ</string>
+    <string name="error_title">Can\'t reach EZ-AZ</string>
+    <string name="error_body">Check your TV is connected to the internet and try again.</string>
+    <string name="error_retry">Retry</string>
+</resources>
