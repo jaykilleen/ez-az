@@ -1,0 +1,16 @@
+default: &default
+  adapter: sqlite3
+  pool: 5
+  timeout: 5000
+
+development:
+  <<: *default
+  database: data/leaderboard.sqlite3
+
+test:
+  <<: *default
+  database: db/test.sqlite3
+
+production:
+  <<: *default
+  database: <%= File.exist?(File.expand_path("../../shared/data", __dir__)) ? File.expand_path("../../shared/data/leaderboard.sqlite3", __dir__) : "db/production.sqlite3" %>
