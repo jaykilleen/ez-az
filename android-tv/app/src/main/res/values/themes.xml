@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme -->
+    <style name="Theme.EzAzTv" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/ez_az_bg</item>
+        <item name="colorPrimary">@color/ez_az_accent</item>
+        <item name="colorPrimaryDark">@color/ez_az_bg</item>
+    </style>
+
+    <!-- Fullscreen activity theme -->
+    <style name="Theme.EzAzTv.Fullscreen" parent="Theme.EzAzTv">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+</resources>
