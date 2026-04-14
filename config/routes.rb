@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "/tv", to: "tv#show"
+
   get "/counter", to: "counters#show"
 
   namespace :api do
