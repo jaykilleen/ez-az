@@ -1,4 +1,5 @@
 class Score < ApplicationRecord
+  belongs_to :player, optional: true
   GAME_SORT = {
     "space-dodge" => :desc,
     "bloom" => :asc,

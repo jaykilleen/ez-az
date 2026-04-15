@@ -777,6 +777,125 @@
       letter-spacing: 1px;
     }
 
+    /* Player login button */
+    .player-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #00ffc8;
+      background: transparent;
+      border: 1px solid #00ffc8;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .player-btn:hover { background: #00ffc8; color: #0a0a12; }
+    .player-btn.logged-in { color: #ffe44d; border-color: #ffe44d; }
+    .player-btn.logged-in:hover { background: #ffe44d; color: #0a0a12; }
+
+    /* Auth modal */
+    .auth-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-backdrop.open { display: flex; }
+    .auth-modal {
+      background: #0e0e1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 32px 28px;
+      width: 320px;
+      max-width: 90vw;
+      position: relative;
+      text-align: center;
+    }
+    .auth-modal-close {
+      position: absolute;
+      top: 10px; right: 14px;
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .auth-modal-close:hover { color: #fff; }
+    .auth-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: #00ffc8;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+    .auth-label {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 1px;
+      display: block;
+      text-align: left;
+      margin-bottom: 4px;
+    }
+    .auth-input {
+      width: 100%;
+      background: #0a0a12;
+      border: 1px solid #2a2a4a;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      letter-spacing: 2px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .auth-input:focus { border-color: #00ffc8; }
+    .auth-input.pin-field { text-align: center; font-size: 18px; letter-spacing: 8px; }
+    .auth-submit {
+      width: 100%;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      padding: 12px;
+      border: none;
+      border-radius: 4px;
+      background: #00ffc8;
+      color: #0a0a12;
+      cursor: pointer;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .auth-submit:hover { background: #00e6b4; }
+    .auth-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .auth-error {
+      font-size: 10px;
+      color: #ff4466;
+      min-height: 16px;
+      margin-bottom: 10px;
+    }
+    .auth-logout-btn {
+      margin-top: 16px;
+      background: transparent;
+      border: 1px solid #555;
+      color: #888;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .auth-logout-btn:hover { border-color: #ff4466; color: #ff4466; }
+
     /* Footer */
     .store-footer {
       text-align: center;
@@ -823,10 +942,54 @@
   </div>
 
   <header class="store-header">
+    <button class="player-btn" id="playerBtn">Login</button>
     <h1 class="store-name">EZ-AZ</h1>
     <p class="store-tagline">The Family Video Game Store</p>
     <p class="store-version">20260304.1000 #a7793ce</p>
   </header>
+
+  <!-- Auth modal -->
+  <div class="auth-backdrop" id="authBackdrop">
+    <div class="auth-modal" id="authModal">
+      <button class="auth-modal-close" id="authClose">&times;</button>
+      <div class="auth-title" id="authTitle">WHO ARE YOU?</div>
+      <div class="auth-error" id="authError"></div>
+
+      <!-- Step 1: username -->
+      <div id="authStepUsername">
+        <label class="auth-label">YOUR NAME</label>
+        <input class="auth-input" id="authUsername" type="text" maxlength="16"
+               placeholder="BIGCHIEF" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="auth-submit" id="authCheckBtn">NEXT</button>
+      </div>
+
+      <!-- Step 2a: login (existing player) -->
+      <div id="authStepLogin" style="display:none;">
+        <label class="auth-label">PIN</label>
+        <input class="auth-input pin-field" id="authPin" type="password"
+               maxlength="4" inputmode="numeric" pattern="\d{4}" placeholder="••••">
+        <button class="auth-submit" id="authLoginBtn">LOGIN</button>
+      </div>
+
+      <!-- Step 2b: register (new player) -->
+      <div id="authStepRegister" style="display:none;">
+        <label class="auth-label">CHOOSE A 4-DIGIT PIN</label>
+        <input class="auth-input pin-field" id="authPinNew" type="password"
+               maxlength="4" inputmode="numeric" pattern="\d{4}" placeholder="••••">
+        <label class="auth-label">CONFIRM PIN</label>
+        <input class="auth-input pin-field" id="authPinConfirm" type="password"
+               maxlength="4" inputmode="numeric" pattern="\d{4}" placeholder="••••">
+        <button class="auth-submit" id="authRegisterBtn">CREATE ACCOUNT</button>
+      </div>
+
+      <!-- Logged in view -->
+      <div id="authStepLoggedIn" style="display:none;">
+        <p style="font-size:11px;color:#aaa;margin-bottom:16px;">Logged in as</p>
+        <p style="font-family:'Press Start 2P',monospace;font-size:13px;color:#ffe44d;" id="authWhoami"></p>
+        <button class="auth-logout-btn" id="authLogoutBtn">LOGOUT</button>
+      </div>
+    </div>
+  </div>
 
   <section class="az-section">
     <div class="az-container">
@@ -1993,7 +2156,7 @@
                String(millis).padStart(3, '0');
       }
 
-      function renderScores(scores, game) {
+      function renderScores(scores, game, myBest) {
         var body = document.getElementById('scoresBody');
         scores = scores || [];
         var html = '';
@@ -2006,6 +2169,11 @@
         });
         for (var i = scores.length; i < 10; i++) {
           html += '<div class="lb-row placeholder"><span>' + (i + 1) + '. ---</span><span>-</span></div>';
+        }
+        if (myBest) {
+          var val = timeGames[game] ? formatTime(myBest.value) : myBest.value + ' pts';
+          html += '<div class="lb-row" style="margin-top:12px;border-top:1px solid #2a2a4a;padding-top:10px;color:#ffe44d;">'
+                + '<span>YOUR BEST</span><span>' + val + '</span></div>';
         }
         body.innerHTML = html;
       }
@@ -2024,8 +2192,8 @@
 
           fetch('/api/scores?game=' + game)
             .then(function (r) { return r.json(); })
-            .then(function (d) { renderScores(d.scores, game); })
-            .catch(function () { renderScores([], game); });
+            .then(function (d) { renderScores(d.scores, game, d.my_best); })
+            .catch(function () { renderScores([], game, null); });
         });
       });
 
@@ -2041,6 +2209,210 @@
         if (e.key === 'Escape' && backdrop.classList.contains('open')) {
           backdrop.classList.remove('open');
         }
+      });
+    })();
+  </script>
+
+  <script>
+    // Player auth
+    (function () {
+      var currentPlayer = null;
+
+      var btn          = document.getElementById('playerBtn');
+      var backdrop     = document.getElementById('authBackdrop');
+      var authClose    = document.getElementById('authClose');
+      var authTitle    = document.getElementById('authTitle');
+      var authError    = document.getElementById('authError');
+
+      var stepUsername  = document.getElementById('authStepUsername');
+      var stepLogin     = document.getElementById('authStepLogin');
+      var stepRegister  = document.getElementById('authStepRegister');
+      var stepLoggedIn  = document.getElementById('authStepLoggedIn');
+
+      var usernameInput   = document.getElementById('authUsername');
+      var pinInput        = document.getElementById('authPin');
+      var pinNewInput     = document.getElementById('authPinNew');
+      var pinConfirmInput = document.getElementById('authPinConfirm');
+      var whoamiEl        = document.getElementById('authWhoami');
+
+      function showStep(name) {
+        [stepUsername, stepLogin, stepRegister, stepLoggedIn].forEach(function (el) {
+          el.style.display = 'none';
+        });
+        authError.textContent = '';
+        var map = { username: stepUsername, login: stepLogin, register: stepRegister, loggedIn: stepLoggedIn };
+        if (map[name]) map[name].style.display = '';
+      }
+
+      function setError(msg) { authError.textContent = msg || ''; }
+
+      function updateBtn() {
+        if (currentPlayer) {
+          btn.textContent = currentPlayer.username;
+          btn.classList.add('logged-in');
+        } else {
+          btn.textContent = 'Login';
+          btn.classList.remove('logged-in');
+        }
+      }
+
+      function openModal() {
+        backdrop.classList.add('open');
+        if (currentPlayer) {
+          authTitle.textContent = 'YOUR ACCOUNT';
+          whoamiEl.textContent = currentPlayer.username;
+          showStep('loggedIn');
+        } else {
+          authTitle.textContent = 'WHO ARE YOU?';
+          usernameInput.value = '';
+          showStep('username');
+          setTimeout(function () { usernameInput.focus(); }, 50);
+        }
+      }
+
+      function closeModal() {
+        backdrop.classList.remove('open');
+      }
+
+      // Check session on load
+      fetch('/api/session')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.player) { currentPlayer = d.player; updateBtn(); }
+        })
+        .catch(function () {});
+
+      btn.addEventListener('click', openModal);
+      authClose.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeModal(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && backdrop.classList.contains('open')) closeModal();
+      });
+
+      // Step 1: check username
+      function doCheck() {
+        var username = usernameInput.value.trim().toUpperCase();
+        if (!username) { setError('Enter your name first.'); return; }
+        if (!/^[A-Z0-9_]+$/.test(username)) { setError('Letters, numbers and _ only.'); return; }
+        setError('');
+        document.getElementById('authCheckBtn').disabled = true;
+        fetch('/api/players/check?username=' + encodeURIComponent(username))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            document.getElementById('authCheckBtn').disabled = false;
+            if (d.exists) {
+              authTitle.textContent = 'WELCOME BACK';
+              pinInput.value = '';
+              showStep('login');
+              setTimeout(function () { pinInput.focus(); }, 50);
+            } else {
+              authTitle.textContent = 'NEW PLAYER!';
+              pinNewInput.value = '';
+              pinConfirmInput.value = '';
+              showStep('register');
+              setTimeout(function () { pinNewInput.focus(); }, 50);
+            }
+          })
+          .catch(function () {
+            document.getElementById('authCheckBtn').disabled = false;
+            setError('Could not reach the server. Try again.');
+          });
+      }
+
+      document.getElementById('authCheckBtn').addEventListener('click', doCheck);
+      usernameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doCheck(); });
+
+      // Step 2a: login
+      function doLogin() {
+        var username = usernameInput.value.trim().toUpperCase();
+        var pin      = pinInput.value.trim();
+        if (pin.length !== 4) { setError('PIN must be 4 digits.'); return; }
+        setError('');
+        document.getElementById('authLoginBtn').disabled = true;
+        fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, pin: pin })
+        })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            document.getElementById('authLoginBtn').disabled = false;
+            if (res.ok) {
+              currentPlayer = res.d.player;
+              updateBtn();
+              closeModal();
+            } else {
+              setError(res.d.error || 'Login failed.');
+              pinInput.value = '';
+              pinInput.focus();
+            }
+          })
+          .catch(function () {
+            document.getElementById('authLoginBtn').disabled = false;
+            setError('Could not reach the server. Try again.');
+          });
+      }
+
+      document.getElementById('authLoginBtn').addEventListener('click', doLogin);
+      pinInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+
+      // Step 2b: register
+      function doRegister() {
+        var username   = usernameInput.value.trim().toUpperCase();
+        var pin        = pinNewInput.value.trim();
+        var pinConfirm = pinConfirmInput.value.trim();
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { setError('PIN must be exactly 4 digits.'); return; }
+        if (pin !== pinConfirm) { setError('PINs do not match.'); pinConfirmInput.focus(); return; }
+        setError('');
+        document.getElementById('authRegisterBtn').disabled = true;
+        fetch('/api/players', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, pin: pin })
+        })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            document.getElementById('authRegisterBtn').disabled = false;
+            if (res.ok) {
+              currentPlayer = res.d;
+              updateBtn();
+              closeModal();
+            } else {
+              setError(res.d.error || 'Could not create account.');
+            }
+          })
+          .catch(function () {
+            document.getElementById('authRegisterBtn').disabled = false;
+            setError('Could not reach the server. Try again.');
+          });
+      }
+
+      document.getElementById('authRegisterBtn').addEventListener('click', doRegister);
+      pinConfirmInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doRegister(); });
+
+      // Logout
+      document.getElementById('authLogoutBtn').addEventListener('click', function () {
+        fetch('/api/session', { method: 'DELETE' })
+          .then(function () {
+            currentPlayer = null;
+            updateBtn();
+            closeModal();
+          })
+          .catch(function () {});
+      });
+
+      // Enforce digits-only in PIN fields
+      [pinInput, pinNewInput, pinConfirmInput].forEach(function (el) {
+        el.addEventListener('input', function () {
+          el.value = el.value.replace(/\D/g, '').slice(0, 4);
+        });
+      });
+
+      // Enforce uppercase alphanum in username
+      usernameInput.addEventListener('input', function () {
+        var pos = usernameInput.selectionStart;
+        usernameInput.value = usernameInput.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+        usernameInput.setSelectionRange(pos, pos);
       });
     })();
   </script>

@@ -7,15 +7,17 @@ module Api
         return render json: { error: "Unknown game" }, status: :bad_request
       end
 
-      scores = Score.top_10(game).pluck(:name, :value).map { |n, v| { "name" => n, "value" => v } }
+      top     = Score.top_10(game).map { |s| { "name" => s.name, "value" => s.value } }
+      my_best = my_best_score(game)
+
       response.headers["Cache-Control"] = "no-store"
-      render json: { scores: scores }
+      render json: { scores: top, my_best: my_best }
     end
 
     def create
-      body = JSON.parse(request.body.read) rescue {}
-      game = body["game"].to_s
-      name = body["name"].to_s
+      body  = JSON.parse(request.body.read) rescue {}
+      game  = body["game"].to_s
+      name  = body["name"].to_s
       value = body["value"].to_i
 
       unless Score::GAME_SORT.key?(game)
@@ -26,10 +28,24 @@ module Api
         return render json: { error: "Value must be positive" }, status: :bad_request
       end
 
-      Score.create!(game: game, name: name, value: value)
+      score_attrs = { game: game, name: name, value: value }
+      score_attrs[:player_id] = current_player.id if current_player
 
-      scores = Score.top_10(game).pluck(:name, :value).map { |n, v| { "name" => n, "value" => v } }
-      render json: { scores: scores }, status: :created
+      Score.create!(score_attrs)
+
+      top     = Score.top_10(game).map { |s| { "name" => s.name, "value" => s.value } }
+      my_best = my_best_score(game)
+
+      render json: { scores: top, my_best: my_best }, status: :created
+    end
+
+    private
+
+    def my_best_score(game)
+      return nil unless current_player
+      direction = Score::GAME_SORT.fetch(game, :desc)
+      score = Score.where(game: game, player: current_player).order(value: direction).first
+      score ? { "name" => score.name, "value" => score.value } : nil
     end
   end
 end

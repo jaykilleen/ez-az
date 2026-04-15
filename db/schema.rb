@@ -10,19 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_000003) do
   create_table "counters", force: :cascade do |t|
     t.string "key", null: false
     t.integer "value", default: 0, null: false
     t.index ["key"], name: "index_counters_on_key", unique: true
   end
 
+  create_table "players", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.datetime "locked_until"
+    t.string "pin_digest", null: false
+    t.datetime "updated_at", null: false
+    t.string "username", null: false
+    t.index ["username"], name: "index_players_on_username", unique: true
+  end
+
   create_table "scores", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "game", null: false
     t.string "name", null: false
+    t.integer "player_id"
     t.datetime "updated_at", null: false
     t.integer "value", null: false
     t.index ["game"], name: "index_scores_on_game"
+    t.index ["player_id"], name: "index_scores_on_player_id"
   end
+
+  add_foreign_key "scores", "players"
 end

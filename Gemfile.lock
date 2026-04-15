@@ -76,6 +76,7 @@ GEM
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
     base64 (0.3.0)
+    bcrypt (3.1.22)
     bigdecimal (4.1.1)
     builder (3.3.0)
     chunky_png (1.4.0)
@@ -231,6 +232,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  bcrypt (~> 3.1)
   minitest
   puma
   rack-test
