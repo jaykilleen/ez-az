@@ -164,6 +164,33 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "onHoliday"
   end
 
+  test "opening-hours js redirects from closed page to root when store is open" do
+    get "/opening-hours.js"
+    assert_includes response.body, "/closed.html",
+      "should mention the closed page path"
+    assert_match(/onClosedPage.*storeOpen|storeOpen.*onClosedPage/m, response.body,
+      "should check both storeOpen and onClosedPage to decide where to redirect")
+    assert_includes response.body, 'window.location.replace("/")',
+      "should redirect home when the store reopens while on the closed page"
+  end
+
+  test "service worker does not pre-cache HTML shell files" do
+    get "/sw.js"
+    assert_response :success
+    # HTML files must go through network-first-no-fallback so the holiday
+    # redirect and opening-hours.js are never served stale after a deploy.
+    refute_match(/games\/.*\.html/, response.body,
+      "sw.js SHELL should not pre-cache game HTML — it needs to be always-fresh")
+    refute_match(/'\/closed\.html'/, response.body,
+      "sw.js SHELL should not pre-cache closed.html")
+  end
+
+  test "service worker treats opening-hours script as network-only" do
+    get "/sw.js"
+    assert_includes response.body, "opening-hours.js"
+    assert_match(/network-only|isOpeningHoursScript|isHtmlNavigation/i, response.body)
+  end
+
   test "opening-hours js contains a holidays array" do
     get "/opening-hours.js"
     assert_includes response.body, "HOLIDAYS"
