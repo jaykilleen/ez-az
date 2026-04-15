@@ -11,7 +11,7 @@ module Api
       my_best = my_best_score(game)
 
       response.headers["Cache-Control"] = "no-store"
-      render json: { scores: top, my_best: my_best }
+      render json: { scores: top, my_best: my_best, player: current_player&.username }
     end
 
     def create
@@ -28,6 +28,7 @@ module Api
         return render json: { error: "Value must be positive" }, status: :bad_request
       end
 
+      name = current_player.username if current_player
       score_attrs = { game: game, name: name, value: value }
       score_attrs[:player_id] = current_player.id if current_player
 
@@ -36,7 +37,7 @@ module Api
       top     = Score.top_10(game).map { |s| { "name" => s.name, "value" => s.value } }
       my_best = my_best_score(game)
 
-      render json: { scores: top, my_best: my_best }, status: :created
+      render json: { scores: top, my_best: my_best, player: current_player&.username }, status: :created
     end
 
     private
