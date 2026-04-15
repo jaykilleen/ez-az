@@ -6,6 +6,7 @@ require "active_record/railtie"
 require "action_controller/railtie"
 require "action_view/railtie"
 require "action_cable/engine"
+require "propshaft"
 
 require_relative "../lib/middleware/static_cache_headers"
 

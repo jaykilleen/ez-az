@@ -5,6 +5,7 @@ gem "puma"
 gem "sqlite3"
 gem "bcrypt", "~> 3.1"
 gem "rqrcode", "~> 3.0"
+gem "propshaft"
 
 group :test do
   gem "minitest"

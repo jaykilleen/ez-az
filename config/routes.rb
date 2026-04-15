@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   get "/tv", to: "tv#show"
 
+  get "/manifest.json",    to: "manifest#show"
+  get "/icons/:name.:format", to: "icons#show", constraints: { format: /png|jpg|jpeg|svg|webp/ }
+
   get "/counter", to: "counters#show"
 
   namespace :api do

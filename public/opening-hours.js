@@ -80,5 +80,15 @@
 
   // Auto-redirect unless we're on localhost (dev convenience)
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
-  if (!isOpen(new Date())) window.location.replace("/closed.html");
+
+  var storeOpen    = isOpen(new Date());
+  var onClosedPage = location.pathname === "/closed.html";
+
+  if (!storeOpen && !onClosedPage) {
+    // Store is shut and we're trying to use it — send to the closed page
+    window.location.replace("/closed.html");
+  } else if (storeOpen && onClosedPage) {
+    // Store has opened while we were sitting on the closed page — send home
+    window.location.replace("/");
+  }
 })();
