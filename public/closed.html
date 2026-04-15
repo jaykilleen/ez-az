@@ -8,6 +8,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#00ffc8">
   <link rel="apple-touch-icon" href="/icons/az-192.png">
+  <script src="/opening-hours.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap');
 
@@ -388,6 +389,15 @@
       margin-top: 6px;
       letter-spacing: 1px;
     }
+
+    .store-version {
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 1px;
+      margin-top: 24px;
+      text-align: center;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
   </style>
 </head>
 
@@ -457,8 +467,9 @@
     </div>
   </div>
 
-  <div class="hours-info">
-    Mon-Fri 4pm-7:30pm<br>
+  <div class="hours-info" id="hoursInfo">
+    <span id="holidayNote" style="display:none; color:#00ffc8;">School holiday hours!<br></span>
+    <span id="weekdayHours">Mon-Fri 4pm-7:30pm</span><br>
     Sat 7:30am-7:30pm<br>
     Sun 7:30am-5pm<br>
     Your local time
@@ -471,63 +482,46 @@
     <p class="counter-label">visitors to the store</p>
   </div>
 
+  <p class="store-version" id="storeVersion"></p>
+
   <script>
-    function nextOpening() {
+    fetch('/api/version')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById('storeVersion');
+        if (el) el.textContent = d.version + ' #' + d.commit;
+      })
+      .catch(function () {});
+  </script>
+
+  <script>
+    // Show holiday hours in the footer if we're currently in a school-holiday range
+    (function () {
+      if (!window.EzAzHours) return;
       var now = new Date();
-      var day = now.getDay();
-      var hm = now.getHours() * 60 + now.getMinutes();
+      // Check if any weekday in the next 7 days is on holiday; if so, surface the note
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(now);
+        d.setDate(now.getDate() + i);
+        var day = d.getDay();
+        if (day >= 1 && day <= 5 && EzAzHours.onHoliday(d)) {
+          document.getElementById('holidayNote').style.display = '';
+          document.getElementById('weekdayHours').textContent = 'Mon-Fri 7:30am-7:30pm';
+          break;
+        }
+      }
+    })();
 
-      // Open windows: Mon-Fri 16:00-19:30, Sat 7:30-19:30, Sun 7:30-17:00
-      // Friday after 7:30pm, next open is Saturday 7:30am
-      if (day === 5 && hm >= 1170) {
-        var next = new Date(now);
-        next.setDate(now.getDate() + 1);
-        next.setHours(7, 30, 0, 0);
-        return next;
+    // If the store has opened since the user landed here, send them home
+    function checkStoreOpen() {
+      if (window.EzAzHours && EzAzHours.isOpen(new Date())) {
+        window.location.replace('/');
       }
-      // Saturday before 7:30am
-      if (day === 6 && hm < 450) {
-        var next = new Date(now);
-        next.setHours(7, 30, 0, 0);
-        return next;
-      }
-      // Saturday after 7:30pm, next open is Sunday 7:30am
-      if (day === 6 && hm >= 1170) {
-        var next = new Date(now);
-        next.setDate(now.getDate() + 1);
-        next.setHours(7, 30, 0, 0);
-        return next;
-      }
-      // Sunday before 7:30am
-      if (day === 0 && hm < 450) {
-        var next = new Date(now);
-        next.setHours(7, 30, 0, 0);
-        return next;
-      }
-      // Sunday after 5pm or weekday (Mon-Thu) after 7:30pm, next open is tomorrow 4pm
-      if ((day >= 0 && day <= 4) && hm >= 1170 || (day === 0 && hm >= 1020)) {
-        var next = new Date(now);
-        next.setDate(now.getDate() + 1);
-        next.setHours(16, 0, 0, 0);
-        return next;
-      }
-      // Weekday (Mon-Fri) before 4pm, next open is today 4pm
-      if (day >= 1 && day <= 5 && hm < 960) {
-        var next = new Date(now);
-        next.setHours(16, 0, 0, 0);
-        return next;
-      }
-
-      // Fallback: next open is tomorrow 4pm
-      var next = new Date(now);
-      next.setDate(now.getDate() + 1);
-      next.setHours(16, 0, 0, 0);
-      return next;
     }
 
     function updateCountdown() {
       var now = new Date();
-      var target = nextOpening();
+      var target = window.EzAzHours ? EzAzHours.nextOpening(now) : now;
       var diff = Math.max(0, target - now);
 
       var totalSecs = Math.floor(diff / 1000);
@@ -540,6 +534,8 @@
       document.getElementById('hours').textContent = h;
       document.getElementById('mins').textContent = m;
       document.getElementById('secs').textContent = s;
+
+      if (diff === 0) checkStoreOpen();
     }
 
     updateCountdown();
