@@ -945,7 +945,7 @@
     <button class="player-btn" id="playerBtn">Login</button>
     <h1 class="store-name">EZ-AZ</h1>
     <p class="store-tagline">The Family Video Game Store</p>
-    <p class="store-version">20260304.1000 #a7793ce</p>
+    <p class="store-version" id="storeVersion"></p>
   </header>
 
   <!-- Auth modal -->
@@ -2083,34 +2083,37 @@
   </script>
 
   <script>
-    // Show a banner when Az has shipped something new
-    (function () {
-      var version = document.querySelector('.store-version');
-      if (!version) return;
-      var current = version.textContent.trim();
-      var seen = localStorage.getItem('ez-az-version');
+    // Fetch version and show update banner if it changed
+    fetch('/api/version')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var current = d.version + ' #' + d.commit;
+        var el = document.getElementById('storeVersion');
+        if (el) el.textContent = current;
 
-      if (seen && seen !== current) {
-        var messages = [
-          "Rawr! I've been tinkering. Check out what's new!",
-          "New stuff on the shelf! Have a look around.",
-          "Az just restocked. Fresh games and fixes!",
-          "Something's different... in a good way. Have a poke around!",
-          "The store just got an upgrade. You're welcome.",
-        ];
-        var msg = messages[Math.floor(Math.random() * messages.length)];
-        var banner = document.getElementById('updateBanner');
-        document.getElementById('updateMessage').textContent = msg;
-        banner.style.display = 'block';
+        var seen = localStorage.getItem('ez-az-version');
+        if (seen && seen !== current) {
+          var messages = [
+            "Rawr! I've been tinkering. Check out what's new!",
+            "New stuff on the shelf! Have a look around.",
+            "Az just restocked. Fresh games and fixes!",
+            "Something's different... in a good way. Have a poke around!",
+            "The store just got an upgrade. You're welcome.",
+          ];
+          var msg = messages[Math.floor(Math.random() * messages.length)];
+          var banner = document.getElementById('updateBanner');
+          document.getElementById('updateMessage').textContent = msg;
+          banner.style.display = 'block';
 
-        document.getElementById('dismissBanner').addEventListener('click', function () {
-          banner.style.display = 'none';
+          document.getElementById('dismissBanner').addEventListener('click', function () {
+            banner.style.display = 'none';
+            localStorage.setItem('ez-az-version', current);
+          });
+        } else {
           localStorage.setItem('ez-az-version', current);
-        });
-      } else {
-        localStorage.setItem('ez-az-version', current);
-      }
-    })();
+        }
+      })
+      .catch(function () {});
   </script>
 
   <script>

@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   namespace :api do
     resources :scores,  only: [:index, :create]
     resource  :session, only: [:show, :create, :destroy]
+    get "version", to: "version#show"
     resources :players, only: [:create] do
       collection { get :check }
     end
