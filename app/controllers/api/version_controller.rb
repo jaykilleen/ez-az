@@ -1,5 +1,5 @@
 module Api
-  class VersionController < ApplicationController
+  class VersionController < BaseController
     def show
       render json: { version: EzAz::Version::STRING, commit: EzAz::Version::COMMIT }
     end

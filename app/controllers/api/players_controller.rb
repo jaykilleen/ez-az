@@ -1,5 +1,5 @@
 module Api
-  class PlayersController < ApplicationController
+  class PlayersController < BaseController
     # POST /api/players
     # Body: { username, pin }
     def create
