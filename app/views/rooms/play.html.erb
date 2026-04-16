@@ -1,0 +1,53 @@
+<style>
+  .play {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; padding: 40px 20px;
+  }
+  .play h1 { margin: 0; font-size: 24px; color: #cfe; }
+  .play .name { font-size: 40px; font-weight: 800; color: #00ffc8; letter-spacing: 0.05em; }
+  .play .room-code {
+    font-family: "Courier New", monospace; font-size: 18px; color: #8ab4c8;
+    letter-spacing: 4px;
+  }
+  .play .waiting {
+    margin-top: 24px; color: #8ab4c8; font-size: 16px; text-align: center;
+    max-width: 320px;
+  }
+  .play .waiting strong { color: #00ffc8; }
+  .play .dot {
+    display: inline-block; width: 10px; height: 10px; background: #00ffc8;
+    border-radius: 50%; margin-right: 8px; animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+</style>
+
+<div class="play">
+  <h1>You're in!</h1>
+  <div class="name"><%= @membership.name %></div>
+  <div class="room-code">Room <%= @room.code %> · Player <%= @membership.slot %></div>
+
+  <div class="waiting">
+    <span class="dot"></span>
+    Waiting for the host to start a game.<br>
+    <strong>Keep this tab open</strong> — this is your controller.
+  </div>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+  const consumer = createConsumer();
+  const code = <%= @room.code.to_json.html_safe %>;
+
+  consumer.subscriptions.create(
+    { channel: "RoomChannel", code },
+    {
+      connected() { console.log("[controller] subscribed to", code); },
+      received(data) {
+        if (data && data.type === "game_starting") {
+          window.location.replace("/games/" + data.game_slug + ".html");
+        }
+      }
+    }
+  );
+</script>
