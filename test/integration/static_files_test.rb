@@ -216,6 +216,14 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "every game page references the room-input router" do
+    %w[space-dodge bloom cat-vs-mouse dodgeball descent corrupted].each do |slug|
+      get "/games/#{slug}.html"
+      assert_includes response.body, %(src="/room-input.js"),
+        "#{slug} is missing the room-input.js script"
+    end
+  end
+
   # Corrupted game box on shelf
 
   test "index has corrupted link" do

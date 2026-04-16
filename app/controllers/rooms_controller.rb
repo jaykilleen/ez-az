@@ -6,8 +6,8 @@ class RoomsController < ApplicationController
   # resolves the layout per action.
   layout :layout_for_action
 
-  before_action :load_room, only: [:show, :join, :add_member, :play]
-  before_action :ensure_room_active, only: [:show, :join, :add_member, :play]
+  before_action :load_room,         only: [:show, :join, :add_member, :play, :start]
+  before_action :ensure_room_active, only: [:show, :join, :add_member, :play, :start]
 
   # GET /rooms/new — TV splash: "Press OK to create a room"
   def new
@@ -31,6 +31,7 @@ class RoomsController < ApplicationController
     @qr_code_svg = RQRCode::QRCode.new(join_room_url(code: @room.code))
                                   .as_svg(color: "00ffc8", module_size: 6, standalone: true, use_path: true)
                                   .html_safe
+    @games = Game.all
   end
 
   # GET /rooms/:code/join — phone landing page (name form)
@@ -76,12 +77,29 @@ class RoomsController < ApplicationController
     return redirect_to join_room_path(code: @room.code) unless @membership
   end
 
+  # POST /rooms/:code/start — host picks a game; broadcasts game_starting and
+  # redirects the TV to the game page with ?room=<code> so the game wires
+  # its key events to the ControllerChannel input stream.
+  def start
+    slug = params[:game_slug].to_s
+    unless Score::GAME_SORT.key?(slug)
+      @error = "Unknown game"
+      return redirect_to room_path(code: @room.code), alert: @error
+    end
+
+    @room.update!(game_slug: slug, state: :playing)
+    RoomChannel.game_starting(@room)
+
+    redirect_to "/games/#{slug}.html?room=#{@room.code}",
+                allow_other_host: false
+  end
+
   private
 
   def layout_for_action
     case action_name
-    when "new", "show"               then "tv"
-    when "join", "add_member", "play" then "controller"
+    when "new", "show", "start"                   then "tv"
+    when "join", "add_member", "play"             then "controller"
     else "application"
     end
   end

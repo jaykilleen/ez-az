@@ -85,11 +85,58 @@
     </div>
   </section>
 
+  <section class="lobby-games" aria-label="Choose a game">
+    <h2>Pick a game to start</h2>
+    <div class="lobby-game-row" id="lobbyGameRow">
+      <% @games.each_with_index do |game, i| %>
+        <%= form_with url: start_room_path(code: @room.code), method: :post, local: true, class: "lobby-game-form" do |f| %>
+          <%= f.hidden_field :game_slug, value: game[:slug] %>
+          <button type="submit" class="lobby-game" data-index="<%= i %>" tabindex="<%= i == 0 ? 0 : -1 %>">
+            <div class="lobby-game-icon"><%= game_icon_svg(game[:icon]) %></div>
+            <div class="lobby-game-title"><%= game[:title] %></div>
+            <div class="lobby-game-creators">by <%= game[:creators] %></div>
+          </button>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
   <footer class="lobby-footer">
     <div class="lobby-hint">Point your phone's camera at the QR code to join. Need a friend? <strong>Up to <%= Room::MAX_PLAYERS %> players.</strong></div>
     <div>Room expires in ~2 hours</div>
   </footer>
 </div>
+
+<style>
+  .lobby-games { margin-top: 1.5vh; }
+  .lobby-games h2 { font-size: clamp(1.4rem, 2.2vw, 2.4rem); color: #fff; margin: 0 0 1.5vh; }
+  .lobby-game-row { display: flex; gap: 1.5vw; overflow-x: auto; padding: 1vh 0 2vh; scrollbar-width: none; }
+  .lobby-game-row::-webkit-scrollbar { display: none; }
+  .lobby-game-form { flex: 0 0 auto; }
+  .lobby-game {
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #13131f, #1a1a2e);
+    border: 3px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.8vw;
+    padding: 1.5vh 1.2vw;
+    width: clamp(180px, 16vw, 260px);
+    display: flex; flex-direction: column; gap: 0.8vh;
+    color: inherit; cursor: pointer;
+    transition: transform 180ms, border-color 180ms, box-shadow 180ms;
+    font: inherit; text-align: left;
+  }
+  .lobby-game:focus,
+  .lobby-game.is-focused {
+    outline: none;
+    transform: scale(1.06) translateY(-0.5vh);
+    border-color: #00ffc8;
+    box-shadow: 0 0 0 4px rgba(0, 255, 200, 0.25),
+                0 15px 40px rgba(0, 255, 200, 0.3);
+  }
+  .lobby-game-icon { width: 100%; aspect-ratio: 16 / 10; border-radius: 0.4vw; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .lobby-game-title   { font-size: clamp(1rem, 1.4vw, 1.4rem); font-weight: 800; color: #fff; }
+  .lobby-game-creators{ font-size: clamp(0.8rem, 1vw, 1rem);  color: #00ffc8; font-weight: 600; }
+</style>
 
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
