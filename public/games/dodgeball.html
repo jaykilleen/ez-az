@@ -4,8 +4,9 @@
 <html lang="en">
 <head>
 <script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>Dodgeball - World Championship 1988</title>
@@ -81,6 +82,7 @@
 var canvas = document.getElementById('game');
 var ctx = canvas.getContext('2d');
 var W = canvas.width = 700, H = canvas.height = 560;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
 var COURT_TOP = 40, COURT_BOTTOM = H - 20, COURT_LEFT = 30, COURT_RIGHT = W - 30;
 var COURT_W = COURT_RIGHT - COURT_LEFT, COURT_H = COURT_BOTTOM - COURT_TOP;
 var CENTER_Y = COURT_TOP + COURT_H / 2;

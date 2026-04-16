@@ -4,8 +4,9 @@
 <html lang="en">
 <head>
 <script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>Descent - EZ-AZ</title>
@@ -155,6 +156,7 @@ var canvas = document.getElementById('game');
 var ctx = canvas.getContext('2d');
 var W = canvas.width = 700;
 var H = canvas.height = 800;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
 
 // Offscreen canvas for fog of war (so destination-out only affects the fog layer)
 var fogCanvas = document.createElement('canvas');

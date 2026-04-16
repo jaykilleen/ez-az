@@ -34,11 +34,16 @@
     }));
   }
 
-  // Inject styles
+  // Inject styles. Control positions use env(safe-area-inset-*) so the
+  // joystick, action buttons, and pause button clear the iOS notch and
+  // home indicator (addresses part of #12's audit + closes #11).
   var style = document.createElement('style');
   style.textContent =
     '.ez-controls{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:20}' +
-    '.ez-joy-base{position:absolute;bottom:24px;left:24px;pointer-events:auto;' +
+    '.ez-joy-base{position:absolute;' +
+      'bottom:max(env(safe-area-inset-bottom),24px);' +
+      'left:max(env(safe-area-inset-left),24px);' +
+      'pointer-events:auto;' +
       'width:min(30vw,150px);height:min(30vw,150px);border-radius:50%;' +
       'background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);' +
       'touch-action:none;-webkit-user-select:none;user-select:none}' +
@@ -47,7 +52,10 @@
       'top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;' +
       'transition:background 0.1s}' +
     '.ez-joy-base.active .ez-joy-knob{background:rgba(255,255,255,0.5)}' +
-    '.ez-btn-area{position:absolute;bottom:24px;right:24px;pointer-events:auto;' +
+    '.ez-btn-area{position:absolute;' +
+      'bottom:max(env(safe-area-inset-bottom),24px);' +
+      'right:max(env(safe-area-inset-right),24px);' +
+      'pointer-events:auto;' +
       'display:flex;flex-direction:column;gap:12px;align-items:center;touch-action:none;' +
       '-webkit-user-select:none;user-select:none}' +
     '.ez-btn{width:64px;height:64px;border-radius:50%;' +
@@ -56,7 +64,9 @@
       'font-family:"Press Start 2P",monospace;font-size:10px;touch-action:none;' +
       '-webkit-user-select:none;user-select:none}' +
     '.ez-btn.active{background:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.5)}' +
-    '.ez-btn-pause{width:40px;height:40px;font-size:14px;position:absolute;top:44px;right:12px;' +
+    '.ez-btn-pause{width:40px;height:40px;font-size:14px;position:absolute;' +
+      'top:max(env(safe-area-inset-top),44px);' +
+      'right:max(env(safe-area-inset-right),12px);' +
       'pointer-events:auto;border-radius:50%;' +
       'background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);' +
       'color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;' +
