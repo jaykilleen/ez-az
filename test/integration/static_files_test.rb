@@ -273,6 +273,27 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     assert_match(/safe-area-inset-top/,    response.body)
   end
 
+  # Touch-controlled games (#14, #15 and earlier bloom/cat/descent)
+  # All 1-player games that accept Space Dodge-style touch controls
+  # should reference the shared /controls.js so they're playable
+  # without a keyboard.
+
+  test "space-dodge references controls.js with a shoot button" do
+    get "/games/space-dodge.html"
+    assert_includes response.body, %(src="/controls.js"),
+      "space-dodge should include /controls.js for mobile playability (#14)"
+    assert_match(/data-buttons="shoot"/, response.body,
+      "space-dodge's controls should expose a shoot button for firing")
+  end
+
+  test "descent references controls.js with a sprint button" do
+    get "/games/descent.html"
+    assert_includes response.body, %(src="/controls.js"),
+      "descent should include /controls.js for mobile playability (#15)"
+    assert_match(/data-buttons="sprint"/, response.body,
+      "descent's controls should expose a sprint button")
+  end
+
   # Corrupted game box on shelf
 
   test "index has corrupted link" do
