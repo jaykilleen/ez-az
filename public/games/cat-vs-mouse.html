@@ -4,8 +4,9 @@
 <html lang="en">
 <head>
 <script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Cat Vs Mouse – by Lil</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -147,6 +148,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
 const overlay  = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
 

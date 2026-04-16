@@ -4,7 +4,9 @@
 <html lang="en">
 <head>
 <script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>Charlie & Cooper's Space Dodge!</title>
@@ -86,6 +88,7 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = canvas.width = 700, H = canvas.height = 800;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
 
 // ===== LEADERBOARD =====
 let leaderboardCache = [];

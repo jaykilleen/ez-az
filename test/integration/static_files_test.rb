@@ -224,6 +224,55 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Shared game-viewport helper (#11)
+
+  test "game-viewport js is served" do
+    get "/game-viewport.js"
+    assert_response :success
+    assert_match(/javascript/, response.content_type)
+  end
+
+  test "game-viewport js exposes EzAzGame.fitCanvas" do
+    get "/game-viewport.js"
+    assert_includes response.body, "EzAzGame"
+    assert_includes response.body, "fitCanvas"
+    assert_includes response.body, "orientationchange"
+  end
+
+  test "every scalable game page includes the viewport helper and calls fitCanvas" do
+    %w[space-dodge bloom cat-vs-mouse dodgeball descent].each do |slug|
+      get "/games/#{slug}.html"
+      assert_response :success
+      assert_includes response.body, %(src="/game-viewport.js"),
+        "#{slug} is missing the shared viewport script"
+      assert_includes response.body, "EzAzGame.fitCanvas(canvas)",
+        "#{slug} is not calling EzAzGame.fitCanvas(canvas)"
+    end
+  end
+
+  test "every game page declares a viewport meta" do
+    %w[space-dodge bloom cat-vs-mouse dodgeball descent corrupted].each do |slug|
+      get "/games/#{slug}.html"
+      assert_match(/<meta[^>]+name="viewport"[^>]+width=device-width/, response.body,
+        "#{slug} is missing a viewport meta tag")
+    end
+  end
+
+  test "scalable games opt into viewport-fit=cover for safe-area insets" do
+    %w[space-dodge bloom cat-vs-mouse dodgeball descent].each do |slug|
+      get "/games/#{slug}.html"
+      assert_match(/viewport-fit=cover/, response.body,
+        "#{slug} should use viewport-fit=cover so env(safe-area-inset-*) is populated")
+    end
+  end
+
+  test "controls js uses env(safe-area-inset-*) for control positioning" do
+    get "/controls.js"
+    assert_response :success
+    assert_match(/safe-area-inset-bottom/, response.body)
+    assert_match(/safe-area-inset-top/,    response.body)
+  end
+
   # Corrupted game box on shelf
 
   test "index has corrupted link" do
