@@ -1,5 +1,5 @@
 module Api
-  class SessionsController < ApplicationController
+  class SessionsController < BaseController
     # GET /api/sessions
     # Returns current logged-in player or null
     def show

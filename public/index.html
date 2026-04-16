@@ -2229,6 +2229,32 @@
       var pinConfirmInput = document.getElementById('authPinConfirm');
       var whoamiEl        = document.getElementById('authWhoami');
 
+      // Shared fetch helper that returns { ok, status, data } and surfaces
+      // useful errors even when the server blows up. The old code used
+      // `r.json()` directly, which threw on HTML error pages and fell
+      // into the catch block with a misleading "could not reach server"
+      // message (see issue #16).
+      function apiFetch(url, options) {
+        return fetch(url, options).then(function (r) {
+          return r.text().then(function (text) {
+            var data = null;
+            if (text) {
+              try { data = JSON.parse(text); }
+              catch (e) {
+                var snippet = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+                var label = 'Server error (HTTP ' + r.status + ')';
+                if (snippet) label += ': ' + snippet;
+                var err = new Error(label);
+                err.status = r.status;
+                err.body   = text;
+                throw err;
+              }
+            }
+            return { ok: r.ok, status: r.status, data: data };
+          });
+        });
+      }
+
       function showStep(name) {
         [stepUsername, stepLogin, stepRegister, stepLoggedIn].forEach(function (el) {
           el.style.display = 'none';
@@ -2323,27 +2349,27 @@
         if (pin.length !== 4) { setError('PIN must be 4 digits.'); return; }
         setError('');
         document.getElementById('authLoginBtn').disabled = true;
-        fetch('/api/session', {
+        apiFetch('/api/session', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ username: username, pin: pin })
         })
-          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
           .then(function (res) {
             document.getElementById('authLoginBtn').disabled = false;
             if (res.ok) {
-              currentPlayer = res.d.player;
+              currentPlayer = res.data.player;
               updateBtn();
               closeModal();
             } else {
-              setError(res.d.error || 'Login failed.');
+              setError((res.data && res.data.error) || 'Login failed (HTTP ' + res.status + ').');
               pinInput.value = '';
               pinInput.focus();
             }
           })
-          .catch(function () {
+          .catch(function (err) {
             document.getElementById('authLoginBtn').disabled = false;
-            setError('Could not reach the server. Try again.');
+            console.error('[login]', err);
+            setError(err && err.message ? err.message : 'Could not reach the server. Try again.');
           });
       }
 
@@ -2359,25 +2385,25 @@
         if (pin !== pinConfirm) { setError('PINs do not match.'); pinConfirmInput.focus(); return; }
         setError('');
         document.getElementById('authRegisterBtn').disabled = true;
-        fetch('/api/players', {
+        apiFetch('/api/players', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ username: username, pin: pin })
         })
-          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
           .then(function (res) {
             document.getElementById('authRegisterBtn').disabled = false;
             if (res.ok) {
-              currentPlayer = res.d;
+              currentPlayer = res.data;
               updateBtn();
               closeModal();
             } else {
-              setError(res.d.error || 'Could not create account.');
+              setError((res.data && res.data.error) || 'Could not create account (HTTP ' + res.status + ').');
             }
           })
-          .catch(function () {
+          .catch(function (err) {
             document.getElementById('authRegisterBtn').disabled = false;
-            setError('Could not reach the server. Try again.');
+            console.error('[register]', err);
+            setError(err && err.message ? err.message : 'Could not reach the server. Try again.');
           });
       }
 

@@ -1,5 +1,5 @@
 module Api
-  class ScoresController < ApplicationController
+  class ScoresController < BaseController
     def index
       game = params[:game]
 
