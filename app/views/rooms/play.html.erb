@@ -1,53 +1,257 @@
 <style>
   .play {
     flex: 1;
+    display: flex; flex-direction: column;
+    color: #fff;
+    min-height: 100vh;
+  }
+  .play-top {
+    padding: max(env(safe-area-inset-top), 12px) 20px 12px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 14px; color: #8ab4c8; border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .play-top .name { color: #00ffc8; font-weight: 700; letter-spacing: 0.05em; font-size: 18px; }
+  .play-top .meta { font-family: "Courier New", monospace; letter-spacing: 2px; }
+
+  /* "Waiting for host" state */
+  .waiting {
+    flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 24px; padding: 40px 20px;
+    gap: 16px; padding: 20px; text-align: center;
   }
-  .play h1 { margin: 0; font-size: 24px; color: #cfe; }
-  .play .name { font-size: 40px; font-weight: 800; color: #00ffc8; letter-spacing: 0.05em; }
-  .play .room-code {
-    font-family: "Courier New", monospace; font-size: 18px; color: #8ab4c8;
-    letter-spacing: 4px;
-  }
-  .play .waiting {
-    margin-top: 24px; color: #8ab4c8; font-size: 16px; text-align: center;
-    max-width: 320px;
-  }
-  .play .waiting strong { color: #00ffc8; }
-  .play .dot {
+  .waiting .dot {
     display: inline-block; width: 10px; height: 10px; background: #00ffc8;
     border-radius: 50%; margin-right: 8px; animation: pulse 1.5s ease-in-out infinite;
   }
   @keyframes pulse { 50% { opacity: 0.3; } }
+  .waiting strong { color: #00ffc8; }
+
+  /* Controller active state */
+  .controller { flex: 1; display: none; position: relative; overflow: hidden; }
+  .controller.is-active { display: block; }
+
+  .joy-base {
+    position: absolute;
+    bottom: max(env(safe-area-inset-bottom), 32px);
+    left:   max(env(safe-area-inset-left),   32px);
+    width:  min(40vw, 200px);
+    height: min(40vw, 200px);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(0, 255, 200, 0.35);
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .joy-knob {
+    position: absolute; top: 50%; left: 50%;
+    width: 40%; height: 40%;
+    border-radius: 50%;
+    background: rgba(0, 255, 200, 0.3);
+    border: 2px solid rgba(0, 255, 200, 0.55);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: background 100ms;
+  }
+  .joy-base.active .joy-knob { background: rgba(0, 255, 200, 0.55); }
+
+  .btn-area {
+    position: absolute;
+    bottom: max(env(safe-area-inset-bottom), 32px);
+    right:  max(env(safe-area-inset-right),  32px);
+    display: flex; flex-direction: column; gap: 16px; align-items: center;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .ctrl-btn {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: rgba(0, 255, 200, 0.1);
+    border: 2px solid rgba(0, 255, 200, 0.4);
+    color: #cfe; font-family: "Courier New", monospace; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none;
+  }
+  .ctrl-btn.active { background: rgba(0, 255, 200, 0.35); border-color: #00ffc8; color: #0a0a12; }
+
+  .pause-btn {
+    position: absolute;
+    top: max(env(safe-area-inset-top), 12px);
+    right: max(env(safe-area-inset-right), 12px);
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Courier New", monospace; font-size: 18px;
+    touch-action: none;
+  }
+  .pause-btn.active { background: rgba(255, 255, 255, 0.2); }
+
+  .play-hint {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.25); font-size: 14px; pointer-events: none;
+    text-align: center; line-height: 1.6;
+  }
 </style>
 
 <div class="play">
-  <h1>You're in!</h1>
-  <div class="name"><%= @membership.name %></div>
-  <div class="room-code">Room <%= @room.code %> · Player <%= @membership.slot %></div>
-
-  <div class="waiting">
-    <span class="dot"></span>
-    Waiting for the host to start a game.<br>
-    <strong>Keep this tab open</strong> — this is your controller.
+  <div class="play-top">
+    <div class="name"><%= @membership.name %></div>
+    <div class="meta">Room <%= @room.code %> · P<%= @membership.slot %></div>
   </div>
+
+  <!-- State A: waiting for the host to start a game -->
+  <section class="waiting" id="waiting" <%= "hidden".html_safe if @room.playing? %>>
+    <span><span class="dot"></span>Waiting for the host to start a game</span>
+    <div><strong>Keep this tab open</strong><br>it's your controller</div>
+  </section>
+
+  <!-- State B: active controller -->
+  <section class="controller <%= 'is-active' if @room.playing? %>" id="controller">
+    <div class="play-hint">Drag the joystick<br>Tap a button to act</div>
+
+    <div class="joy-base" id="joy">
+      <div class="joy-knob" id="joyKnob"></div>
+    </div>
+
+    <div class="btn-area" id="btns">
+      <div class="ctrl-btn" data-input="primary">FIRE</div>
+      <div class="ctrl-btn" data-input="secondary">JUMP</div>
+    </div>
+
+    <div class="pause-btn" id="pauseBtn" data-input="pause">||</div>
+  </section>
 </div>
 
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
-  const consumer = createConsumer();
-  const code = <%= @room.code.to_json.html_safe %>;
 
+  var consumer  = createConsumer();
+  var code      = <%= @room.code.to_json.html_safe %>;
+  var slot      = <%= @membership.slot %>;
+  var waitingEl = document.getElementById("waiting");
+  var ctrlEl    = document.getElementById("controller");
+
+  // Subscribe to RoomChannel for lobby-level broadcasts (game_starting)
   consumer.subscriptions.create(
-    { channel: "RoomChannel", code },
+    { channel: "RoomChannel", code: code },
     {
-      connected() { console.log("[controller] subscribed to", code); },
       received(data) {
-        if (data && data.type === "game_starting") {
-          window.location.replace("/games/" + data.game_slug + ".html");
+        if (!data) return;
+        if (data.type === "game_starting") {
+          waitingEl.setAttribute("hidden", "");
+          ctrlEl.classList.add("is-active");
         }
       }
     }
   );
+
+  // Subscribe to ControllerChannel as a phone (with slot) to send inputs
+  var input = consumer.subscriptions.create(
+    { channel: "ControllerChannel", code: code, slot: slot },
+    {
+      connected()    { console.log("[controller] slot", slot, "connected"); },
+      disconnected() { console.log("[controller] slot", slot, "disconnected"); },
+      send(type, name) { this.perform("input", { type: type, input: name }); }
+    }
+  );
+
+  // --- Joystick --------------------------------------------------------
+
+  var joy     = document.getElementById("joy");
+  var joyKnob = document.getElementById("joyKnob");
+  var joyTouchId = null;
+  var center = { x: 0, y: 0 };
+  var radius = 0;
+  var dirs   = { up: false, down: false, left: false, right: false };
+
+  function updateJoy(tx, ty) {
+    var dx = tx - center.x, dy = ty - center.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > radius) { dx = dx / dist * radius; dy = dy / dist * radius; }
+    joyKnob.style.transform = "translate(calc(-50% + " + dx + "px), calc(-50% + " + dy + "px))";
+
+    var deadZone = radius * 0.2;
+    var newDirs = { up: false, down: false, left: false, right: false };
+    if (dist > deadZone) {
+      var angle = Math.atan2(dy, dx);
+      if (angle > -2.749 && angle < -0.393) newDirs.up = true;
+      if (angle > 0.393  && angle < 2.749)  newDirs.down = true;
+      if (angle > 1.963  || angle < -1.963) newDirs.left = true;
+      if (angle > -1.178 && angle < 1.178)  newDirs.right = true;
+    }
+    for (var d in dirs) {
+      if ( dirs[d] && !newDirs[d]) input.send("keyup",   d);
+      if (!dirs[d] &&  newDirs[d]) input.send("keydown", d);
+    }
+    dirs = newDirs;
+  }
+
+  function releaseJoy() {
+    joyKnob.style.transform = "translate(-50%, -50%)";
+    joy.classList.remove("active");
+    for (var d in dirs) { if (dirs[d]) input.send("keyup", d); }
+    dirs = { up: false, down: false, left: false, right: false };
+    joyTouchId = null;
+  }
+
+  joy.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    if (joyTouchId !== null) return;
+    var t = e.changedTouches[0];
+    joyTouchId = t.identifier;
+    var rect = joy.getBoundingClientRect();
+    center.x = rect.left + rect.width / 2;
+    center.y = rect.top  + rect.height / 2;
+    radius   = rect.width / 2;
+    joy.classList.add("active");
+    updateJoy(t.clientX, t.clientY);
+  });
+  joy.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joyTouchId) {
+        updateJoy(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+        break;
+      }
+    }
+  });
+  function joyEnd(e) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joyTouchId) { releaseJoy(); break; }
+    }
+  }
+  joy.addEventListener("touchend", joyEnd);
+  joy.addEventListener("touchcancel", joyEnd);
+
+  // --- Action + pause buttons -----------------------------------------
+
+  function bindButton(el) {
+    var name = el.getAttribute("data-input");
+    var touchId = null;
+    el.addEventListener("touchstart", function (e) {
+      e.preventDefault();
+      if (touchId !== null) return;
+      touchId = e.changedTouches[0].identifier;
+      el.classList.add("active");
+      input.send("keydown", name);
+      if (navigator.vibrate) navigator.vibrate(10);
+    });
+    function end(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) {
+          el.classList.remove("active");
+          input.send("keyup", name);
+          touchId = null; break;
+        }
+      }
+    }
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+  }
+
+  document.querySelectorAll("#btns .ctrl-btn").forEach(bindButton);
+  bindButton(document.getElementById("pauseBtn"));
+
+  // Release everything if the tab goes to background
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) releaseJoy();
+  });
 </script>

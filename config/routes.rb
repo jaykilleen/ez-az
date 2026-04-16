@@ -8,9 +8,11 @@ Rails.application.routes.draw do
       get  :join,     action: :join
       post :join,     action: :add_member
       get  :play
+      post :start
     end
   end
 
+  get "/room-input.js",    to: "room_input#show", defaults: { format: :js }
   get "/manifest.json",    to: "manifest#show"
   get "/icons/:name.:format", to: "icons#show", constraints: { format: /png|jpg|jpeg|svg|webp/ }
 

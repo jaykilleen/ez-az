@@ -150,4 +150,46 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get play_room_path(code: "XXXX")
     assert_response :not_found
   end
+
+  # POST /rooms/:code/start
+
+  test "start persists game_slug and flips state to playing" do
+    room = Room.create!
+    post start_room_path(code: room.code), params: { game_slug: "space-dodge" }
+    room.reload
+    assert_equal "space-dodge", room.game_slug
+    assert_equal "playing",     room.state
+  end
+
+  test "start redirects the TV to the game page with ?room=<code>" do
+    room = Room.create!
+    post start_room_path(code: room.code), params: { game_slug: "bloom" }
+    assert_redirected_to "/games/bloom.html?room=#{room.code}"
+  end
+
+  test "start broadcasts game_starting on RoomChannel" do
+    room = Room.create!
+    before = broadcasts(room.channel_name).size
+    post start_room_path(code: room.code), params: { game_slug: "descent" }
+    msgs = broadcasts(room.channel_name)
+    assert_equal before + 1, msgs.size
+
+    payload = JSON.parse(msgs.last)
+    assert_equal "game_starting", payload["type"]
+    assert_equal "descent",       payload["game_slug"]
+  end
+
+  test "start rejects unknown game slugs" do
+    room = Room.create!
+    post start_room_path(code: room.code), params: { game_slug: "pong" }
+    assert_redirected_to room_path(code: room.code)
+    room.reload
+    assert_nil room.game_slug
+    assert_equal "lobby", room.state
+  end
+
+  test "start 404s on unknown room code" do
+    post start_room_path(code: "XXXX"), params: { game_slug: "bloom" }
+    assert_response :not_found
+  end
 end

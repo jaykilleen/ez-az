@@ -1,0 +1,97 @@
+// TV-side input router for EZ-AZ multiplayer rooms.
+//
+// Served by RoomInputController so the fingerprinted actioncable asset
+// URL can be baked in. Games include <script src="/room-input.js">
+// and this file decides whether to activate based on ?room=<CODE> in
+// the URL — no other change to the game page is needed.
+
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var code   = params.get("room");
+  if (!code) return;
+
+  // --- Keymaps ---------------------------------------------------------
+
+  var ARROWS = {
+    up:        { key: "ArrowUp",    code: "ArrowUp",    keyCode: 38 },
+    down:      { key: "ArrowDown",  code: "ArrowDown",  keyCode: 40 },
+    left:      { key: "ArrowLeft",  code: "ArrowLeft",  keyCode: 37 },
+    right:     { key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    primary:   { key: "Shift",      code: "ShiftRight", keyCode: 16, shift: true },
+    secondary: { key: " ",          code: "Space",      keyCode: 32 },
+    pause:     { key: "Escape",     code: "Escape",     keyCode: 27 }
+  };
+
+  var WASD = {
+    up:        { key: "w", code: "KeyW", keyCode: 87 },
+    down:      { key: "s", code: "KeyS", keyCode: 83 },
+    left:      { key: "a", code: "KeyA", keyCode: 65 },
+    right:     { key: "d", code: "KeyD", keyCode: 68 },
+    primary:   { key: "Shift",  code: "ShiftLeft", keyCode: 16, shift: true },
+    secondary: { key: "q",      code: "KeyQ",      keyCode: 81 },
+    pause:     { key: "Escape", code: "Escape",    keyCode: 27 }
+  };
+
+  // game slug -> slot -> map. A missing slot means that slot's inputs
+  // are ignored (e.g. in single-player games, only slot 1's phone drives).
+  var KEYMAPS = {
+    "space-dodge":  { 1: ARROWS, 2: WASD },
+    "dodgeball":    { 1: ARROWS, 2: WASD, 3: ARROWS, 4: WASD },
+    "bloom":        { 1: ARROWS },
+    "cat-vs-mouse": { 1: ARROWS },
+    "descent":      { 1: ARROWS },
+    "corrupted":    { 1: ARROWS, 2: WASD }
+  };
+
+  var match    = window.location.pathname.match(/\/games\/([a-z0-9-]+)\.html$/i);
+  var gameSlug = match ? match[1].toLowerCase() : null;
+
+  function mapFor(slot) {
+    var byGame = gameSlug && KEYMAPS[gameSlug];
+    if (byGame && byGame[slot]) return byGame[slot];
+    if (!byGame && slot === 1) return ARROWS;
+    return null;
+  }
+
+  function dispatch(type, entry) {
+    document.dispatchEvent(new KeyboardEvent(type, {
+      key:       entry.key,
+      code:      entry.code,
+      keyCode:   entry.keyCode,
+      which:     entry.keyCode,
+      shiftKey:  !!entry.shift,
+      bubbles:   true,
+      cancelable: true
+    }));
+  }
+
+  function handle(msg) {
+    if (!msg || typeof msg.slot !== "number") return;
+    if (msg.type !== "keydown" && msg.type !== "keyup") return;
+    var map = mapFor(msg.slot);
+    if (!map) return;
+    var entry = map[msg.input];
+    if (!entry) return;
+    dispatch(msg.type, entry);
+  }
+
+  // --- ActionCable bootstrap + subscription --------------------------
+
+  var ACTIONCABLE_URL = <%= asset_path("actioncable.esm.js").to_json.html_safe %>;
+
+  import(ACTIONCABLE_URL)
+    .then(function (mod) {
+      var consumer = mod.createConsumer();
+      consumer.subscriptions.create(
+        { channel: "ControllerChannel", code: code },
+        {
+          connected()    { console.log("[room-input] TV connected to room", code); },
+          disconnected() { console.log("[room-input] TV disconnected from", code); },
+          received(data) { handle(data); }
+        }
+      );
+    })
+    .catch(function (err) {
+      console.error("[room-input] could not load actioncable:", err);
+    });
+})();
