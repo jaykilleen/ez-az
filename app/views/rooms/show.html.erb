@@ -1,0 +1,125 @@
+<style>
+  .lobby {
+    width: 100vw; height: 100vh;
+    display: grid; grid-template-rows: auto 1fr auto;
+    padding: 3vh 4vw; gap: 2vh;
+    background:
+      radial-gradient(ellipse at top right, rgba(0, 255, 200, 0.08), transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(255, 0, 170, 0.06), transparent 50%),
+      #0a0a12;
+  }
+  .lobby-header { display: flex; align-items: center; justify-content: space-between; gap: 3vw; }
+  .lobby-logo {
+    font-size: clamp(2.4rem, 5vw, 5rem); font-weight: 900; letter-spacing: -0.04em;
+    background: linear-gradient(135deg, #00ffc8, #00a3ff, #ff00aa);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lobby-code {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: clamp(3rem, 10vw, 10rem);
+    letter-spacing: 0.5vw; color: #00ffc8;
+    text-shadow: 0 0 30px rgba(0, 255, 200, 0.6);
+  }
+
+  .lobby-main { display: grid; grid-template-columns: auto 1fr; gap: 4vw; align-items: center; }
+  .lobby-qr {
+    background: rgba(0, 255, 200, 0.06);
+    border: 2px solid rgba(0, 255, 200, 0.3);
+    border-radius: 1.2vw; padding: 2vh 2vw; display: flex; flex-direction: column; gap: 1vh;
+    align-items: center;
+  }
+  .lobby-qr svg { width: clamp(200px, 22vw, 360px); height: clamp(200px, 22vw, 360px); background: #0a0a12; padding: 1vw; border-radius: 0.6vw; }
+  .lobby-qr-label { font-size: clamp(1rem, 1.4vw, 1.4rem); color: #cfe; text-align: center; }
+  .lobby-qr-url { font-size: clamp(1.1rem, 1.8vw, 1.8rem); color: #00ffc8; font-weight: 700; }
+
+  .lobby-players { display: flex; flex-direction: column; gap: 2vh; }
+  .lobby-players h2 { font-size: clamp(1.4rem, 2.4vw, 2.6rem); color: #fff; margin: 0; }
+  .lobby-slots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vh 2vw; }
+  .lobby-slot {
+    background: linear-gradient(135deg, #13131f, #1a1a2e);
+    border: 3px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 1vw; padding: 2.5vh 2vw;
+    font-size: clamp(1.2rem, 1.8vw, 2rem);
+    color: #667;
+    min-height: 12vh; display: flex; flex-direction: column; justify-content: center;
+    transition: border-color 220ms, background 220ms, transform 220ms;
+  }
+  .lobby-slot.is-taken {
+    border-style: solid; border-color: #00ffc8;
+    background: linear-gradient(135deg, #13262a, #1a2e32);
+    color: #fff;
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(0, 255, 200, 0.25);
+  }
+  .lobby-slot-label { font-size: 0.7em; color: #00ffc8; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4em; }
+  .lobby-slot-name { font-weight: 800; }
+
+  .lobby-footer { display: flex; justify-content: space-between; align-items: center; color: #cfe; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
+  .lobby-hint strong { color: #00ffc8; }
+</style>
+
+<div class="lobby">
+  <header class="lobby-header">
+    <div class="lobby-logo">EZ-AZ</div>
+    <div class="lobby-code" aria-label="Room code"><%= @room.code %></div>
+  </header>
+
+  <section class="lobby-main">
+    <div class="lobby-qr">
+      <%= @qr_code_svg %>
+      <div class="lobby-qr-label">Scan to join on your phone</div>
+      <div class="lobby-qr-url">ez-az.net/rooms/<%= @room.code %>/join</div>
+    </div>
+
+    <div class="lobby-players">
+      <h2>Players</h2>
+      <div class="lobby-slots" id="lobbySlots">
+        <% (1..Room::MAX_PLAYERS).each do |slot| %>
+          <% membership = @room.memberships.find_by(slot: slot) %>
+          <div class="lobby-slot <%= 'is-taken' if membership %>" data-slot="<%= slot %>">
+            <div class="lobby-slot-label">Player <%= slot %></div>
+            <div class="lobby-slot-name"><%= membership ? membership.name : "Waiting…" %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lobby-footer">
+    <div class="lobby-hint">Point your phone's camera at the QR code to join. Need a friend? <strong>Up to <%= Room::MAX_PLAYERS %> players.</strong></div>
+    <div>Room expires in ~2 hours</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  const consumer = createConsumer();
+  const code     = <%= @room.code.to_json.html_safe %>;
+  const slotsEl  = document.getElementById("lobbySlots");
+
+  function renderMembers(members) {
+    // Reset every slot to "Waiting…"
+    slotsEl.querySelectorAll(".lobby-slot").forEach(el => {
+      el.classList.remove("is-taken");
+      el.querySelector(".lobby-slot-name").textContent = "Waiting…";
+    });
+    members.forEach(m => {
+      const el = slotsEl.querySelector(`.lobby-slot[data-slot="${m.slot}"]`);
+      if (!el) return;
+      el.classList.add("is-taken");
+      el.querySelector(".lobby-slot-name").textContent = m.name;
+    });
+  }
+
+  consumer.subscriptions.create(
+    { channel: "RoomChannel", code },
+    {
+      connected() { console.log("[room] subscribed to", code); },
+      received(data) {
+        if (!data || !data.members) return;
+        renderMembers(data.members);
+      }
+    }
+  );
+</script>

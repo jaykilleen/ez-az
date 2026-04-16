@@ -1,5 +1,15 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => "/cable"
+
   get "/tv", to: "tv#show"
+
+  resources :rooms, only: [:new, :create, :show], param: :code do
+    member do
+      get  :join,     action: :join
+      post :join,     action: :add_member
+      get  :play
+    end
+  end
 
   get "/manifest.json",    to: "manifest#show"
   get "/icons/:name.:format", to: "icons#show", constraints: { format: /png|jpg|jpeg|svg|webp/ }

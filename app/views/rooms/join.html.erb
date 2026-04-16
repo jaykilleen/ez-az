@@ -1,0 +1,51 @@
+<style>
+  .join {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; padding: 40px 20px;
+  }
+  .join h1 { font-size: 28px; color: #00ffc8; margin: 0; text-align: center; }
+  .join .room-code {
+    font-family: "Courier New", monospace;
+    font-size: 24px; letter-spacing: 4px; color: #fff;
+    background: rgba(0, 255, 200, 0.1);
+    border: 2px solid rgba(0, 255, 200, 0.3);
+    border-radius: 8px; padding: 8px 16px;
+  }
+  .join form { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 320px; }
+  .join label { font-size: 14px; color: #cfe; letter-spacing: 0.1em; text-transform: uppercase; }
+  .join input[type="text"] {
+    font-size: 22px; padding: 14px 16px;
+    background: #13131f; color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.12); border-radius: 10px;
+    text-align: center; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .join input[type="text"]:focus { outline: none; border-color: #00ffc8; }
+  .join button {
+    font-size: 20px; font-weight: 700; padding: 16px;
+    background: linear-gradient(135deg, #00ffc8, #00a3ff); color: #0a0a12;
+    border: 0; border-radius: 10px; cursor: pointer;
+  }
+  .join button:active { transform: scale(0.98); }
+  .join .error {
+    background: rgba(255, 68, 68, 0.1); border: 1px solid #ff4444;
+    color: #ff8888; padding: 10px; border-radius: 8px; font-size: 14px;
+  }
+</style>
+
+<div class="join">
+  <h1>Joining room</h1>
+  <div class="room-code"><%= @room.code %></div>
+
+  <% if @error %>
+    <div class="error"><%= @error %></div>
+  <% end %>
+
+  <%= form_with url: join_room_path(code: @room.code), method: :post, local: true do |f| %>
+    <label for="name">Your name</label>
+    <%= f.text_field :name, maxlength: RoomMembership::NAME_MAX,
+                     placeholder: "AZ", required: true, autofocus: true,
+                     autocomplete: "off", autocapitalize: "characters" %>
+    <%= f.submit "Join" %>
+  <% end %>
+</div>
