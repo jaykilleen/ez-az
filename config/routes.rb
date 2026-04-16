@@ -25,7 +25,10 @@ Rails.application.routes.draw do
     resources :players, only: [:create] do
       collection { get :check }
     end
+    resources :errors,  only: [:create]
   end
+
+  get "/errors", to: "errors_dashboard#index"
 
   match "/404", to: "errors#not_found",       via: :all
   match "/500", to: "errors#internal_error",  via: :all

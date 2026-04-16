@@ -224,6 +224,30 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Error reporter (#33)
+
+  test "error-reporter.js is served" do
+    get "/error-reporter.js"
+    assert_response :success
+    assert_match(/javascript/, response.content_type)
+    assert_includes response.body, "EzAzErrors"
+    assert_includes response.body, "/api/errors"
+  end
+
+  test "every game page includes the error reporter" do
+    %w[space-dodge bloom cat-vs-mouse dodgeball descent corrupted].each do |slug|
+      get "/games/#{slug}.html"
+      assert_includes response.body, %(src="/error-reporter.js"),
+        "#{slug} should include the shared error-reporter.js"
+    end
+  end
+
+  test "index page includes the error reporter" do
+    get "/"
+    assert_includes response.body, %(src="/error-reporter.js"),
+      "the store index should include the shared error-reporter.js"
+  end
+
   # Shared game-viewport helper (#11)
 
   test "game-viewport js is served" do

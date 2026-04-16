@@ -10,11 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_000011) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_000001) do
   create_table "counters", force: :cascade do |t|
     t.string "key", null: false
     t.integer "value", default: 0, null: false
     t.index ["key"], name: "index_counters_on_key", unique: true
+  end
+
+  create_table "error_reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "fingerprint", null: false
+    t.datetime "first_seen_at", null: false
+    t.string "game"
+    t.datetime "last_seen_at", null: false
+    t.string "message", limit: 500, null: false
+    t.integer "occurrences", default: 1, null: false
+    t.text "stack"
+    t.datetime "updated_at", null: false
+    t.string "url", limit: 500
+    t.string "user_agent", limit: 500
+    t.index ["fingerprint"], name: "index_error_reports_on_fingerprint", unique: true
+    t.index ["game"], name: "index_error_reports_on_game"
+    t.index ["last_seen_at"], name: "index_error_reports_on_last_seen_at"
   end
 
   create_table "players", force: :cascade do |t|

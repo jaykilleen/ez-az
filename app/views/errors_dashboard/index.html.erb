@@ -1,0 +1,111 @@
+<% content_for :title, "Errors on EZ-AZ" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Errors on EZ-AZ</title>
+  <meta name="theme-color" content="#0a0a12">
+  <style>
+    *,*::before,*::after { box-sizing: border-box; }
+    html,body { margin: 0; background: #0a0a12; color: #cfe;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    a { color: #00ffc8; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0;
+         background: linear-gradient(135deg, #00ffc8, #00a3ff, #ff00aa);
+         -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { color: #8ab4c8; font-size: 14px; max-width: 640px; line-height: 1.5; }
+    .count { font-family: "Courier New", monospace; color: #8ab4c8; font-size: 13px; white-space: nowrap; }
+
+    table { width: 100%; border-collapse: collapse; background: #13131f;
+            border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,255,200,0.08); }
+    th, td { text-align: left; padding: 10px 12px; vertical-align: top; font-size: 13px; }
+    th { background: #1a1a2e; color: #00ffc8; font-weight: 700; font-size: 11px;
+         text-transform: uppercase; letter-spacing: 0.1em; }
+    tr + tr td { border-top: 1px solid rgba(255,255,255,0.04); }
+    td.msg { max-width: 520px; color: #fff; font-family: "SF Mono", "Menlo", monospace; font-size: 12px; }
+    td.msg code { background: #0a0a12; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    td.game { color: #ff00aa; font-weight: 600; text-transform: lowercase; font-size: 12px; }
+    td.game.empty { color: #556; font-style: italic; font-weight: 400; }
+    td.count-col { text-align: right; font-family: "Courier New", monospace; color: #00ffc8; width: 80px; }
+    td.seen { color: #8ab4c8; font-family: "Courier New", monospace; font-size: 12px; white-space: nowrap; }
+
+    .stack { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 11px;
+             color: #aaa; white-space: pre-wrap; margin-top: 6px; padding: 8px;
+             background: #0a0a12; border-radius: 4px; max-height: 140px; overflow: auto; }
+    details summary { cursor: pointer; color: #667; font-size: 11px; }
+    details[open] summary { color: #00ffc8; }
+
+    .empty { text-align: center; padding: 60px 20px; color: #667; font-style: italic; }
+    footer { margin-top: 32px; text-align: center; color: #556; font-size: 12px; line-height: 1.6; }
+    footer a { color: #8ab4c8; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Errors on EZ-AZ</h1>
+        <p class="subtitle">
+          Real errors captured from real gameplay. When a game crashes, Az catches
+          the exception and logs it here so we can learn from it — yours too.
+          <strong>Errors aren't failures, they're how we find bugs.</strong>
+        </p>
+      </div>
+      <div class="count">
+        <%= @total %> unique · showing <%= @reports.size %>
+      </div>
+    </header>
+
+    <% if @reports.any? %>
+      <table>
+        <thead>
+          <tr>
+            <th>Error</th>
+            <th>Game</th>
+            <th style="text-align:right;">Count</th>
+            <th>Last seen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @reports.each do |report| %>
+            <tr>
+              <td class="msg">
+                <code><%= report.message %></code>
+                <% if report.stack.present? %>
+                  <details>
+                    <summary>stack trace</summary>
+                    <div class="stack"><%= report.stack %></div>
+                  </details>
+                <% end %>
+              </td>
+              <td class="<%= report.game.present? ? "game" : "game empty" %>">
+                <%= report.game.presence || "—" %>
+              </td>
+              <td class="count-col"><%= report.occurrences %>x</td>
+              <td class="seen"><%= time_ago_in_words(report.last_seen_at) %> ago</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="empty">
+        No errors yet — either EZ-AZ is running perfectly, or the error reporter
+        hasn't caught anything here.
+      </div>
+    <% end %>
+
+    <footer>
+      <p>
+        <a href="/">&larr; Back to EZ-AZ</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/jaykilleen/easy-az">Source on GitHub</a>
+      </p>
+      <p>Errors are grouped by message + top stack frame + game.
+        Nothing about who you are is collected — just the technical details.</p>
+    </footer>
+  </div>
+</body>
+</html>
