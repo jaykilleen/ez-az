@@ -221,6 +221,29 @@
     font-family: "Courier New", monospace;
   }
 
+  .tv-learn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6vw;
+    padding: 0.8vh 1.4vw;
+    background: rgba(0, 255, 200, 0.08);
+    border: 2px solid rgba(0, 255, 200, 0.35);
+    border-radius: 0.8vw;
+    color: #00ffc8;
+    text-decoration: none;
+    font-size: clamp(0.9rem, 1.2vw, 1.3rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .tv-learn-btn:focus, .tv-learn-btn:hover {
+    background: rgba(0, 255, 200, 0.18);
+    border-color: #00ffc8;
+    box-shadow: 0 0 0 4px rgba(0,255,200,0.2);
+    outline: none;
+  }
+
   .tv-status {
     font-size: clamp(0.85rem, 1.1vw, 1.1rem);
     color: #667;
@@ -305,6 +328,9 @@
   </section>
 
   <footer class="tv-footer">
+    <a href="/learn" class="tv-learn-btn" id="tv-learn-btn">
+      📚 Learning Center
+    </a>
     <div class="tv-hint">
       <span class="tv-key">&larr;</span>
       <span class="tv-key">&rarr;</span>
@@ -320,19 +346,30 @@
 
 <script>
   (function() {
-    var shelf = document.getElementById('tv-shelf');
-    var games = Array.prototype.slice.call(shelf.querySelectorAll('.tv-game'));
+    var shelf    = document.getElementById('tv-shelf');
+    var games    = Array.prototype.slice.call(shelf.querySelectorAll('.tv-game'));
+    var learnBtn = document.getElementById('tv-learn-btn');
     var focusedIndex = 0;
+    var learnFocused = false;
 
-    function focus(index) {
+    function focusGame(index) {
       index = Math.max(0, Math.min(games.length - 1, index));
       games.forEach(function(g, i) {
         g.tabIndex = i === index ? 0 : -1;
         g.classList.toggle('is-focused', i === index);
       });
+      learnBtn.tabIndex = -1;
+      learnFocused = false;
       focusedIndex = index;
       games[index].focus();
       scrollIntoView(games[index]);
+    }
+
+    function focusLearn() {
+      games.forEach(function(g) { g.tabIndex = -1; g.classList.remove('is-focused'); });
+      learnBtn.tabIndex = 0;
+      learnFocused = true;
+      learnBtn.focus();
     }
 
     function scrollIntoView(el) {
@@ -347,21 +384,34 @@
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          focus(focusedIndex - 1);
+          if (learnFocused) { focusGame(games.length - 1); }
+          else { focusGame(focusedIndex - 1); }
           break;
         case 'ArrowRight':
           e.preventDefault();
-          focus(focusedIndex + 1);
+          if (learnFocused) break;
+          if (focusedIndex === games.length - 1) { focusLearn(); }
+          else { focusGame(focusedIndex + 1); }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          focusLearn();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (learnFocused) focusGame(focusedIndex);
           break;
         case 'Enter':
         case ' ':
           e.preventDefault();
-          games[focusedIndex].click();
+          if (learnFocused) { learnBtn.click(); }
+          else { games[focusedIndex].click(); }
           break;
       }
     });
 
     // Initialize focus
-    focus(0);
+    learnBtn.tabIndex = -1;
+    focusGame(0);
   })();
 </script>

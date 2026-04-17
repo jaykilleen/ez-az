@@ -122,6 +122,32 @@
       text-transform: uppercase;
     }
 
+    .store-nav {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .store-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .store-nav a:hover { border-color: #00ffc8; color: #00ffc8; }
+    .store-nav a.active { border-color: #00ffc8; color: #00ffc8; background: rgba(0,255,200,0.06); }
+
     .store-version {
       font-size: 11px;
       color: #555;
@@ -938,6 +964,11 @@
     <h1 class="store-name">EZ-AZ</h1>
     <p class="store-tagline">The Family Video Game Store</p>
     <p class="store-version" id="storeVersion"></p>
+    <nav class="store-nav">
+      <a href="/" class="active">🎮 Games</a>
+      <a href="/learn">📚 Learning Center</a>
+      <a href="/prompt.html">🤖 Build a Game</a>
+    </nav>
   </header>
 
   <!-- Auth modal -->
@@ -1232,7 +1263,7 @@
   <footer class="store-footer">
     Built by Cooper and Charlie (aged 8), with Jay helping them learn to work with AI.<br>
     Gumdale's first family friendly video game store. Launched 28th February 2026.<br>
-    <a href="/licence.html">Licence</a>
+    <a href="/learn">Learning Center</a> &middot; <a href="/licence.html">Licence</a>
   </footer>
 
   <script>
