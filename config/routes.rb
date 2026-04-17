@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   mount ActionCable.server => "/cable"
 
-  get "/tv", to: "tv#show"
+  get "/tv",    to: "tv#show"
+  get "/learn", to: "learn#show"
 
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
