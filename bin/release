@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Release script for EZ-AZ.
+#
+# Usage:
+#   bin/release       # bump today's build number (20260417.1 -> 20260417.2)
+#   bin/release minor # new date, reset counter  (20260417.2 -> 20260418.1)
+#
+# What it does:
+#   1. Checks we're on main with a clean tree
+#   2. Runs the test suite
+#   3. Bumps the version in lib/ez_az/version.rb
+#   4. Commits the bump, pushes to main
+#   5. Polls https://ez-az.net/api/version until Hatchbox deploys the new commit
+
+VERSION_FILE="lib/ez_az/version.rb"
+PRODUCTION_URL="https://ez-az.net/api/version"
+POLL_INTERVAL=15
+POLL_TIMEOUT=300  # 5 minutes
+
+# --- Determine new version ---
+TODAY=$(date +%Y%m%d)
+CURRENT_STRING=$(grep 'STRING' "$VERSION_FILE" | grep -o '"[^"]*"' | tr -d '"')
+CURRENT_DATE="${CURRENT_STRING%%.*}"
+CURRENT_BUILD="${CURRENT_STRING##*.}"
+
+if [ "$CURRENT_DATE" = "$TODAY" ]; then
+  NEW_BUILD=$((CURRENT_BUILD + 1))
+else
+  NEW_BUILD=1
+fi
+
+NEW_VERSION="${TODAY}.${NEW_BUILD}"
+
+# --- Sanity checks ---
+BRANCH=$(git branch --show-current)
+if [ "$BRANCH" != "main" ]; then
+  echo "Error: must be on main (currently on $BRANCH)"
+  exit 1
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Error: working tree is dirty. Commit or stash changes first."
+  exit 1
+fi
+
+git fetch origin
+if [ "$(git rev-parse main)" != "$(git rev-parse origin/main)" ]; then
+  echo "Error: local main is not in sync with origin. Pull first."
+  exit 1
+fi
+
+echo "Current version: $CURRENT_STRING"
+echo "New version:     $NEW_VERSION"
+echo ""
+
+# --- Tests ---
+echo "Running tests..."
+if ! bin/rails test 2>&1; then
+  echo ""
+  echo "Error: tests failed. Fix before releasing."
+  exit 1
+fi
+echo "Tests passed."
+echo ""
+
+# --- Version bump ---
+NEW_COMMIT=$(git rev-parse --short HEAD)
+
+cat > "$VERSION_FILE" <<RUBY
+module EzAz
+  module Version
+    STRING = "${NEW_VERSION}"
+    COMMIT = "${NEW_COMMIT}"
+  end
+end
+RUBY
+
+git add "$VERSION_FILE"
+git commit -m "Release ${NEW_VERSION}"
+git push origin main
+
+NEW_COMMIT=$(git rev-parse --short HEAD)
+echo ""
+echo "Pushed. Waiting for Hatchbox to deploy ${NEW_VERSION} (${NEW_COMMIT})..."
+echo ""
+
+# --- Poll for deployment ---
+ELAPSED=0
+while [ $ELAPSED -lt $POLL_TIMEOUT ]; do
+  sleep $POLL_INTERVAL
+  ELAPSED=$((ELAPSED + POLL_INTERVAL))
+
+  RESPONSE=$(curl -sf "$PRODUCTION_URL" 2>/dev/null || echo "")
+  if [ -z "$RESPONSE" ]; then
+    echo "  [${ELAPSED}s] Production unreachable, retrying..."
+    continue
+  fi
+
+  DEPLOYED_VERSION=$(echo "$RESPONSE" | grep -o '"version":"[^"]*"' | grep -o '[0-9.]*')
+  DEPLOYED_COMMIT=$(echo "$RESPONSE" | grep -o '"commit":"[^"]*"' | grep -o '[a-f0-9]*')
+
+  echo "  [${ELAPSED}s] Production: ${DEPLOYED_VERSION} (${DEPLOYED_COMMIT})"
+
+  if [ "$DEPLOYED_VERSION" = "$NEW_VERSION" ]; then
+    echo ""
+    echo "Deployed successfully: v${NEW_VERSION}"
+    exit 0
+  fi
+done
+
+echo ""
+echo "Warning: timed out after ${POLL_TIMEOUT}s. Check Hatchbox for deploy status."
+echo "  Expected: ${NEW_VERSION}"
+echo "  Got:      ${DEPLOYED_VERSION:-unknown}"
+exit 1
