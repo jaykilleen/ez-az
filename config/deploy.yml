@@ -6,14 +6,10 @@ servers:
     hosts:
       - 172.105.171.81
 
-# ssl: false — traffic arrives via the Hatchbox LB which terminates SSL.
-# Once DNS is pointed directly at 172.105.171.81, flip ssl to true and
-# remove the forward_headers line.
 proxy:
-  ssl: false
+  ssl: true
   host: ez-az.net
   app_port: 3000
-  forward_headers: true
   healthcheck:
     path: /up
     interval: 3
