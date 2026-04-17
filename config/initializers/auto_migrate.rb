@@ -5,9 +5,7 @@
 # and cause 500 errors on every DB-touching endpoint.
 if Rails.env.production?
   begin
-    ActiveRecord::Tasks::DatabaseTasks.create_current
     ActiveRecord::Tasks::DatabaseTasks.migrate
-    ActiveRecord::Base.clear_all_connections!
   rescue => e
     Rails.logger.error("[auto_migrate] #{e.class}: #{e.message}")
     e.backtrace&.first(5)&.each { |l| Rails.logger.error("  #{l}") }
