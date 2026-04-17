@@ -19,7 +19,7 @@ RUN apt-get update -qq && \
 FROM base AS build
 
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential libsqlite3-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential libsqlite3-dev libyaml-dev pkg-config && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 COPY Gemfile Gemfile.lock ./
