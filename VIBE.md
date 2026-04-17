@@ -63,6 +63,27 @@ Things we're building toward:
 
 ---
 
+### v20260417.3 — 17 April 2026
+
+**Fixed: leaderboards and accounts were broken in production.**
+Since we shipped player accounts two days ago, every kid who tried to create an account got "Something went wrong on our end." Every game that tried to load the leaderboard on its title screen got nothing. The database existed on the server but had no tables — Hatchbox (the hosting platform) doesn't run database migrations automatically, and nobody had told it to. The scores table, the players table, all of it sitting there empty. We didn't catch it because everything works fine locally.
+
+The fix was an initializer that runs any pending migrations automatically when the server boots. Every deploy from now on, before the first request is served, the database gets checked and brought up to date. It adds maybe a second to startup time. That's fine. The alternative is shipping broken features and not knowing.
+
+Honest lesson here: just because a feature passes tests doesn't mean it works in production. The test environment had a database. Production didn't. We've got an error tracker at `/errors` to catch this kind of thing going forward — and now the database will actually be there to record those errors.
+
+**The `/whats-next` command now closes resolved issues automatically.**
+When Jay runs `/whats-next` to pick what to work on, it now cross-references recent commits against open issues and closes anything that's already been shipped. Before this, old issues were cluttering the backlog with work that was already done. Small thing, but a tidy backlog means we spend less time figuring out what to do next and more time doing it.
+
+---
+
+### v20260417.2 — 17 April 2026
+
+**VIBE.md — this file.**
+Needed a place to record what we're actually building and why. Not a README. Not a changelog. Something alive that Az updates after every deploy. The idea: if someone discovers this project six months from now, VIBE.md should tell them everything a commit history can't — the philosophy, who the kids are, what decisions were made and why. The `/vibe` command runs automatically after each deploy and writes the new entry.
+
+---
+
 ### v20260417.1 — 17 April 2026
 
 **Learning Center launched at `/learn`.**
