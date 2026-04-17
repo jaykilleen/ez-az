@@ -13,4 +13,4 @@ test:
 
 production:
   <<: *default
-  database: <%= File.exist?(File.expand_path("../../shared/data", __dir__)) ? File.expand_path("../../shared/data/leaderboard.sqlite3", __dir__) : "db/production.sqlite3" %>
+  database: storage/leaderboard.sqlite3

@@ -1,0 +1,44 @@
+service: ez-az
+image: jaykilleen/ez-az
+
+servers:
+  web:
+    hosts:
+      - 172.105.171.81
+
+# ssl: false — traffic arrives via the Hatchbox LB which terminates SSL.
+# Once DNS is pointed directly at 172.105.171.81, flip ssl to true and
+# remove the forward_headers line.
+proxy:
+  ssl: false
+  host: ez-az.net
+  app_port: 3000
+  forward_headers: true
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 10
+
+registry:
+  server: ghcr.io
+  username: jaykilleen
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    RAILS_ENV: production
+    RAILS_LOG_LEVEL: info
+    RAILS_SERVE_STATIC_FILES: "true"
+  secret:
+    - SECRET_KEY_BASE
+
+builder:
+  arch: amd64
+  context: "."
+
+ssh:
+  user: root
+
+volumes:
+  - ez_az_storage:/rails/storage

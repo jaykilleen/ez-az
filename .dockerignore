@@ -1,0 +1,17 @@
+.git
+.github
+.kamal
+.claude
+node_modules
+test-results
+playwright-report
+log/*
+tmp/*
+data/*.sqlite3
+data/*.sqlite3-shm
+data/*.sqlite3-wal
+storage/*
+*.png
+*.md
+e2e/
+test/
