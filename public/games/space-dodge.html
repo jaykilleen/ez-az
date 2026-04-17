@@ -55,7 +55,7 @@
   <button class="btn" onclick="startGame(2)">2 PLAYER - BLAST OFF!</button>
   <button class="btn" style="background:linear-gradient(135deg,#4af,#26d);margin-left:10px;" onclick="startGame(1)">1 PLAYER</button>
   <div class="info">
-    <span class="p1">P1:</span> Arrow Keys + Right Shift to shoot<br>
+    <span class="p1">P1:</span> Arrow Keys + Shift or Space to shoot<br>
     <span class="p2">P2:</span> WASD + Left Shift to shoot<br>
     1 Player mode: use either controls!<br>
     Power-ups: <span style="color:#0ff">SHIELD</span> | <span style="color:#0f0">SLOW-MO</span> | <span style="color:#f0f">SPEED</span> | <span style="color:#f00">BLAST</span> | <span style="color:#f44">REVIVE</span> | <span style="color:#fa0">MEGA GUN</span>
@@ -713,13 +713,13 @@ function update() {
   const anyAlive=players.some(p=>p.alive);
   const slow=activePowerups.slowmo?0.35:1;
   const ctrls = playerCount===1
-    ? [{up:'ArrowUp',up2:'KeyW',down:'ArrowDown',down2:'KeyS',left:'ArrowLeft',left2:'KeyA',right:'ArrowRight',right2:'KeyD',shoot:'ShiftRight',shoot2:'ShiftLeft'}]
+    ? [{up:'ArrowUp',up2:'KeyW',down:'ArrowDown',down2:'KeyS',left:'ArrowLeft',left2:'KeyA',right:'ArrowRight',right2:'KeyD',shoot:'ShiftRight',shoot2:'ShiftLeft',shoot3:'Space'}]
     : [{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',shoot:'ShiftRight'},{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',shoot:'ShiftLeft'}];
 
   players.forEach((p,i)=>{if(!p.alive)return;const c=ctrls[i];const ms=activePowerups.speed?p.baseSpeed*1.7:p.baseSpeed;
     const r=(keys[c.right]||keys[c.right2])?1:0, l=(keys[c.left]||keys[c.left2])?1:0;
     const d=(keys[c.down]||keys[c.down2])?1:0, u=(keys[c.up]||keys[c.up2])?1:0;
-    p.x+=(r-l)*ms;p.y+=(d-u)*ms;p.x=Math.max(p.w,Math.min(W-p.w,p.x));p.y=Math.max(p.h,Math.min(H-p.h,p.y));if(p.shootCooldown>0)p.shootCooldown--;if(keys[c.shoot]||keys[c.shoot2])spawnBullet(p);if(p.invincible>0)p.invincible--;});
+    p.x+=(r-l)*ms;p.y+=(d-u)*ms;p.x=Math.max(p.w,Math.min(W-p.w,p.x));p.y=Math.max(p.h,Math.min(H-p.h,p.y));if(p.shootCooldown>0)p.shootCooldown--;if(keys[c.shoot]||keys[c.shoot2]||keys[c.shoot3])spawnBullet(p);if(p.invincible>0)p.invincible--;});
 
   // ---- GAME PHASE LOGIC ----
   if(gamePhase==='PLAYING') {
