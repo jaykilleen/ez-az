@@ -28,6 +28,7 @@ env:
     RAILS_SERVE_STATIC_FILES: "true"
   secret:
     - SECRET_KEY_BASE
+    - HONEYBADGER_API_KEY
 
 builder:
   arch: amd64

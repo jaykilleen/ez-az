@@ -1,0 +1,11 @@
+api_key: "<%= ENV['HONEYBADGER_API_KEY'] %>"
+
+environments:
+  - production
+
+source_root: "/rails"
+
+request:
+  filter_keys:
+    - pin
+    - pin_confirmation
