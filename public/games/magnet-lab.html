@@ -1,0 +1,330 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 JAYKILL -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
+<script src="/error-reporter.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Magnet Lab - by JAYKILL</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    border: 2px solid #244;
+    border-radius: 8px;
+    background: #050a14;
+    box-shadow: 0 0 40px rgba(0, 200, 255, 0.15);
+  }
+
+  .store-banner {
+    position: fixed; top: 0; left: 0; width: 100%;
+    text-align: center; padding: 6px 0; z-index: 30;
+    background: rgba(0,0,0,0.6);
+  }
+  .store-banner a {
+    text-decoration: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .store-banner a:hover { opacity: 1; }
+
+  #overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 5, 15, 0.94);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    color: #fff; z-index: 10;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 2rem;
+    background: linear-gradient(to right, #00ccff, #ff4477);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(0, 204, 255, 0.4);
+    margin-bottom: 0.4rem;
+    letter-spacing: 2px;
+  }
+  #overlay .subtitle { font-size: 0.95rem; color: #88bbff; margin-bottom: 0.4rem; letter-spacing: 1px; }
+  #overlay .byline   { font-size: 0.75rem; color: #557; margin-bottom: 1.5rem; font-family: 'Press Start 2P', monospace; }
+  #overlay .instructions {
+    font-size: 0.85rem; color: #ccd; text-align: center;
+    line-height: 1.9; margin-bottom: 1.5rem;
+    background: rgba(0, 100, 180, 0.12);
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    padding: 0.9rem 1.6rem; border-radius: 8px;
+    max-width: 520px;
+  }
+  #overlay .instructions b { color: #00ccff; }
+  #overlay .instructions .p2 { color: #ff7799; }
+  #startBtn {
+    background: linear-gradient(135deg, #00ccff, #0077cc);
+    color: #fff; border: none;
+    padding: 0.85rem 2.5rem; font-size: 1.1rem;
+    font-family: 'Press Start 2P', monospace;
+    cursor: pointer; letter-spacing: 2px; border-radius: 6px;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 0 24px rgba(0, 204, 255, 0.4);
+  }
+  #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 36px rgba(0, 204, 255, 0.7); }
+</style>
+</head>
+<body>
+
+<div class="store-banner"><a href="/">EZ-AZ</a></div>
+
+<div id="overlay">
+  <h1>MAGNET LAB</h1>
+  <div class="subtitle">Co-op physics puzzle — sit at opposite ends of the table</div>
+  <div class="byline">by JAYKILL</div>
+  <div class="instructions">
+    Two robot scientists work together to guide energy balls to the target.<br>
+    <br>
+    <b>Player 1</b> (bottom of table): <b>ARROW KEYS</b> to move, <b>SPACE</b> to place magnet<br>
+    <span class="p2"><b>Player 2</b> (top of table): <b>WASD</b> to move, <b>SHIFT</b> to place magnet</span><br>
+    <br>
+    Take turns placing magnets. Push and pull the ball to the target.<br>
+    More accurate = more points. Score as many puzzles as you can in 2 minutes.<br>
+    <br>
+    <b>ESC</b> to pause.
+  </div>
+  <button id="startBtn">START</button>
+</div>
+
+<canvas id="game" width="700" height="800"></canvas>
+
+<script>
+(function () {
+  'use strict';
+
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var overlay = document.getElementById('overlay');
+  var startBtn = document.getElementById('startBtn');
+
+  // Game state
+  var state = 'title'; // 'title', 'playing', 'paused', 'over'
+  var keys = {};
+
+  // Board layout: centre arena, player strips at top and bottom
+  var STRIP = 80; // height of each player's UI strip
+  var boardTop = STRIP;
+  var boardBottom = H - STRIP;
+  var boardHeight = boardBottom - boardTop;
+
+  // Two cursors - one for each player
+  var p1 = {
+    x: W * 0.35,
+    y: H - 150,
+    color: '#00ccff',
+    label: 'P1'
+  };
+  var p2 = {
+    x: W * 0.65,
+    y: 150,
+    color: '#ff4477',
+    label: 'P2'
+  };
+
+  var CURSOR_SPEED = 4;
+
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  // Input
+  window.addEventListener('keydown', function (e) {
+    keys[e.key] = true;
+    keys[e.code] = true;
+    if (e.key === 'Escape' && state === 'playing') {
+      state = 'paused';
+    } else if (e.key === 'Escape' && state === 'paused') {
+      state = 'playing';
+    }
+    // Prevent page scroll on arrows/space
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Space'].indexOf(e.key) !== -1) {
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', function (e) {
+    keys[e.key] = false;
+    keys[e.code] = false;
+  });
+
+  startBtn.addEventListener('click', function () {
+    overlay.classList.add('hidden');
+    state = 'playing';
+  });
+
+  function update() {
+    if (state !== 'playing') return;
+
+    // P1 controls: Arrow keys
+    if (keys['ArrowLeft'])  p1.x -= CURSOR_SPEED;
+    if (keys['ArrowRight']) p1.x += CURSOR_SPEED;
+    if (keys['ArrowUp'])    p1.y -= CURSOR_SPEED;
+    if (keys['ArrowDown'])  p1.y += CURSOR_SPEED;
+
+    // P2 controls: WASD
+    if (keys['a'] || keys['A']) p2.x -= CURSOR_SPEED;
+    if (keys['d'] || keys['D']) p2.x += CURSOR_SPEED;
+    if (keys['w'] || keys['W']) p2.y -= CURSOR_SPEED;
+    if (keys['s'] || keys['S']) p2.y += CURSOR_SPEED;
+
+    // Keep cursors inside the board
+    p1.x = clamp(p1.x, 20, W - 20);
+    p1.y = clamp(p1.y, boardTop + 20, boardBottom - 20);
+    p2.x = clamp(p2.x, 20, W - 20);
+    p2.y = clamp(p2.y, boardTop + 20, boardBottom - 20);
+  }
+
+  function drawBoard() {
+    // Background grid on the play area
+    ctx.fillStyle = '#050a14';
+    ctx.fillRect(0, boardTop, W, boardHeight);
+
+    ctx.strokeStyle = 'rgba(0, 120, 180, 0.15)';
+    ctx.lineWidth = 1;
+    var g = 40;
+    for (var x = 0; x < W; x += g) {
+      ctx.beginPath();
+      ctx.moveTo(x, boardTop); ctx.lineTo(x, boardBottom);
+      ctx.stroke();
+    }
+    for (var y = boardTop; y < boardBottom; y += g) {
+      ctx.beginPath();
+      ctx.moveTo(0, y); ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Board frame
+    ctx.strokeStyle = '#244';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, boardTop, W, boardHeight);
+  }
+
+  function drawStrips() {
+    // P1 strip (bottom - reads right side up)
+    ctx.fillStyle = '#080010';
+    ctx.fillRect(0, boardBottom, W, STRIP);
+    ctx.strokeStyle = p1.color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(4, boardBottom + 4, W - 8, STRIP - 8);
+
+    ctx.fillStyle = p1.color;
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P1 ROBOT', 16, boardBottom + STRIP / 2);
+
+    // P2 strip (top - upside down so P2 reads right side up from the other end)
+    ctx.fillStyle = '#080010';
+    ctx.fillRect(0, 0, W, STRIP);
+    ctx.strokeStyle = p2.color;
+    ctx.strokeRect(4, 4, W - 8, STRIP - 8);
+
+    ctx.save();
+    ctx.translate(W, STRIP);
+    ctx.rotate(Math.PI);
+    ctx.fillStyle = p2.color;
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P2 ROBOT', 16, STRIP / 2);
+    ctx.restore();
+  }
+
+  function drawCursor(p, pointingUp) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    if (!pointingUp) ctx.rotate(Math.PI);
+
+    // Crosshair
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-20, 0); ctx.lineTo(-10, 0);
+    ctx.moveTo(10, 0);  ctx.lineTo(20, 0);
+    ctx.moveTo(0, -20); ctx.lineTo(0, -10);
+    ctx.moveTo(0, 10);  ctx.lineTo(0, 20);
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    // Label
+    ctx.fillStyle = p.color;
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(p.label, 0, 22);
+
+    ctx.restore();
+  }
+
+  function drawPaused() {
+    ctx.fillStyle = 'rgba(0, 0, 20, 0.78)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#00ccff';
+    ctx.font = '28px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PAUSED', W / 2, H / 2 - 20);
+    ctx.fillStyle = '#88bbff';
+    ctx.font = '12px "Press Start 2P", monospace';
+    ctx.fillText('Press ESC to resume', W / 2, H / 2 + 20);
+  }
+
+  function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    drawBoard();
+    drawStrips();
+
+    // Cursors - P1 right-side up, P2 upside down
+    drawCursor(p1, true);
+    drawCursor(p2, false);
+
+    if (state === 'paused') drawPaused();
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+})();
+</script>
+</body>
+</html>
