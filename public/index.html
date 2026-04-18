@@ -1160,16 +1160,20 @@
         </div>
       </a>
 
-      <div class="game-box coming-soon">
-        <div class="game-box-art placeholder">
-          <div class="placeholder-text">COMING<br>SOON</div>
+      <a href="/games/magnet-lab.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="magnetLabCover" width="220" height="280"></canvas>
         </div>
         <div class="game-box-info">
-          <div class="game-box-title">Your Game Here</div>
-          <div class="game-box-creators">By You</div>
-          <div class="game-box-desc">Got an idea? Build it and put it on the shelf.</div>
+          <div class="game-box-title">Magnet Lab</div>
+          <div class="game-box-creators">By Jaykill</div>
+          <div class="game-box-desc">
+            Co-op physics puzzle. Sit across the table, push and pull energy balls to the target.
+          </div>
+          <span class="game-box-badge">2 PLAYERS</span><br>
+          <span class="game-box-scores" data-game="magnet-lab">High Scores</span>
         </div>
-      </div>
+      </a>
 
       <div class="game-box coming-soon">
         <div class="game-box-art placeholder">
@@ -2045,6 +2049,155 @@
       ctx.lineWidth = 1.5;
       ctx.strokeRect(6, 12, 20, 20);
     })();
+
+    // Draw the Magnet Lab cover art
+    (function () {
+      var canvas = document.getElementById('magnetLabCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width;
+      var H = canvas.height;
+
+      // Dark lab background with subtle gradient
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#0a1428');
+      grad.addColorStop(1, '#05101f');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(0, 180, 240, 0.15)';
+      ctx.lineWidth = 1;
+      for (var x = 0; x <= W; x += 20) {
+        ctx.beginPath(); ctx.moveTo(x, 40); ctx.lineTo(x, H - 40); ctx.stroke();
+      }
+      for (var y = 40; y <= H - 40; y += 20) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // P2 cursor at top (pink, pointing down)
+      ctx.save();
+      ctx.translate(W * 0.3, 70);
+      ctx.strokeStyle = '#ff4477';
+      ctx.shadowColor = '#ff4477';
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-15, 0); ctx.lineTo(-7, 0);
+      ctx.moveTo(7, 0); ctx.lineTo(15, 0);
+      ctx.moveTo(0, -15); ctx.lineTo(0, -7);
+      ctx.moveTo(0, 7); ctx.lineTo(0, 15);
+      ctx.stroke();
+      ctx.restore();
+
+      // Blue pull magnet (left)
+      ctx.save();
+      ctx.translate(W * 0.28, H * 0.45);
+      // Field ring
+      ctx.strokeStyle = 'rgba(0, 180, 255, 0.5)';
+      ctx.shadowColor = '#00ccff';
+      ctx.shadowBlur = 14;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.stroke();
+      // Magnet body (horseshoe)
+      ctx.fillStyle = '#0099dd';
+      ctx.fillRect(-14, -4, 8, 16);
+      ctx.fillRect(6, -4, 8, 16);
+      ctx.fillRect(-14, -4, 28, 6);
+      ctx.fillStyle = '#ff2222';
+      ctx.fillRect(-14, 8, 8, 4);
+      ctx.fillRect(6, 8, 8, 4);
+      ctx.restore();
+
+      // Red push magnet (right)
+      ctx.save();
+      ctx.translate(W * 0.72, H * 0.55);
+      ctx.strokeStyle = 'rgba(255, 80, 120, 0.5)';
+      ctx.shadowColor = '#ff4477';
+      ctx.shadowBlur = 14;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#dd2255';
+      ctx.fillRect(-14, -4, 8, 16);
+      ctx.fillRect(6, -4, 8, 16);
+      ctx.fillRect(-14, -4, 28, 6);
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(-14, 8, 8, 4);
+      ctx.fillRect(6, 8, 8, 4);
+      ctx.restore();
+
+      // Energy ball mid-flight with trail
+      ctx.save();
+      ctx.shadowBlur = 0;
+      var bx = W * 0.5, by = H * 0.5;
+      for (var i = 6; i > 0; i--) {
+        ctx.fillStyle = 'rgba(255, 238, 80, ' + (i * 0.08) + ')';
+        ctx.beginPath();
+        ctx.arc(bx - i * 6, by + i * 2, 8 - i * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Ball
+      var bgrad = ctx.createRadialGradient(bx - 2, by - 2, 1, bx, by, 9);
+      bgrad.addColorStop(0, '#ffffcc');
+      bgrad.addColorStop(1, '#ffaa00');
+      ctx.fillStyle = bgrad;
+      ctx.shadowColor = '#ffdd44';
+      ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(bx, by, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Target zone (centre-bottom area)
+      ctx.save();
+      ctx.translate(W * 0.5, H * 0.72);
+      ctx.strokeStyle = '#00ffc8';
+      ctx.shadowColor = '#00ffc8';
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 2;
+      for (var r = 6; r <= 22; r += 6) {
+        ctx.globalAlpha = 1 - r / 30;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#00ffc8';
+      ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // P1 cursor at bottom (cyan)
+      ctx.save();
+      ctx.translate(W * 0.7, H - 70);
+      ctx.strokeStyle = '#00ccff';
+      ctx.shadowColor = '#00ccff';
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-15, 0); ctx.lineTo(-7, 0);
+      ctx.moveTo(7, 0); ctx.lineTo(15, 0);
+      ctx.moveTo(0, -15); ctx.lineTo(0, -7);
+      ctx.moveTo(0, 7); ctx.lineTo(0, 15);
+      ctx.stroke();
+      ctx.restore();
+
+      // Title text
+      ctx.shadowColor = '#00ccff';
+      ctx.shadowBlur = 10;
+      ctx.font = 'bold 14px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('MAGNET LAB', W / 2, H - 20);
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+
+      // Rating badge
+      ctx.fillStyle = '#00ccff';
+      ctx.font = 'bold 10px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('E', 12, 26);
+      ctx.strokeStyle = '#00ccff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(6, 12, 20, 20);
+    })();
   </script>
 
   <script>
@@ -2167,7 +2320,8 @@
         'cat-vs-mouse': 'Cat vs Mouse',
         'dodgeball': 'Dodgeball',
         'descent': 'Descent',
-        'corrupted': 'Corrupted'
+        'corrupted': 'Corrupted',
+        'magnet-lab': 'Magnet Lab'
       };
 
       var timeGames = { bloom: true, descent: true };

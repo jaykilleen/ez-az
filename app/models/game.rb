@@ -47,6 +47,14 @@ class Game
       tagline: "Chill exploration, time-based scoring, no pressure",
       path: "/games/bloom.html",
       icon: "bloom"
+    },
+    {
+      slug: "magnet-lab",
+      title: "Magnet Lab",
+      creators: "Jaykill",
+      tagline: "Co-op physics puzzle, push and pull energy balls across the table",
+      path: "/games/magnet-lab.html",
+      icon: "magnet"
     }
   ].freeze
 

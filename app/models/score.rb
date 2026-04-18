@@ -6,7 +6,8 @@ class Score < ApplicationRecord
     "cat-vs-mouse" => :desc,
     "dodgeball" => :desc,
     "descent" => :asc,
-    "corrupted" => :desc
+    "corrupted" => :desc,
+    "magnet-lab" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -15,7 +16,8 @@ class Score < ApplicationRecord
     "cat-vs-mouse" => "ANON",
     "dodgeball" => "LACHIE",
     "descent" => "ANON",
-    "corrupted" => "COOPER"
+    "corrupted" => "COOPER",
+    "magnet-lab" => "JAYKILL"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }
