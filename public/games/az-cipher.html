@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cipher — EZ-AZ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    .store-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 36px;
+      background: #0a0a0a;
+      border-bottom: 1px solid #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .store-banner a {
+      color: #00ff88;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 4px;
+    }
+    .store-banner a:hover { color: #fff; }
+
+    canvas {
+      display: block;
+      margin-top: 36px;
+      max-width: 100%;
+      touch-action: none;
+    }
+
+    /* ── Start screen ── */
+    #start-screen {
+      position: fixed;
+      top: 36px; left: 0; right: 0; bottom: 0;
+      background: #050510;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 26px;
+      z-index: 50;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .locked-badge {
+      border: 1px solid #4a2200;
+      color: #aa4400;
+      font-size: 10px;
+      letter-spacing: 5px;
+      padding: 5px 16px;
+      margin-bottom: 16px;
+      background: #1a0800;
+    }
+
+    .game-title {
+      color: #00ff88;
+      font-size: 30px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      text-shadow: 0 0 24px #00ff8855;
+      margin-bottom: 4px;
+    }
+
+    .game-subtitle {
+      color: #334d40;
+      font-size: 11px;
+      letter-spacing: 4px;
+      margin-bottom: 22px;
+    }
+
+    .az-story {
+      color: #6677aa;
+      font-size: 13px;
+      text-align: center;
+      max-width: 520px;
+      line-height: 2;
+      margin-bottom: 24px;
+      padding: 0 24px;
+    }
+    .az-story strong { color: #ffcc00; font-weight: normal; }
+
+    .section-label {
+      color: #2a3344;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+    }
+
+    .diff-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .diff-btn {
+      background: transparent;
+      border: 1px solid #151525;
+      color: #445566;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .diff-btn.easy:hover,   .diff-btn.easy.active   { border-color: #44ff88; color: #44ff88; background: #44ff8810; }
+    .diff-btn.medium:hover, .diff-btn.medium.active { border-color: #ffcc00; color: #ffcc00; background: #ffcc0010; }
+    .diff-btn.hard:hover,   .diff-btn.hard.active   { border-color: #ff5544; color: #ff5544; background: #ff554410; }
+
+    .diff-info {
+      color: #2a3344;
+      font-size: 11px;
+      margin-bottom: 22px;
+      min-height: 16px;
+    }
+
+    .start-btn {
+      background: #00ff8814;
+      border: 2px solid #00ff88;
+      color: #00ff88;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 5px;
+      padding: 14px 44px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 28px;
+    }
+    .start-btn:hover {
+      background: #00ff8828;
+      box-shadow: 0 0 28px #00ff8828;
+    }
+
+    .leaderboard-wrap {
+      width: 380px;
+      border: 1px solid #0e0e1e;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .lb-title {
+      color: #1e2e2e;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .lb-empty {
+      color: #1e2e2e;
+      font-size: 12px;
+      text-align: center;
+      padding: 8px 0;
+    }
+    .lb-row {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid #0a0a18;
+    }
+    .lb-rank { color: #2a3344; width: 24px; flex-shrink: 0; }
+    .lb-name { color: #556677; flex: 1; }
+    .lb-score { color: #00cc66; }
+
+    /* ── Pause screen ── */
+    #pause-screen {
+      position: fixed;
+      top: 36px; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 5, 16, 0.92);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .pause-title {
+      color: #00ff88;
+      font-size: 26px;
+      letter-spacing: 8px;
+      margin-bottom: 32px;
+      text-shadow: 0 0 20px #00ff8844;
+    }
+    .pause-btn {
+      background: transparent;
+      border: 1px solid #151525;
+      color: #445566;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 3px;
+      padding: 11px 28px;
+      cursor: pointer;
+      margin: 5px;
+      transition: all 0.15s;
+      min-width: 200px;
+      text-align: center;
+    }
+    .pause-btn:hover { border-color: #00ff88; color: #00ff88; }
+
+    /* ── Solved screen ── */
+    #solved-screen {
+      position: fixed;
+      top: 36px; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 5, 16, 0.88);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 20px;
+      z-index: 55;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .solved-panel {
+      width: min(440px, calc(100vw - 32px));
+      background: #080814;
+      border: 1px solid #00ff8822;
+      padding: 24px 28px 20px;
+      text-align: center;
+    }
+    .solved-title {
+      color: #00ff88;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 5px;
+      text-shadow: 0 0 20px #00ff8855;
+      margin-bottom: 6px;
+    }
+    .solved-sub {
+      color: #225533;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+    .solved-score-num {
+      color: #ffcc00;
+      font-size: 42px;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .solved-score-lbl {
+      color: #443300;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+    .solved-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 16px;
+    }
+    .solved-stats span { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .solved-stats .sv { font-size: 15px; font-weight: bold; color: #66aacc; }
+    .solved-stats .sv.bad { color: #ff7766; }
+    .solved-stats .sv.good { color: #00ff88; }
+    .solved-stats .sl { font-size: 9px; letter-spacing: 3px; color: #334455; }
+    .solved-divider {
+      border: none; border-top: 1px solid #0e0e1e;
+      margin: 14px 0;
+    }
+    #ss-name-entry {
+      margin-bottom: 14px;
+    }
+    .ss-name-label {
+      color: #aa8800;
+      font-size: 9px;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+    .ss-name-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    #ss-name-input {
+      background: #0a0a16;
+      border: 1px solid #334455;
+      color: #00ff88;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      letter-spacing: 5px;
+      padding: 7px 12px;
+      width: 160px;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+    }
+    #ss-name-input:focus { border-color: #00ff8866; }
+    .ss-submit-btn {
+      background: transparent;
+      border: 1px solid #00ff8844;
+      color: #00ff88;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      padding: 7px 16px;
+      cursor: pointer;
+    }
+    .ss-submit-btn:hover { border-color: #00ff88; }
+    .solved-lb-title {
+      color: #1e2e2e;
+      font-size: 10px;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+    .ss-lb-row {
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      padding: 3px 0;
+      border-bottom: 1px solid #0a0a18;
+    }
+    .ss-lb-row.mine { background: #001a0d; }
+    .ss-lb-row.mine .lb-rank  { color: #00aa55; }
+    .ss-lb-row.mine .lb-name  { color: #00ff88; }
+    .ss-lb-row.mine .lb-score { color: #ffcc00; }
+    .solved-session {
+      color: #223344;
+      font-size: 9px;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+    .ss-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .ss-btn {
+      background: transparent;
+      border: 1px solid #151525;
+      color: #445566;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ss-btn:hover { border-color: #00ff88; color: #00ff88; }
+    .ss-btn.primary { border-color: #003322; color: #00aa66; }
+    .ss-btn.primary:hover { border-color: #00ff88; color: #00ff88; }
+  </style>
+</head>
+<body>
+
+<div class="store-banner"><a href="/">EZ-AZ</a></div>
+
+<canvas id="gameCanvas" width="800" height="620"></canvas>
+
+<!-- Start screen -->
+<div id="start-screen">
+  <div class="locked-badge">STORE LOCKED</div>
+  <div class="game-title">CIPHER</div>
+  <div class="game-subtitle">CRACK THE CODE. OPEN THE STORE.</div>
+
+  <div class="az-story">
+    Az has locked up for the night and set a secret cipher on the door.<br>
+    <strong>One word</strong> is your clue — use it to deduce the rest, letter by letter.<br>
+    Crack the full sentence and unlock EZ-AZ.
+  </div>
+
+  <div class="az-story" style="font-size:11px; color:#2a3a4a; margin-top:-12px; margin-bottom:16px;">
+    <strong style="color:#334455">Touch / tablet:</strong> tap a tile to open the letter picker &nbsp;·&nbsp;
+    <strong style="color:#334455">Keyboard:</strong> click a tile then type · Tab to jump · Enter to submit
+  </div>
+
+  <div class="section-label">DIFFICULTY</div>
+  <div class="diff-buttons">
+    <button class="diff-btn easy"          onclick="selectDifficulty('easy')">EASY</button>
+    <button class="diff-btn medium active" onclick="selectDifficulty('medium')">MEDIUM</button>
+    <button class="diff-btn hard"          onclick="selectDifficulty('hard')">HARD</button>
+  </div>
+  <div class="diff-info" id="diff-info">8-12 words — 500 pts base, -30 per error, time bonus</div>
+
+  <button class="start-btn" onclick="startGame()">CRACK THE CIPHER</button>
+
+  <div class="leaderboard-wrap">
+    <div class="lb-title">TOP CODEBREAKERS</div>
+    <div id="lb-list"><div class="lb-empty">Loading...</div></div>
+  </div>
+</div>
+
+<!-- Pause screen -->
+<div id="pause-screen">
+  <div class="pause-title">PAUSED</div>
+  <button class="pause-btn" onclick="resumeGame()">RESUME</button>
+  <button class="pause-btn" onclick="restartGame()">RESTART GAME</button>
+  <button class="pause-btn" onclick="quitGame()">BACK TO STORE</button>
+</div>
+
+<!-- Solved screen -->
+<div id="solved-screen">
+  <div class="solved-panel">
+    <div class="locked-badge" style="color:#00aa55;border-color:#004422;background:#001a0a;">STORE UNLOCKED</div>
+    <div class="solved-title">CIPHER CRACKED!</div>
+    <div class="solved-sub">EZ-AZ IS NOW OPEN</div>
+
+    <div class="solved-score-num" id="ss-score">0</div>
+    <div class="solved-score-lbl">SCORE</div>
+
+    <div class="solved-stats">
+      <span><span class="sv" id="ss-time">00:00</span><span class="sl">TIME</span></span>
+      <span><span class="sv" id="ss-errors">0</span><span class="sl">ERRORS</span></span>
+      <span><span class="sv" id="ss-hints">0</span><span class="sl">HINTS</span></span>
+    </div>
+
+    <hr class="solved-divider">
+
+    <div id="ss-name-entry" style="display:none;">
+      <div class="ss-name-label">YOU MADE THE TOP 10 — ENTER YOUR GAMER NAME</div>
+      <div class="ss-name-row">
+        <input id="ss-name-input" maxlength="12" autocomplete="off" spellcheck="false"
+               placeholder="YOUR NAME" onkeydown="if(event.key==='Enter')submitName()">
+        <button class="ss-submit-btn" onclick="submitName()">SAVE</button>
+      </div>
+    </div>
+
+    <div class="solved-lb-title">TOP CODEBREAKERS</div>
+    <div id="ss-lb-list"><div class="lb-empty">Loading...</div></div>
+
+    <div class="solved-session" id="ss-session"></div>
+
+    <div class="ss-btns">
+      <button class="ss-btn primary" onclick="nextPuzzle(null)">NEXT PUZZLE</button>
+      <button class="ss-btn primary" id="ss-upgrade-btn" style="display:none;" onclick="">UPGRADE</button>
+      <button class="ss-btn" onclick="restartGame()">BACK TO MENU</button>
+      <button class="ss-btn" onclick="quitGame()">QUIT TO STORE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── SENTENCES ─────────────────────────────────────────────────────────────────
+
+const SENTENCES = {
+  easy: [
+    "THE CAT SAT ON THE BIG RED MAT",
+    "MY DOG LIKES TO PLAY IN THE PARK",
+    "PIZZA IS THE BEST FOOD IN THE WORLD",
+    "DINOSAURS ROAMED THE EARTH VERY LONG AGO",
+    "SPACE IS FULL OF STARS AND PLANETS",
+    "ICE CREAM TASTES BEST ON A HOT DAY",
+    "FROGS CAN JUMP REALLY HIGH WHEN SCARED",
+    "SHARKS SWIM FAST AND HAVE SHARP TEETH",
+    "THE MOON GLOWS BRIGHT ON DARK CLEAR NIGHTS",
+    "ROBOTS ARE COOL AND VERY SMART",
+    "CATS ALWAYS LAND ON THEIR FEET WHEN THEY FALL",
+    "THE SUN SETS RED OVER THE CALM BLUE SEA",
+    "EVERY CLOUD IN THE SKY HAS A SILVER LINING",
+    "BIRDS FLY SOUTH WHEN THE COLD WINTER COMES",
+    "A GOOD BOOK IS THE BEST FRIEND YOU HAVE",
+  ],
+  medium: [
+    "MY LITTLE SISTER ALWAYS HIDES CHOCOLATE BISCUITS UNDER HER BED",
+    "WIZARDS CAN CAST SPELLS THAT MAKE THINGS DISAPPEAR IN SMOKE",
+    "THE FASTEST RUNNER IN SCHOOL WON A GOLDEN TROPHY TODAY",
+    "PENGUINS SLIDE ON ICE AND CATCH FISH WITH THEIR BEAKS",
+    "SECRETLY EATING BIRTHDAY CAKE FOR BREAKFAST IS THE BEST FEELING",
+    "DRAGONS FLY OVER MOUNTAINS AND BREATHE FIRE INTO THE NIGHT SKY",
+    "THE TREASURE MAP LED THEM DEEP INTO THE SPOOKY OLD FOREST",
+    "ASTRONAUTS FLOAT IN ZERO GRAVITY AND EAT FOOD FROM A TUBE",
+    "EVERY MORNING THE BAKER WAKES UP BEFORE SUNRISE TO MAKE BREAD",
+    "THE QUIET LIBRARY HAS THOUSANDS OF BOOKS ABOUT MAGIC AND SCIENCE",
+    "CHARLIE AND COOPER BUILT A ROCKET SHIP FROM OLD CARDBOARD BOXES",
+    "NEVER TRUST A PIRATE WHO SMILES TOO MUCH AND SHARES HIS GOLD",
+    "THE GIANT SQUID LIVES SO DEEP THAT NO LIGHT EVER REACHES IT",
+    "JAYKILL FOUND A SECRET DOOR BEHIND THE BOOKSHELF IN THE LIBRARY",
+    "ZOMBIES ARE SLOW BUT THERE ARE ALWAYS TOO MANY OF THEM",
+  ],
+  hard: [
+    "MY LITTLE SISTER ALWAYS HIDES CHOCOLATE BISCUITS UNDER HER BED WHEN NOBODY IS LOOKING",
+    "BRAVE EXPLORERS DISCOVERED A MYSTERIOUS ANCIENT TEMPLE HIDDEN DEEP IN THE JUNGLE",
+    "THE CHAMPIONSHIP FINAL WAS DECIDED BY A LAST MINUTE GOAL FROM THE YOUNGEST PLAYER",
+    "SCIENTISTS BELIEVE SOMEWHERE IN THE UNIVERSE THERE MIGHT BE CREATURES JUST LIKE US",
+    "EVERY SINGLE MORNING THE BAKER WAKES UP BEFORE SUNRISE TO MAKE THE PERFECT LOAF OF BREAD",
+    "THE MOST DANGEROUS DRAGON IN THE KINGDOM HAD WINGS MADE OF DARKNESS AND BREATHED PURPLE FIRE",
+    "WHEN THE WIZARD OPENED THE ANCIENT SPELLBOOK A CLOUD OF GOLDEN DUST FILLED THE ENTIRE ROOM",
+    "NOBODY KNEW THAT BENEATH THE OLD SCHOOL BUILDING THERE WAS A SECRET LABORATORY FULL OF ROBOTS",
+    "JAYKILL DISCOVERED A HIDDEN PASSAGE BEHIND THE WATERFALL LEADING TO A GLOWING UNDERGROUND CITY",
+    "THE GREATEST ADVENTURE ALWAYS BEGINS WITH A SINGLE BRAVE STEP INTO THE UNKNOWN DARKNESS BEYOND",
+    "AZ LOCKED THE STORE AND SET THE CIPHER BUT FORGOT THAT SOMEONE WAS HIDING BEHIND THE SHELVES",
+    "COOPER SPENT THREE DAYS BUILDING THE PERFECT FORTRESS OUT OF BLANKETS AND SOFA CUSHIONS",
+  ],
+};
+
+const DIFF_INFO = {
+  easy:   'Short sentences — 300 pts base, -20 per error, time bonus',
+  medium: '8-12 words — 500 pts base, -30 per error, time bonus',
+  hard:   'Long sentences — 800 pts base, -40 per error, time bonus',
+};
+
+const SCORING = {
+  easy:   { base: 300, errorPenalty: 20, timeBonusPer30s: 50,  hintPenalty: 50  },
+  medium: { base: 500, errorPenalty: 30, timeBonusPer30s: 80,  hintPenalty: 80  },
+  hard:   { base: 800, errorPenalty: 40, timeBonusPer30s: 120, hintPenalty: 120 },
+};
+const MAX_HINTS = 3;
+
+function calculateScore(difficulty, solveTime, wrongGuesses, hintsUsed) {
+  const s = SCORING[difficulty];
+  const intervals = Math.max(0, 10 - Math.floor(solveTime / 30));
+  const timeBonus = intervals * s.timeBonusPer30s;
+  return Math.max(0, s.base + timeBonus - wrongGuesses * s.errorPenalty - hintsUsed * s.hintPenalty);
+}
+
+function liveScore() {
+  const elapsed = (G.phase === 'playing' || G.phase === 'checking')
+    ? Math.floor((Date.now() - G.startTime) / 1000)
+    : 0;
+  return calculateScore(G.difficulty, elapsed, G.wrongGuesses, G.hintsUsed);
+}
+
+function isFullSubmitReady() {
+  if (!G.tiles.length) return false;
+  const remaining = [...new Set(G.tiles.filter(t => !t.isClue && !G.confirmed.has(t.cipherLetter)).map(t => t.cipherLetter))];
+  return remaining.length > 0 && remaining.every(cl => G.playerMap[cl]);
+}
+
+// ── CIPHER ────────────────────────────────────────────────────────────────────
+
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function generateDerangement() {
+  let arr;
+  do {
+    arr = Array.from({ length: 26 }, (_, i) => i);
+    for (let i = 25; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  } while (arr.some((v, i) => v === i));
+  return arr;
+}
+
+function buildCipher(d) {
+  const encode = {}, decode = {};
+  for (let i = 0; i < 26; i++) {
+    encode[ALPHA[i]] = ALPHA[d[i]];
+    decode[ALPHA[d[i]]] = ALPHA[i];
+  }
+  return { encode, decode };
+}
+
+function encodeSentence(sentence, encode) {
+  return sentence.split('').map(c => c === ' ' ? ' ' : encode[c]).join('');
+}
+
+// ── CLUE WORD SELECTION ───────────────────────────────────────────────────────
+
+function pickClueWord(plainWords, encodedWords) {
+  const freq = {};
+  for (const w of encodedWords) for (const c of w) freq[c] = (freq[c] || 0) + 1;
+
+  let best = -1, bestIdx = 0;
+  plainWords.forEach((word, i) => {
+    const uniqueEncoded = new Set(encodedWords[i]);
+    const uniquePlain = new Set(word);
+    let coverage = 0;
+    for (const c of uniqueEncoded) coverage += freq[c];
+    const score = uniquePlain.size * coverage;
+    if (score > best) { best = score; bestIdx = i; }
+  });
+  return bestIdx;
+}
+
+// ── TILE LAYOUT ───────────────────────────────────────────────────────────────
+
+// Base tile dimensions at 800px canvas width — scaled at runtime
+const TW_B = 34, TH_B = 66, TG_B = 3, WG_B = 14, LH_B = 86, PAD_B = 28;
+const TOP = 108; // HUD height — fixed, does not scale
+
+let SCALE = 1;
+let TW = TW_B, TH = TH_B, TG = TG_B, WG = WG_B, LH = LH_B, PAD = PAD_B;
+
+function fnt(size) {
+  return `bold ${Math.max(9, Math.round(size * SCALE))}px Courier New`;
+}
+
+function layoutTiles(plainWords, encodedWords, clueEncodedSet) {
+  const W = 800;
+  const usable = W - PAD * 2;
+
+  const wordPx = plainWords.map(w => w.length * TW + (w.length - 1) * TG);
+
+  // Word-wrap into lines
+  const lines = [];
+  let line = [], lineW = 0;
+  plainWords.forEach((w, i) => {
+    const gap = line.length > 0 ? WG : 0;
+    if (lineW + gap + wordPx[i] > usable && line.length > 0) {
+      lines.push(line);
+      line = [i];
+      lineW = wordPx[i];
+    } else {
+      line.push(i);
+      lineW += gap + wordPx[i];
+    }
+  });
+  if (line.length > 0) lines.push(line);
+
+  const tiles = [];
+  lines.forEach((idxs, li) => {
+    const totalW = idxs.reduce((s, wi, i) => s + (i > 0 ? WG : 0) + wordPx[wi], 0);
+    let x = (W - totalW) / 2;
+    const y = TOP + li * LH;
+
+    idxs.forEach(wi => {
+      const pWord = plainWords[wi];
+      const eWord = encodedWords[wi];
+      pWord.split('').forEach((pc, ci) => {
+        tiles.push({
+          plainLetter:  pc,
+          cipherLetter: eWord[ci],
+          x, y,
+          isClue: clueEncodedSet.has(eWord[ci]),
+          wordIndex: wi,
+          charIndex: ci,
+        });
+        x += TW + (ci < pWord.length - 1 ? TG : 0);
+      });
+      x += WG;
+    });
+  });
+
+  return { tiles, numLines: lines.length };
+}
+
+// ── GAME STATE ────────────────────────────────────────────────────────────────
+
+// Session persists across puzzles until the player returns to the menu
+const SESSION = {
+  puzzlesSolved: 0,
+  totalErrors: 0,
+  used: { easy: new Set(), medium: new Set(), hard: new Set() },
+};
+
+function resetSession() {
+  SESSION.puzzlesSolved = 0;
+  SESSION.totalErrors   = 0;
+  SESSION.used.easy.clear();
+  SESSION.used.medium.clear();
+  SESSION.used.hard.clear();
+}
+
+const NEXT_DIFF = { easy: 'medium', medium: 'hard', hard: null };
+
+const SPIN_DURATION = 600;
+const SPIN_STAGGER  = 80;
+const SPIN_TICK     = 90;
+const SPIN_CHARS    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const G = {
+  phase: 'start',
+  showPicker: false,
+  flash: { wrong: new Set(), correct: new Set(), endTime: 0 },
+  difficulty: 'medium',
+  sentence: '', encoded: '',
+  cipher: null,
+  plainWords: [], encodedWords: [],
+  clueWordIdx: 0,
+  playerMap: {},
+  confirmed: null,
+  wrongGuesses: 0,
+  hintsUsed: 0,
+  hintFlash: null,
+  startTime: 0,
+  tiles: [],
+  selectedCipher: null,
+  numLines: 0,
+  finalScore: 0,
+  solveTime: 0,
+  sentenceIndex: -1,
+  particles: [],
+  progressAnim: 0,
+  spin: null,
+};
+
+function selectDifficulty(diff) {
+  G.difficulty = diff;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.diff-btn.' + diff).classList.add('active');
+  document.getElementById('diff-info').textContent = DIFF_INFO[diff];
+}
+
+function initPuzzle() {
+  const pool = SENTENCES[G.difficulty];
+  const used = SESSION.used[G.difficulty];
+
+  // Pick a sentence not used this session; if all used, reset pool
+  let available = pool.map((_, i) => i).filter(i => !used.has(i));
+  if (available.length === 0) { used.clear(); available = pool.map((_, i) => i); }
+  const idx = available[Math.floor(Math.random() * available.length)];
+  used.add(idx);
+
+  const sentence = pool[idx];
+
+  const d = generateDerangement();
+  const cipher = buildCipher(d);
+  const encoded = encodeSentence(sentence, cipher.encode);
+
+  const plainWords   = sentence.split(' ');
+  const encodedWords = encoded.split(' ');
+
+  const clueIdx      = pickClueWord(plainWords, encodedWords);
+  const clueEncoded  = new Set(encodedWords[clueIdx]);
+
+  // Pre-fill clue word into playerMap
+  const playerMap = {};
+  plainWords[clueIdx].split('').forEach((pc, ci) => {
+    playerMap[encodedWords[clueIdx][ci]] = pc;
+  });
+
+  const { tiles, numLines } = layoutTiles(plainWords, encodedWords, clueEncoded);
+
+  // Clue letters are pre-confirmed — they can't be edited
+  const confirmed = new Set(Object.keys(playerMap));
+
+  Object.assign(G, {
+    sentence, encoded, cipher,
+    plainWords, encodedWords,
+    clueWordIdx: clueIdx,
+    playerMap, confirmed, wrongGuesses: 0,
+    tiles, numLines,
+    selectedCipher: null, showPicker: false,
+    flash: { wrong: new Set(), correct: new Set(), endTime: 0 },
+    finalScore: 0, solveTime: 0, sentenceIndex: idx,
+    hintsUsed: 0, hintFlash: null,
+    particles: [], progressAnim: 0, spin: null,
+  });
+}
+
+function startGame() {
+  resetSession();
+  initPuzzle();
+  G.phase = 'playing';
+  G.startTime = Date.now();
+  document.getElementById('start-screen').style.display = 'none';
+  MUSIC.start();
+}
+
+function nextPuzzle(diff) {
+  hideSolvedScreen();
+  if (diff) G.difficulty = diff;
+  SESSION.puzzlesSolved++;
+  SESSION.totalErrors += G.wrongGuesses;
+  initPuzzle();
+  G.phase = 'playing';
+  G.startTime = Date.now();
+  MUSIC.resume();
+}
+
+function resumeGame() {
+  G.phase = 'playing';
+  document.getElementById('pause-screen').style.display = 'none';
+  MUSIC.resume();
+}
+
+function restartGame() {
+  MUSIC.stop();
+  hideSolvedScreen();
+  resetSession();
+  G.phase = 'start';
+  document.getElementById('pause-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  loadLeaderboard();
+}
+
+function quitGame() {
+  window.location.href = '/';
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y,     x + w, y + r,     r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x,     y + h, x,     y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x,     y,     x + r, y,         r);
+  ctx.closePath();
+}
+
+function drawTile(t) {
+  const guess      = G.playerMap[t.cipherLetter];
+  const isLocked   = t.isClue || G.confirmed.has(t.cipherLetter);
+  const isSelected = G.selectedCipher === t.cipherLetter && !isLocked;
+  const isPending  = guess && !isLocked;
+
+  // Spin reveal animation (letter-by-letter slot-machine on submit)
+  const spinEntry = G.spin && G.spin.entries.get(t.cipherLetter);
+  if (spinEntry) {
+    const tileElapsed = Date.now() - G.spin.startTime - spinEntry.staggerMs;
+    if (tileElapsed >= 0) {
+      const spinning = tileElapsed < SPIN_DURATION;
+      const frame    = Math.floor(Date.now() / SPIN_TICK);
+
+      const spinBg     = spinning ? (Math.sin(Date.now() / 70) > 0 ? '#0d0d2a' : '#08081a') : (spinEntry.isCorrect ? '#001a0a' : '#1a0300');
+      const spinBorder = spinning ? (Math.sin(Date.now() / 70) > 0 ? '#5555bb' : '#22224a') : (spinEntry.isCorrect ? '#00ff88' : '#ff3300');
+
+      ctx.lineWidth = 1;
+      roundRect(t.x, t.y, TW, TH, 3);
+      ctx.fillStyle = spinBg;     ctx.fill();
+      ctx.strokeStyle = spinBorder; ctx.stroke();
+
+      if (!spinning) {
+        ctx.shadowColor = spinEntry.isCorrect ? '#00ff88' : '#ff3300';
+        ctx.shadowBlur  = 10;
+        roundRect(t.x, t.y, TW, TH, 3); ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.strokeStyle = '#121228'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(t.x + 4,      t.y + Math.round(TH * 0.52));
+      ctx.lineTo(t.x + TW - 4, t.y + Math.round(TH * 0.52));
+      ctx.stroke();
+
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+      ctx.fillStyle = spinning ? '#cc8844' : (spinEntry.isCorrect ? '#aaffcc' : '#ff6655');
+      ctx.font = fnt(15);
+      ctx.fillText(t.cipherLetter, t.x + TW / 2, t.y + Math.round(TH * 0.26));
+
+      ctx.font = fnt(15);
+      if (spinning) {
+        ctx.fillStyle = '#6688cc';
+        ctx.fillText(SPIN_CHARS[(frame + spinEntry.seed) % 26], t.x + TW / 2, t.y + Math.round(TH * 0.76));
+      } else {
+        const settled = spinEntry.isCorrect
+          ? G.tiles.find(tt => tt.cipherLetter === t.cipherLetter).plainLetter
+          : (G.playerMap[t.cipherLetter] || '?');
+        ctx.fillStyle = spinEntry.isCorrect ? '#00ff88' : '#ff4422';
+        ctx.fillText(settled, t.x + TW / 2, t.y + Math.round(TH * 0.76));
+      }
+      return;
+    }
+  }
+
+  // Flash states override normal colours
+  const isFlashWrong   = G.flash.wrong.has(t.cipherLetter);
+  const isFlashCorrect = G.flash.correct.has(t.cipherLetter);
+  const isFlashHint    = G.hintFlash && G.hintFlash.cipher === t.cipherLetter && Date.now() < G.hintFlash.endTime;
+  // Pulse: 0..1 based on time remaining in flash window
+  const flashProg = G.flash.endTime > 0
+    ? Math.max(0, (G.flash.endTime - Date.now()) / 700)
+    : 0;
+  // Oscillate for the flash: blink 3x during the window
+  const flashBlink = Math.sin(flashProg * Math.PI * 6) > 0;
+
+  const hintProg  = G.hintFlash ? Math.max(0, (G.hintFlash.endTime - Date.now()) / 900) : 0;
+  const hintBlink = Math.sin(hintProg * Math.PI * 4) > 0;
+
+  let bg, border;
+  if (isFlashWrong) {
+    bg = flashBlink ? '#3a0800' : '#1a0300'; border = flashBlink ? '#ff3300' : '#882200';
+  } else if (isFlashCorrect) {
+    bg = flashBlink ? '#003a18' : '#001a0a'; border = flashBlink ? '#00ff88' : '#00aa44';
+  } else if (isFlashHint) {
+    bg = hintBlink ? '#001830' : '#000d1a'; border = hintBlink ? '#0088ff' : '#004488';
+  } else if (t.isClue) {
+    bg = '#150f00'; border = '#4a3500';
+  } else if (G.confirmed.has(t.cipherLetter)) {
+    bg = '#001a0a'; border = '#008844';
+  } else if (isSelected) {
+    bg = '#001a0e'; border = '#00ff88';
+  } else if (isPending) {
+    bg = '#0e0e22'; border = '#2a2a66';
+  } else {
+    bg = '#0c0c1a'; border = '#18182e';
+  }
+
+  ctx.lineWidth = 1;
+  roundRect(t.x, t.y, TW, TH, 3);
+  ctx.fillStyle = bg;       ctx.fill();
+  ctx.strokeStyle = border; ctx.stroke();
+
+  // Glow on flash, confirmation, or selection
+  if (isFlashWrong && flashBlink) {
+    ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 14;
+    roundRect(t.x, t.y, TW, TH, 3); ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else if (isFlashCorrect && flashBlink) {
+    ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 14;
+    roundRect(t.x, t.y, TW, TH, 3); ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else if (!t.isClue && G.confirmed.has(t.cipherLetter) && !isFlashHint) {
+    const pulse = 2 + 2 * Math.sin(Date.now() / 900 + t.x * 0.02);
+    ctx.shadowColor = '#00ff88'; ctx.shadowBlur = pulse;
+    roundRect(t.x, t.y, TW, TH, 3); ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // Divider
+  ctx.strokeStyle = t.isClue ? '#382400' : '#121228';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(t.x + 4,      t.y + Math.round(TH * 0.52));
+  ctx.lineTo(t.x + TW - 4, t.y + Math.round(TH * 0.52));
+  ctx.stroke();
+
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Cipher letter — upper half
+  ctx.fillStyle = isFlashWrong ? '#ff6655' : isFlashCorrect ? '#aaffcc' : '#cc8844';
+  ctx.font = fnt(15);
+  ctx.fillText(t.cipherLetter, t.x + TW / 2, t.y + Math.round(TH * 0.26));
+
+  // Decoded letter — lower half
+  if (guess) {
+    if      (isFlashWrong)                     ctx.fillStyle = '#ff4422';
+    else if (isFlashCorrect)                   ctx.fillStyle = '#00ffaa';
+    else if (isFlashHint)                      ctx.fillStyle = '#44aaff';
+    else if (t.isClue)                         ctx.fillStyle = '#ffcc00';
+    else if (G.confirmed.has(t.cipherLetter))  ctx.fillStyle = '#00ff88';
+    else                                       ctx.fillStyle = '#9999cc';
+    ctx.font = fnt(15);
+    ctx.fillText(guess, t.x + TW / 2, t.y + Math.round(TH * 0.76));
+  } else if (isSelected) {
+    if (Math.floor(Date.now() / 500) % 2 === 0) {
+      ctx.fillStyle = '#00ff8899';
+      ctx.fillRect(t.x + TW / 2 - 1, t.y + TH * 0.58, 2, Math.round(TH * 0.34));
+    }
+    ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 12;
+    roundRect(t.x, t.y, TW, TH, 3);
+    ctx.strokeStyle = '#00ff88'; ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ── LETTER PICKER ─────────────────────────────────────────────────────────────
+
+let PK = { x: 150, y: 124, w: 500, h: 296 };
+
+// Built during drawPicker so click handler can hit-test cells
+let pickerCells = [];
+let pickerClearBtn = null;
+
+function drawPicker() {
+  if (!G.showPicker || !G.selectedCipher) return;
+
+  const { x, y, w, h } = PK;
+
+  // Backdrop
+  ctx.fillStyle = 'rgba(2,2,12,0.82)';
+  ctx.fillRect(0, 0, 800, 620);
+
+  // Panel
+  roundRect(x, y, w, h, 6);
+  ctx.fillStyle = '#0b0b1c'; ctx.fill();
+  ctx.strokeStyle = '#2a2a55'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Header
+  ctx.textBaseline = 'middle';
+  ctx.font = '10px Courier New';
+  ctx.fillStyle = '#445566';
+  ctx.textAlign = 'left';
+  ctx.fillText('SELECT A LETTER FOR CIPHER', x + 18, y + 18);
+  ctx.font = 'bold 20px Courier New';
+  ctx.fillStyle = '#cc8844';
+  ctx.fillText(G.selectedCipher, x + 18 + 210, y + 18);
+
+  // Clear button
+  const cbx = x + w - 90, cby = y + 8, cbw = 76, cbh = 22;
+  pickerClearBtn = { x: cbx, y: cby, w: cbw, h: cbh };
+  const hasCurrent = !!G.playerMap[G.selectedCipher];
+  ctx.fillStyle = hasCurrent ? '#1a0808' : '#0d0d0d';
+  ctx.fillRect(cbx, cby, cbw, cbh);
+  ctx.strokeStyle = hasCurrent ? '#aa3322' : '#1a1a1a';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cbx, cby, cbw, cbh);
+  ctx.fillStyle = hasCurrent ? '#ff5544' : '#2a2a2a';
+  ctx.font = 'bold 10px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('CLEAR', cbx + cbw / 2, cby + cbh / 2);
+
+  // Build reverse map: plainLetter -> cipherLetter that claims it
+  const usedBy = {};
+  for (const [cl, pl] of Object.entries(G.playerMap)) {
+    usedBy[pl] = cl;
+  }
+  const currentGuess = G.playerMap[G.selectedCipher];
+
+  // Letter grid — 6 columns
+  const cols   = 6;
+  const cellW  = 72, cellH = 38;
+  const gridX  = x + (w - cols * cellW) / 2;
+  const gridY  = y + 40;
+
+  pickerCells = [];
+
+  for (let i = 0; i < 26; i++) {
+    const pl    = ALPHA[i];
+    const col   = i % cols;
+    const row   = Math.floor(i / cols);
+    const cx    = gridX + col * cellW;
+    const cy    = gridY + row * cellH;
+
+    const isCurrent       = currentGuess === pl;
+    const takenBy         = usedBy[pl];
+    const isConfirmedTaken = takenBy && G.confirmed.has(takenBy) && takenBy !== G.selectedCipher;
+    const isPendingTaken   = takenBy && !G.confirmed.has(takenBy) && takenBy !== G.selectedCipher;
+
+    let cellBg, cellBorder, letterColor, subColor = null, subText = null;
+
+    if (isCurrent) {
+      cellBg = '#001a0e'; cellBorder = '#00ff88'; letterColor = '#00ff88';
+    } else if (isConfirmedTaken) {
+      cellBg = '#0a0a0a'; cellBorder = '#111118'; letterColor = '#222233';
+      subText = `${takenBy}=${pl}`; subColor = '#1a1a2a';
+    } else if (isPendingTaken) {
+      cellBg = '#0d0d1a'; cellBorder = '#1a1a33'; letterColor = '#44446a';
+      subText = `${takenBy}=${pl}`; subColor = '#33334a';
+    } else {
+      cellBg = '#111124'; cellBorder = '#22224a'; letterColor = '#9999dd';
+    }
+
+    roundRect(cx + 3, cy + 3, cellW - 6, cellH - 6, 3);
+    ctx.fillStyle = cellBg; ctx.fill();
+    ctx.strokeStyle = cellBorder; ctx.lineWidth = 1; ctx.stroke();
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    if (subText) {
+      // Show the taken mapping instead of just the letter
+      ctx.fillStyle = subColor;
+      ctx.font = 'bold 10px Courier New';
+      ctx.fillText(subText, cx + cellW / 2, cy + cellH / 2);
+    } else {
+      ctx.fillStyle = letterColor;
+      ctx.font = 'bold 14px Courier New';
+      ctx.fillText(pl, cx + cellW / 2, cy + cellH / 2);
+    }
+
+    // Store hit area (only non-confirmed-taken cells are clickable)
+    pickerCells.push({
+      pl,
+      x: cx + 3, y: cy + 3, w: cellW - 6, h: cellH - 6,
+      disabled: isConfirmedTaken,
+    });
+  }
+
+  // Mappings reference strip at the bottom
+  const stripY = gridY + Math.ceil(26 / cols) * cellH + 10;
+  ctx.fillStyle = '#0d0d1a';
+  ctx.fillRect(x + 12, stripY, w - 24, h - (stripY - y) - 12);
+  ctx.strokeStyle = '#1a1a33'; ctx.lineWidth = 1;
+  ctx.strokeRect(x + 12, stripY, w - 24, h - (stripY - y) - 12);
+
+  ctx.fillStyle = '#223344';
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('CRACKED SO FAR:', x + 20, stripY + 12);
+
+  // List confirmed mappings as CL=PL
+  const mappings = [];
+  G.tiles.forEach(t => {
+    if (G.confirmed.has(t.cipherLetter)) {
+      const pl = G.playerMap[t.cipherLetter];
+      const key = t.cipherLetter + '=' + pl;
+      if (!mappings.find(m => m.key === key)) mappings.push({ key, confirmed: true });
+    } else if (G.playerMap[t.cipherLetter] && !t.isClue) {
+      const pl = G.playerMap[t.cipherLetter];
+      const key = t.cipherLetter + '=' + pl;
+      if (!mappings.find(m => m.key === key)) mappings.push({ key, confirmed: false });
+    }
+  });
+
+  let mx = x + 20, my = stripY + 26;
+  const lineMaxX = x + w - 20;
+  mappings.forEach(m => {
+    ctx.font = 'bold 10px Courier New';
+    ctx.fillStyle = m.confirmed ? '#00cc66' : '#555577';
+    const tw = ctx.measureText(m.key).width + 10;
+    if (mx + tw > lineMaxX) { mx = x + 20; my += 16; }
+    ctx.fillText(m.key, mx, my);
+    mx += tw;
+  });
+
+  if (mappings.length === 0) {
+    ctx.fillStyle = '#1e2e2e';
+    ctx.font = '10px Courier New';
+    ctx.fillText('none yet', x + 20, stripY + 26);
+  }
+}
+
+function drawHUD() {
+  const cw = canvas.width;
+  const rEdge = cw - 20; // right-aligned text x
+
+  ctx.fillStyle = '#06060f';
+  ctx.fillRect(0, 0, cw, TOP - 8);
+  ctx.fillStyle = '#10102a';
+  ctx.fillRect(0, TOP - 10, cw, 1);
+
+  // Title
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 17px Courier New';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText("CIPHER", 20, 24);
+
+  // Difficulty badge
+  const dc = { easy: '#44ff88', medium: '#ffcc00', hard: '#ff5544' }[G.difficulty];
+  ctx.fillStyle = dc + '20';
+  ctx.fillRect(164, 13, 62, 20);
+  ctx.strokeStyle = dc; ctx.lineWidth = 1;
+  ctx.strokeRect(164, 13, 62, 20);
+  ctx.fillStyle = dc;
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText(G.difficulty.toUpperCase(), 195, 23);
+
+  // Clue word box — fills space between badge and submit button
+  const clueBoxW = SUBMIT_BTN.x - 20 - 166;
+  ctx.fillStyle = '#180e00';
+  ctx.fillRect(20, 42, clueBoxW, 30);
+  ctx.strokeStyle = '#302000'; ctx.lineWidth = 1;
+  ctx.strokeRect(20, 42, clueBoxW, 30);
+  ctx.fillStyle = '#554400';
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('CLUE WORD', 28, 57);
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 14px Courier New';
+  ctx.fillText(G.plainWords[G.clueWordIdx], 108, 57);
+
+  // Submit button
+  const hasPending = G.tiles.some(t =>
+    !t.isClue && !G.confirmed.has(t.cipherLetter) && G.playerMap[t.cipherLetter]
+  );
+  const fullSubmit     = isFullSubmitReady();
+  const errorPenaltyPts = SCORING[G.difficulty].errorPenalty;
+  ctx.fillStyle = hasPending ? '#002a14' : '#0a0a1a';
+  ctx.fillRect(SUBMIT_BTN.x, SUBMIT_BTN.y, SUBMIT_BTN.w, SUBMIT_BTN.h);
+  ctx.strokeStyle = hasPending ? (fullSubmit ? '#00ddff' : '#00aa55') : '#1a1a33';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(SUBMIT_BTN.x, SUBMIT_BTN.y, SUBMIT_BTN.w, SUBMIT_BTN.h);
+  const cx = SUBMIT_BTN.x + SUBMIT_BTN.w / 2;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = hasPending ? (fullSubmit ? '#44eeff' : '#00ff88') : '#2a3344';
+  ctx.font = 'bold 10px Courier New';
+  ctx.fillText('SUBMIT  [Enter]', cx, SUBMIT_BTN.y + Math.round(SUBMIT_BTN.h * 0.33));
+  ctx.font = '9px Courier New';
+  ctx.fillStyle = fullSubmit ? '#00ddaa' : (hasPending ? '#226644' : '#1a2233');
+  ctx.fillText(fullSubmit ? 'FREE — no penalty' : `-${errorPenaltyPts}pts per error`, cx, SUBMIT_BTN.y + Math.round(SUBMIT_BTN.h * 0.72));
+
+  // Hint button
+  const hintsLeft    = MAX_HINTS - G.hintsUsed;
+  const hintAvail    = hintsLeft > 0 && G.phase === 'playing' && bestHintCipher() !== null;
+  const hintPenaltyPts = SCORING[G.difficulty].hintPenalty;
+  ctx.fillStyle  = hintAvail ? '#001a33' : '#0a0a1a';
+  ctx.fillRect(HINT_BTN.x, HINT_BTN.y, HINT_BTN.w, HINT_BTN.h);
+  ctx.strokeStyle = hintAvail ? '#0055aa' : '#1a1a33';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(HINT_BTN.x, HINT_BTN.y, HINT_BTN.w, HINT_BTN.h);
+  ctx.fillStyle  = hintAvail ? '#4499ff' : '#2a3344';
+  ctx.font       = 'bold 10px Courier New';
+  ctx.textAlign  = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`HINT  -${hintPenaltyPts}`, HINT_BTN.x + HINT_BTN.w / 2, HINT_BTN.y + 10);
+  ctx.font       = '9px Courier New';
+  ctx.fillStyle  = hintAvail ? '#2266aa' : '#1a2233';
+  ctx.fillText(`${hintsLeft} left`, HINT_BTN.x + HINT_BTN.w / 2, HINT_BTN.y + 22);
+
+  // Pause button
+  ctx.fillStyle = '#0e0e1e';
+  ctx.fillRect(PAUSE_BTN.x, PAUSE_BTN.y, PAUSE_BTN.w, PAUSE_BTN.h);
+  ctx.strokeStyle = '#2a2a44'; ctx.lineWidth = 1;
+  ctx.strokeRect(PAUSE_BTN.x, PAUSE_BTN.y, PAUSE_BTN.w, PAUSE_BTN.h);
+  ctx.fillStyle = '#445566';
+  ctx.font = '10px Courier New';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('II', PAUSE_BTN.x + PAUSE_BTN.w / 2, PAUSE_BTN.y + PAUSE_BTN.h / 2);
+
+  // Live score
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#1e3028';
+  ctx.font = '9px Courier New';
+  ctx.fillText('SCORE', rEdge, 12);
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 16px Courier New';
+  ctx.fillText(liveScore(), rEdge, 26);
+
+  // Timer
+  const elapsed = (G.phase === 'playing' || G.phase === 'checking') ? Math.floor((Date.now() - G.startTime) / 1000) : 0;
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  ctx.fillStyle = '#1e2e1e';
+  ctx.font = '9px Courier New';
+  ctx.fillText('TIME', rEdge, 44);
+  ctx.fillStyle = '#55cc77';
+  ctx.font = 'bold 14px Courier New';
+  ctx.fillText(`${mm}:${ss}`, rEdge, 58);
+
+  // Error count
+  ctx.fillStyle = '#2a1e1e';
+  ctx.font = '9px Courier New';
+  ctx.fillText('ERRORS', rEdge, 72);
+  ctx.fillStyle = G.wrongGuesses > 0 ? '#ff5544' : '#2a3a2a';
+  ctx.font = 'bold 12px Courier New';
+  ctx.fillText(G.wrongGuesses, rEdge, 85);
+}
+
+// ── PARTICLES ─────────────────────────────────────────────────────────────────
+
+function spawnSolveParticles() {
+  const colours = ['#00ff88', '#00cc66', '#ffcc00', '#ffffff', '#44ffaa', '#ffee55'];
+  const sources = G.tiles.filter(t => !t.isClue);
+  for (let i = 0; i < 200; i++) {
+    const src = sources.length
+      ? sources[Math.floor(Math.random() * sources.length)]
+      : { x: canvas.width / 2, y: canvas.height / 2 };
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 9;
+    G.particles.push({
+      x: src.x + TW / 2 + (Math.random() - 0.5) * TW,
+      y: src.y + TH / 2 + (Math.random() - 0.5) * TH,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      life: 1.0,
+      decay: 0.005 + Math.random() * 0.009,
+      colour: colours[Math.floor(Math.random() * colours.length)],
+      size: 3 + Math.random() * 5,
+    });
+  }
+}
+
+function updateAndDrawParticles() {
+  const surviving = [];
+  G.particles.forEach(p => {
+    p.x   += p.vx;
+    p.y   += p.vy;
+    p.vy  += 0.18;
+    p.vx  *= 0.98;
+    p.life -= p.decay;
+    if (p.life <= 0) return;
+    surviving.push(p);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle   = p.colour;
+    ctx.shadowColor = p.colour;
+    ctx.shadowBlur  = 8;
+    const s = p.size * Math.min(1, p.life * 3);
+    ctx.fillRect(Math.round(p.x - s / 2), Math.round(p.y - s / 2), s, s);
+    ctx.restore();
+  });
+  G.particles = surviving;
+}
+
+function drawProgressBar() {
+  const cipherLetters = [...new Set(G.tiles.map(t => t.cipherLetter))];
+  const total   = cipherLetters.length;
+  const correct = cipherLetters.filter(cl => G.confirmed.has(cl)).length;
+  const target  = total > 0 ? correct / total : 0;
+
+  // Smooth animation toward target
+  G.progressAnim += (target - G.progressAnim) * 0.09;
+  if (Math.abs(G.progressAnim - target) < 0.001) G.progressAnim = target;
+
+  const bx = 20, by = canvas.height - 22, bw = canvas.width - 40, bh = 6;
+  const fillW = Math.floor(bw * G.progressAnim);
+
+  ctx.fillStyle = '#0b0b1a';
+  ctx.fillRect(bx, by, bw, bh);
+
+  if (fillW > 0) {
+    const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    g.addColorStop(0, '#004422');
+    g.addColorStop(1, '#00ff88');
+    ctx.fillStyle = g;
+    // Glow intensifies as progress grows
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur  = 4 + G.progressAnim * 10;
+    ctx.fillRect(bx, by, fillW, bh);
+    ctx.shadowBlur  = 0;
+  }
+
+  ctx.strokeStyle = '#11112a'; ctx.lineWidth = 1;
+  ctx.strokeRect(bx, by, bw, bh);
+
+  ctx.fillStyle = correct === total && total > 0 ? '#00ff88' : '#1e3030';
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${correct} / ${total} LETTERS DECODED`, bx, by - 10);
+}
+
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#050510';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (G.phase === 'solved') {
+    G.tiles.forEach(drawTile);
+    drawProgressBar();
+    updateAndDrawParticles();
+    return;
+  }
+
+  if (G.phase !== 'playing' && G.phase !== 'paused' && G.phase !== 'checking') return;
+
+  drawHUD();
+  G.tiles.forEach(drawTile);
+  drawProgressBar();
+  updateAndDrawParticles();
+  drawPicker();
+}
+
+// ── INPUT ─────────────────────────────────────────────────────────────────────
+
+let PAUSE_BTN  = { x: 752, y: 12, w: 36, h: 24 };
+let SUBMIT_BTN = { x: 436, y: 42, w: 150, h: 30 };
+let HINT_BTN   = { x: 596, y: 42, w: 90,  h: 30 };
+
+function submitGuesses() {
+  const uniqueCiphers = [...new Set(G.tiles.map(t => t.cipherLetter))];
+  const wrongSet = new Set(), correctSet = new Set();
+
+  uniqueCiphers.forEach(cl => {
+    if (G.confirmed.has(cl)) return;
+    const guess = G.playerMap[cl];
+    if (!guess) return;
+    const refTile = G.tiles.find(t => t.cipherLetter === cl);
+    if (guess === refTile.plainLetter) correctSet.add(cl);
+    else wrongSet.add(cl);
+  });
+
+  if (wrongSet.size === 0 && correctSet.size === 0) return;
+
+  const fullSubmit = isFullSubmitReady();
+  G.showPicker = false;
+  G.phase = 'checking';
+
+  // Build spin entries in tile reading order
+  const seen = new Set();
+  const spinOrder = [];
+  G.tiles.forEach(t => {
+    if (!seen.has(t.cipherLetter) && (wrongSet.has(t.cipherLetter) || correctSet.has(t.cipherLetter))) {
+      seen.add(t.cipherLetter);
+      spinOrder.push(t.cipherLetter);
+    }
+  });
+
+  const entries = new Map();
+  spinOrder.forEach((cl, i) => {
+    entries.set(cl, { staggerMs: i * SPIN_STAGGER, isCorrect: correctSet.has(cl), seed: Math.floor(Math.random() * 26) });
+  });
+
+  G.spin = { startTime: Date.now(), entries };
+
+  const totalSpinMs = (spinOrder.length - 1) * SPIN_STAGGER + SPIN_DURATION + 80;
+
+  setTimeout(() => {
+    // Spin done → flash
+    G.spin = null;
+    G.flash = { wrong: wrongSet, correct: correctSet, endTime: Date.now() + 700 };
+
+    if (wrongSet.size   > 0) SFX.wrong();
+    if (correctSet.size > 0) setTimeout(() => SFX.correct(), wrongSet.size > 0 ? 350 : 0);
+
+    // Commit after flash
+    setTimeout(() => {
+      G.flash = { wrong: new Set(), correct: new Set(), endTime: 0 };
+
+      correctSet.forEach(cl => G.confirmed.add(cl));
+      wrongSet.forEach(cl => {
+        delete G.playerMap[cl];
+        if (!fullSubmit) G.wrongGuesses++;
+      });
+
+      G.phase = 'playing';
+
+      if (G.selectedCipher && G.confirmed.has(G.selectedCipher)) {
+        G.selectedCipher = nextUnsolvedCipherLetter(G.selectedCipher);
+      }
+
+      if (isSolved()) {
+        G.phase = 'solved';
+        G.solveTime = Math.floor((Date.now() - G.startTime) / 1000);
+        G.finalScore = calculateScore(G.difficulty, G.solveTime, G.wrongGuesses, G.hintsUsed);
+        MUSIC.pause();
+        SFX.solve();
+        spawnSolveParticles();
+        setTimeout(() => showSolvedScreen(), 1800);
+      }
+    }, 700);
+  }, totalSpinMs);
+}
+
+function isSolved() {
+  return G.tiles.every(t => G.confirmed.has(t.cipherLetter) || t.isClue);
+}
+
+function bestHintCipher() {
+  const freq = {};
+  G.tiles.forEach(t => {
+    if (!t.isClue && !G.confirmed.has(t.cipherLetter))
+      freq[t.cipherLetter] = (freq[t.cipherLetter] || 0) + 1;
+  });
+  const entries = Object.entries(freq);
+  if (entries.length === 0) return null;
+  return entries.sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function useHint() {
+  if (G.phase !== 'playing') return;
+  if (G.hintsUsed >= MAX_HINTS) return;
+  const cl = bestHintCipher();
+  if (!cl) return;
+
+  const refTile = G.tiles.find(t => t.cipherLetter === cl);
+  G.playerMap[cl] = refTile.plainLetter;
+  G.confirmed.add(cl);
+  G.hintsUsed++;
+  G.showPicker = false;
+  G.selectedCipher = nextUnsolvedCipherLetter(cl);
+  G.hintFlash = { cipher: cl, endTime: Date.now() + 900 };
+
+  SFX.hint();
+
+  if (isSolved()) {
+    G.phase = 'solved';
+    G.solveTime = Math.floor((Date.now() - G.startTime) / 1000);
+    G.finalScore = calculateScore(G.difficulty, G.solveTime, G.wrongGuesses, G.hintsUsed);
+    MUSIC.pause();
+    SFX.solve();
+    spawnSolveParticles();
+    setTimeout(() => showSolvedScreen(), 1800);
+  }
+}
+
+function pauseGame() {
+  G.phase = 'paused';
+  MUSIC.pause();
+  document.getElementById('pause-screen').style.display = 'flex';
+}
+
+// Returns the first tile in reading order that has no correct guess yet
+// (skips clue tiles and already-correct tiles)
+function nextUnsolvedCipherLetter(afterCipher) {
+  const seen = new Set();
+  let passed = afterCipher === null;
+  for (const t of G.tiles) {
+    if (t.isClue || G.confirmed.has(t.cipherLetter) || seen.has(t.cipherLetter)) continue;
+    seen.add(t.cipherLetter);
+    if (passed) return t.cipherLetter;
+    if (t.cipherLetter === afterCipher) passed = true;
+  }
+  // Wrap around
+  for (const t of G.tiles) {
+    if (t.isClue || G.confirmed.has(t.cipherLetter)) continue;
+    if (t.cipherLetter !== afterCipher) return t.cipherLetter;
+  }
+  return null;
+}
+
+
+document.addEventListener('keydown', e => {
+  if (G.phase === 'checking') return; // block all keys during flash
+
+  if (G.phase === 'playing') {
+    if (e.key === 'Escape') {
+      if (G.showPicker) { G.showPicker = false; return; }
+      pauseGame(); return;
+    }
+
+    // Enter / Return — submit guesses
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitGuesses();
+      return;
+    }
+
+    if (!G.selectedCipher) return;
+
+    // Letter guess — just record it, no real-time validation
+    if (/^[a-zA-Z]$/.test(e.key)) {
+      e.preventDefault();
+      if (G.confirmed.has(G.selectedCipher)) return; // locked
+      const guess = e.key.toUpperCase();
+      if (G.playerMap[G.selectedCipher] === guess) return; // same key, no-op
+      G.playerMap[G.selectedCipher] = guess;
+      G.showPicker = false;
+      SFX.type();
+      G.selectedCipher = nextUnsolvedCipherLetter(G.selectedCipher);
+      return;
+    }
+
+    // Backspace — clear current pending guess
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (!G.confirmed.has(G.selectedCipher)) delete G.playerMap[G.selectedCipher];
+      return;
+    }
+
+    // Tab / arrow right — next unconfirmed tile
+    if (e.key === 'Tab' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      G.selectedCipher = nextUnsolvedCipherLetter(G.selectedCipher);
+      return;
+    }
+
+    // Arrow left — previous unconfirmed tile
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const seen = new Set(), order = [];
+      for (const t of G.tiles) {
+        if (G.confirmed.has(t.cipherLetter) || t.isClue || seen.has(t.cipherLetter)) continue;
+        seen.add(t.cipherLetter);
+        order.push(t.cipherLetter);
+      }
+      const idx = order.indexOf(G.selectedCipher);
+      if (idx > 0) G.selectedCipher = order[idx - 1];
+      else if (order.length > 0) G.selectedCipher = order[order.length - 1];
+      return;
+    }
+
+  } else if (G.phase === 'paused') {
+    if (e.key === 'Escape') resumeGame();
+  }
+});
+
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (G.phase === 'solved') return;
+  if (G.phase !== 'playing' && G.phase !== 'checking') return;
+  if (G.phase === 'checking') return;
+
+  // If picker is open, handle picker clicks first
+  if (G.showPicker) {
+    // Clear button
+    if (pickerClearBtn &&
+        x >= pickerClearBtn.x && x <= pickerClearBtn.x + pickerClearBtn.w &&
+        y >= pickerClearBtn.y && y <= pickerClearBtn.y + pickerClearBtn.h) {
+      delete G.playerMap[G.selectedCipher];
+      G.showPicker = false;
+      return;
+    }
+    // Letter cell
+    const cell = pickerCells.find(c =>
+      !c.disabled && x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h
+    );
+    if (cell) {
+      G.playerMap[G.selectedCipher] = cell.pl;
+      G.showPicker = false;
+      SFX.type();
+      G.selectedCipher = nextUnsolvedCipherLetter(G.selectedCipher);
+    } else {
+      G.showPicker = false;
+    }
+    return;
+  }
+
+  // Pause button
+  if (x >= PAUSE_BTN.x && x <= PAUSE_BTN.x + PAUSE_BTN.w &&
+      y >= PAUSE_BTN.y && y <= PAUSE_BTN.y + PAUSE_BTN.h) {
+    pauseGame();
+    return;
+  }
+
+  // Submit button
+  if (x >= SUBMIT_BTN.x && x <= SUBMIT_BTN.x + SUBMIT_BTN.w &&
+      y >= SUBMIT_BTN.y && y <= SUBMIT_BTN.y + SUBMIT_BTN.h) {
+    submitGuesses();
+    return;
+  }
+
+  // Hint button
+  if (x >= HINT_BTN.x && x <= HINT_BTN.x + HINT_BTN.w &&
+      y >= HINT_BTN.y && y <= HINT_BTN.y + HINT_BTN.h) {
+    useHint();
+    return;
+  }
+
+  // Tile click — on touch: open picker immediately on first tap
+  //              on mouse: first click highlights, second click opens picker
+  const hit = G.tiles.find(t =>
+    !t.isClue && !G.confirmed.has(t.cipherLetter) &&
+    x >= t.x && x <= t.x + TW &&
+    y >= t.y && y <= t.y + TH
+  );
+  if (hit) {
+    if (IS_TOUCH || G.selectedCipher === hit.cipherLetter) {
+      G.selectedCipher = hit.cipherLetter;
+      G.showPicker = true;
+    } else {
+      G.selectedCipher = hit.cipherLetter;
+      G.showPicker = false;
+      SFX.click();
+    }
+  } else {
+    G.selectedCipher = null;
+    G.showPicker = false;
+  }
+});
+
+// ── SOLVED SCREEN ─────────────────────────────────────────────────────────────
+
+function showSolvedScreen() {
+  const mm = String(Math.floor(G.solveTime / 60)).padStart(2, '0');
+  const ss = String(G.solveTime % 60).padStart(2, '0');
+  document.getElementById('ss-score').textContent  = G.finalScore;
+  document.getElementById('ss-time').textContent   = `${mm}:${ss}`;
+  const errEl = document.getElementById('ss-errors');
+  errEl.textContent = G.wrongGuesses;
+  errEl.className = 'sv' + (G.wrongGuesses > 0 ? ' bad' : ' good');
+  const hintEl = document.getElementById('ss-hints');
+  if (hintEl) {
+    hintEl.textContent = G.hintsUsed;
+    hintEl.className = 'sv' + (G.hintsUsed > 0 ? ' bad' : ' good');
+  }
+
+  const sessionPuzzles = SESSION.puzzlesSolved + 1;
+  const sessionErrors  = SESSION.totalErrors + G.wrongGuesses;
+  document.getElementById('ss-session').textContent =
+    `SESSION  ${sessionPuzzles} solved   ${sessionErrors} total errors`;
+
+  const nextDiff = NEXT_DIFF[G.difficulty];
+  const upgradeBtn = document.getElementById('ss-upgrade-btn');
+  if (nextDiff) {
+    upgradeBtn.style.display = '';
+    upgradeBtn.textContent   = `UPGRADE TO ${nextDiff.toUpperCase()}`;
+    upgradeBtn.onclick       = () => nextPuzzle(nextDiff);
+  } else {
+    upgradeBtn.style.display = 'none';
+  }
+
+  document.getElementById('ss-name-entry').style.display = 'none';
+  document.getElementById('ss-lb-list').innerHTML = '<div class="lb-empty">Loading...</div>';
+  document.getElementById('solved-screen').style.display = 'flex';
+
+  checkLeaderboard();
+}
+
+function hideSolvedScreen() {
+  document.getElementById('solved-screen').style.display = 'none';
+}
+
+async function checkLeaderboard() {
+  let scores = [];
+  try {
+    const r = await fetch('/api/scores?game=az-cipher');
+    const d = await r.json();
+    scores = d.scores || [];
+  } catch {
+    scores = JSON.parse(localStorage.getItem('az-cipher-scores') || '[]');
+  }
+
+  const qualifies = G.finalScore > 0 &&
+    (scores.length < 10 || G.finalScore > scores[scores.length - 1].value);
+
+  renderSolvedLeaderboard(scores, null);
+
+  if (qualifies) {
+    document.getElementById('ss-name-entry').style.display = '';
+    setTimeout(() => {
+      const inp = document.getElementById('ss-name-input');
+      inp.value = '';
+      inp.focus();
+    }, 50);
+  }
+}
+
+async function submitName() {
+  const inp  = document.getElementById('ss-name-input');
+  const name = (inp.value.trim().toUpperCase().slice(0, 12)) || 'ANON';
+  document.getElementById('ss-name-entry').style.display = 'none';
+
+  let scores = [];
+  try {
+    const r = await fetch('/api/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game: 'az-cipher', name, value: G.finalScore }),
+    });
+    const d = await r.json();
+    scores = d.scores || [];
+    try { localStorage.setItem('az-cipher-scores', JSON.stringify(scores)); } catch(e) {}
+  } catch {
+    // Network failure — build from localStorage
+    const local = JSON.parse(localStorage.getItem('az-cipher-scores') || '[]');
+    local.push({ name, value: G.finalScore });
+    local.sort((a, b) => b.value - a.value);
+    scores = local.slice(0, 10);
+    try { localStorage.setItem('az-cipher-scores', JSON.stringify(scores)); } catch(e) {}
+  }
+
+  const playerIdx = scores.findIndex(s => s.name === name && s.value === G.finalScore);
+  renderSolvedLeaderboard(scores, playerIdx);
+
+  // Refresh start screen leaderboard too
+  loadLeaderboard();
+}
+
+function renderSolvedLeaderboard(scores, highlightIdx) {
+  const el = document.getElementById('ss-lb-list');
+  if (!scores || scores.length === 0) {
+    el.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+    return;
+  }
+  el.innerHTML = scores.slice(0, 10).map((s, i) => {
+    const mine = i === highlightIdx ? ' mine' : '';
+    return `<div class="ss-lb-row${mine}">
+      <span class="lb-rank">${i + 1}.</span>
+      <span class="lb-name">${s.name}</span>
+      <span class="lb-score">${s.value} pts</span>
+    </div>`;
+  }).join('');
+  if (highlightIdx !== null && highlightIdx >= 0) {
+    setTimeout(() => {
+      const rows = el.querySelectorAll('.ss-lb-row');
+      if (rows[highlightIdx]) rows[highlightIdx].scrollIntoView({ block: 'nearest' });
+    }, 50);
+  }
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+
+async function loadLeaderboard() {
+  const el = document.getElementById('lb-list');
+  try {
+    const r = await fetch('/api/scores?game=az-cipher');
+    const d = await r.json();
+    renderLeaderboard(el, d.scores);
+  } catch {
+    const local = JSON.parse(localStorage.getItem('az-cipher-scores') || '[]');
+    renderLeaderboard(el, local);
+  }
+}
+
+function renderLeaderboard(el, scores) {
+  if (!scores || scores.length === 0) {
+    el.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+    return;
+  }
+  el.innerHTML = scores.slice(0, 10).map((s, i) =>
+    `<div class="lb-row">
+      <span class="lb-rank">${i + 1}.</span>
+      <span class="lb-name">${s.name}</span>
+      <span class="lb-score">${s.value} pts</span>
+    </div>`
+  ).join('');
+}
+
+// ── AUDIO ─────────────────────────────────────────────────────────────────────
+
+let _actx = null;
+function getAudioCtx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  return _actx;
+}
+
+const SFX = (() => {
+  function ac() { return getAudioCtx(); }
+  function tone(freq, type, vol, dur, freqEnd) {
+    try {
+      const c = ac(), o = c.createOscillator(), g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type = type;
+      o.frequency.setValueAtTime(freq, c.currentTime);
+      if (freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, c.currentTime + dur * 0.7);
+      g.gain.setValueAtTime(vol, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+      o.start(c.currentTime);
+      o.stop(c.currentTime + dur + 0.01);
+    } catch(e) {}
+  }
+  return {
+    click()   { tone(700, 'sine',     0.07, 0.06, 400); },
+    type()    { tone(540, 'sine',     0.06, 0.07); },
+    correct() {
+      [523, 659, 784].forEach((f, i) =>
+        setTimeout(() => tone(f, 'sine', 0.10, 0.20), i * 90)
+      );
+    },
+    wrong()   { tone(180, 'sawtooth', 0.13, 0.35, 80); },
+    solve()   {
+      [523, 659, 784, 1047, 1319].forEach((f, i) =>
+        setTimeout(() => tone(f, 'sine', 0.12, 0.35), i * 110)
+      );
+    },
+    hint()    {
+      tone(440, 'sine', 0.07, 0.12);
+      setTimeout(() => tone(660, 'sine', 0.07, 0.18), 100);
+    },
+  };
+})();
+
+const MUSIC = (() => {
+  // A-minor pentatonic: A3 C4 D4 E4 G4 A4 C5 E5
+  const NOTES = [220, 262, 294, 330, 392, 440, 524, 659];
+  const PATTERN = [0, 2, 4, 5, 4, 2, 1, 0, 3, 5, 4, 2, 0, 1, 4, 3];
+  const BASS    = [110, 110, 165, 110];
+  let nodes = [];
+  let running = false;
+  let stepIdx = 0;
+  let bassIdx = 0;
+  let nextTime = 0;
+  let schedTimer = null;
+  const STEP = 0.28;
+
+  function scheduleStep() {
+    if (!running) return;
+    const c = getAudioCtx();
+    while (nextTime < c.currentTime + 0.5) {
+      const freq = NOTES[PATTERN[stepIdx % PATTERN.length]];
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, nextTime);
+      g.gain.linearRampToValueAtTime(0.04, nextTime + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, nextTime + STEP * 0.9);
+      o.start(nextTime);
+      o.stop(nextTime + STEP);
+      nodes.push(o);
+
+      // Bass note every 4 melody steps
+      if (stepIdx % 4 === 0) {
+        const bf = BASS[bassIdx % BASS.length];
+        const bo = c.createOscillator();
+        const bg = c.createGain();
+        bo.connect(bg); bg.connect(c.destination);
+        bo.type = 'sine';
+        bo.frequency.value = bf;
+        bg.gain.setValueAtTime(0, nextTime);
+        bg.gain.linearRampToValueAtTime(0.06, nextTime + 0.06);
+        bg.gain.exponentialRampToValueAtTime(0.001, nextTime + STEP * 3.8);
+        bo.start(nextTime);
+        bo.stop(nextTime + STEP * 4);
+        nodes.push(bo);
+        bassIdx++;
+      }
+
+      stepIdx++;
+      nextTime += STEP;
+    }
+    // Trim stale nodes
+    nodes = nodes.filter(n => { try { return n.context.currentTime < nextTime; } catch(e) { return false; } });
+    schedTimer = setTimeout(scheduleStep, 200);
+  }
+
+  return {
+    start() {
+      if (running) return;
+      running = true;
+      stepIdx = 0; bassIdx = 0;
+      nextTime = getAudioCtx().currentTime + 0.05;
+      scheduleStep();
+    },
+    pause() {
+      running = false;
+      clearTimeout(schedTimer);
+      nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+      nodes = [];
+    },
+    resume() {
+      if (running) return;
+      running = true;
+      nextTime = getAudioCtx().currentTime + 0.05;
+      scheduleStep();
+    },
+    stop() {
+      this.pause();
+      stepIdx = 0; bassIdx = 0;
+    },
+  };
+})();
+
+// ── RESPONSIVE LAYOUT ─────────────────────────────────────────────────────────
+
+// True if the primary input is touch (used to adapt interaction)
+const IS_TOUCH = navigator.maxTouchPoints > 0;
+
+function setScale() {
+  // On small screens enforce a minimum so tiles stay tappable (~26px wide)
+  const minScale = TW_B > 0 ? 26 / TW_B : 0.5;
+  SCALE = Math.max(minScale, canvas.width / 800);
+
+  TW  = Math.round(TW_B * SCALE);
+  TH  = Math.round(TH_B * SCALE);
+  TG  = Math.max(2, Math.round(TG_B * SCALE));
+  WG  = Math.round(WG_B * SCALE);
+  LH  = Math.round(LH_B * SCALE);
+  PAD = Math.round(PAD_B * SCALE);
+
+  // HUD buttons — taller on touch for fat-finger targets
+  const btnH = IS_TOUCH ? 38 : 30;
+  const btnY2 = IS_TOUCH ? 46 : 42;
+
+  PAUSE_BTN.x  = canvas.width - 52;
+  PAUSE_BTN.y  = 12; PAUSE_BTN.w = 40; PAUSE_BTN.h = IS_TOUCH ? 34 : 24;
+
+  SUBMIT_BTN.x = Math.round(canvas.width * 0.49);
+  SUBMIT_BTN.y = btnY2; SUBMIT_BTN.w = 150; SUBMIT_BTN.h = btnH;
+
+  HINT_BTN.x = SUBMIT_BTN.x + SUBMIT_BTN.w + 8;
+  HINT_BTN.y = btnY2; HINT_BTN.w = 90; HINT_BTN.h = btnH;
+
+  PK.w = Math.min(520, canvas.width - 20);
+  PK.x = (canvas.width - PK.w) / 2;
+  PK.y = 124; PK.h = 308;
+}
+
+function resizeCanvas() {
+  canvas.width  = Math.min(window.innerWidth, 980);
+  // On small screens allow more vertical space so more sentence lines fit
+  const heightRatio = canvas.width < 500 ? 1.1 : 0.78;
+  canvas.height = Math.max(520, Math.round(canvas.width * heightRatio));
+  setScale();
+  // Re-layout tiles if a puzzle is active
+  if (G.tiles.length > 0 && G.plainWords.length > 0) {
+    const clueEncoded = new Set(G.encodedWords[G.clueWordIdx]);
+    const r = layoutTiles(G.plainWords, G.encodedWords, clueEncoded);
+    G.tiles    = r.tiles;
+    G.numLines = r.numLines;
+  }
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+
+resizeCanvas();
+loadLeaderboard();
+requestAnimationFrame(function loop() { render(); requestAnimationFrame(loop); });
+
+</script>
+</body>
+</html>

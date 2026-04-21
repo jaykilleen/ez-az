@@ -773,6 +773,16 @@
       border-top: 1px solid #1a1a2e;
       max-width: 600px;
       margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .counter-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .counter-display {
@@ -1160,6 +1170,21 @@
         </div>
       </a>
 
+      <a href="/games/az-cipher.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="cipherCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Cipher</div>
+          <div class="game-box-creators">By Jaykill</div>
+          <div class="game-box-desc">
+            Az locked up for the night. Crack the substitution cipher to get back in.
+          </div>
+          <span class="game-box-badge">1 PLAYER</span><br>
+          <span class="game-box-scores" data-game="az-cipher">High Scores</span>
+        </div>
+      </a>
+
       <div class="game-box coming-soon">
         <div class="game-box-art placeholder">
           <div class="placeholder-text">COMING<br>SOON</div>
@@ -1256,8 +1281,14 @@
   </section>
 
   <section class="visitor-counter" id="visitorCounter" style="display:none;">
-    <div class="counter-display" id="counterDisplay"></div>
-    <p class="counter-label">visitors to the store</p>
+    <div class="counter-block">
+      <div class="counter-display" id="counterDisplay"></div>
+      <p class="counter-label">visitors to the store</p>
+    </div>
+    <div class="counter-block" id="gamerBlock" style="display:none;">
+      <div class="counter-display" id="gamerDisplay"></div>
+      <p class="counter-label">gamers</p>
+    </div>
   </section>
 
   <footer class="store-footer">
@@ -2045,6 +2076,96 @@
       ctx.lineWidth = 1.5;
       ctx.strokeRect(6, 12, 20, 20);
     })();
+
+    // Draw the Az's Cipher cover art
+    (function () {
+      var canvas = document.getElementById('cipherCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height;
+
+      // Background
+      var bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#05050f');
+      bg.addColorStop(1, '#0a0a18');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Scattered cipher letters in background
+      var alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      ctx.font = 'bold 11px Courier New';
+      for (var i = 0; i < 40; i++) {
+        var x = 8 + (i % 8) * 26 + (Math.floor(i / 8) % 2) * 12;
+        var y = 18 + Math.floor(i / 8) * 22;
+        var opacity = 0.08 + (i % 5) * 0.04;
+        ctx.fillStyle = 'rgba(204,136,68,' + opacity + ')';
+        ctx.textAlign = 'center';
+        ctx.fillText(alpha[i % 26], x, y);
+      }
+
+      // Padlock body
+      var lx = W / 2, ly = H / 2 + 10;
+      // Shackle (arc)
+      ctx.beginPath();
+      ctx.arc(lx, ly - 28, 22, Math.PI, 0, false);
+      ctx.strokeStyle = '#cc8844';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // Lock body
+      ctx.beginPath();
+      var bw = 52, bh = 42, br = 6;
+      var bx = lx - bw / 2, by = ly - 10;
+      ctx.moveTo(bx + br, by);
+      ctx.lineTo(bx + bw - br, by);
+      ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
+      ctx.lineTo(bx + bw, by + bh - br);
+      ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
+      ctx.lineTo(bx + br, by + bh);
+      ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
+      ctx.lineTo(bx, by + br);
+      ctx.arcTo(bx, by, bx + br, by, br);
+      ctx.closePath();
+      ctx.fillStyle = '#1a1200';
+      ctx.fill();
+      ctx.strokeStyle = '#cc8844';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Keyhole
+      ctx.beginPath();
+      ctx.arc(lx, by + 16, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#cc8844';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(lx - 5, by + 22);
+      ctx.lineTo(lx + 5, by + 22);
+      ctx.lineTo(lx + 3, by + 34);
+      ctx.lineTo(lx - 3, by + 34);
+      ctx.closePath();
+      ctx.fill();
+
+      // Glow around lock
+      ctx.shadowColor = '#cc8844';
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = '#cc884455';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx - 4, by - 4, bw + 8, bh + 8);
+      ctx.shadowBlur = 0;
+
+      // Title
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 13px Courier New';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 8;
+      ctx.fillText("CIPHER", W / 2, H - 36);
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#334455';
+      ctx.font = '9px Courier New';
+      ctx.fillText('CRACK THE CODE', W / 2, H - 20);
+    })();
   </script>
 
   <script>
@@ -2146,6 +2267,15 @@
       .then(function(data) {
         document.getElementById('counterDisplay').textContent = data.count.toLocaleString();
         document.getElementById('visitorCounter').style.display = '';
+      })
+      .catch(function() {});
+
+    // Gamers counter
+    fetch('/gamers')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        document.getElementById('gamerDisplay').textContent = data.count.toLocaleString();
+        document.getElementById('gamerBlock').style.display = '';
       })
       .catch(function() {});
   </script>

@@ -4,4 +4,9 @@ class CountersController < ApplicationController
     response.headers["Cache-Control"] = "no-store"
     render json: { count: count }
   end
+
+  def gamers
+    response.headers["Cache-Control"] = "no-store"
+    render json: { count: Player.count }
+  end
 end

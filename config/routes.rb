@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   get "/icons/:name.:format", to: "icons#show", constraints: { format: /png|jpg|jpeg|svg|webp/ }
 
   get "/counter", to: "counters#show"
+  get "/gamers",  to: "counters#gamers"
 
   namespace :api do
     resources :scores,  only: [:index, :create]

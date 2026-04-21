@@ -23,7 +23,7 @@ This is for the dads (and mums, and uncles, and whoever else) who sat down with 
 - **Charlie** (aged 8) and **Cooper** — built Space Dodge, the first game on the shelf. Two players, six worlds, a Void King with two health bars. They argued about the boss fight. The boss fight is great.
 - **Lachie** — built Dodgeball '88. Top-down, 2v2, tournament mode. He wanted a wandering referee. There is a wandering referee.
 - **Lil** — built Cat vs Mouse. A rope puzzle game with 8 levels. Quiet, clever, totally her own.
-- **Jaykill** (Jay) — built Descent. Maze runner, flashlight vision, four dinosaur heroes. He's the one helping everyone else but he made his own game anyway.
+- **Jaykill** (Jay) — built Descent and Cipher. Descent: maze runner, flashlight vision, four dinosaur heroes. Cipher: crack the monoalphabetic substitution cipher to unlock the store. He's the one helping everyone else but he made his own games anyway.
 - **Cooper** — also built Corrupted. First-person raycaster. Six worlds. Zombie bosses. Fists to start, loot from the fallen.
 - **Az** — built Bloom. That's me. A chill exploration game. The world lost its colour and music. You find the hearts. You bring it back.
 
@@ -43,6 +43,8 @@ Every one of these games started as an idea a kid had. Every one of them is on t
 
 **Families over features.** If a feature doesn't make it easier or more fun for a kid and their family to build or play a game, it probably doesn't belong here.
 
+**Restraint is the mother of creativity.** Limits aren't obstacles — they're where interesting ideas come from. One HTML file. One cipher. Fifteen minutes. Give kids a constraint and something to work around, and they'll invent things you didn't expect. That's the whole point.
+
 ---
 
 ## The Future
@@ -60,6 +62,21 @@ Things we're building toward:
 ## Decisions Log
 
 *What shipped, why it mattered, and what it means for the kids.*
+
+---
+
+### v20260421.1 — 21 April 2026
+
+**Cipher is on the shelf.**
+Jaykill's second game. A monoalphabetic substitution cipher puzzle — Az locks up the store for the night, sets a cipher on the door, and you have to crack it to get back in. One word is your clue. You deduce the rest letter by letter, then hit SUBMIT. Wrong letters clear. Correct ones lock. No trial and error.
+
+Three difficulty levels. A hint system that costs points (you can buy a reveal, but the score takes the hit). Scoring based on speed, errors, and hints used. Full leaderboard integration — top codebreakers are saved. Background music: slow A-minor arpeggio that pauses when you do. Particles burst from the tiles when you crack it.
+
+The build happened in one session: 11 steps, each adding one layer. Sentences baked into the JS as arrays — easy to add more. Single HTML file, no dependencies, same as everything else on the shelf.
+
+Two things worth noting. First: the leaderboard wasn't saving in early testing. The dev server had been restarted in production mode without the right environment, so it was pointing at an empty database. The code was fine. The server wasn't. Second: touch controls weren't reviewed until the final step — added `touch-action: none`, a minimum tile scale so tiles stay tappable on phones, and picker-on-first-tap for touch devices since there's no keyboard.
+
+The philosophy behind this one: restraint is the mother of creativity. One cipher. One clue word. Fifteen letters. The constraint is the game.
 
 ---
 

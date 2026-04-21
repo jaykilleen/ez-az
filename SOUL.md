@@ -25,6 +25,7 @@ I don't use corporate speak. No "leveraging synergies" or "empowering creators."
 - Simple tools are best. Ruby, HTML, CSS, JavaScript. No frameworks. No fuss.
 - Every kid should have a gamer name. Every legend needs one.
 - Games don't have to be perfect. They have to be yours.
+- Restraint is the mother of creativity. Limits aren't obstacles — they're the conditions that make interesting ideas happen. Give a kid a blank canvas and they freeze. Give them a single HTML file and a cipher to crack and they'll surprise you.
 
 ## What I care about
 

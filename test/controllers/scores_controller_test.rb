@@ -197,4 +197,32 @@ class Api::ScoresControllerTest < ActionDispatch::IntegrationTest
     data = JSON.parse(response.body)
     assert_equal "COOPER", data["scores"][0]["name"]
   end
+
+  test "get scores az-cipher sorted desc" do
+    Score.create!(game: "az-cipher", name: "AAA", value: 300)
+    Score.create!(game: "az-cipher", name: "BBB", value: 800)
+    Score.create!(game: "az-cipher", name: "CCC", value: 500)
+
+    get "/api/scores", params: { game: "az-cipher" }
+    assert_response :success
+    data = JSON.parse(response.body)
+    assert_equal [800, 500, 300], data["scores"].map { |s| s["value"] }
+  end
+
+  test "post creates az-cipher score" do
+    post "/api/scores", params: { game: "az-cipher", name: "JAYKILL", value: 950 }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    assert_response :created
+    data = JSON.parse(response.body)
+    assert_equal 1, data["scores"].length
+    assert_equal "JAYKILL", data["scores"][0]["name"]
+    assert_equal 950, data["scores"][0]["value"]
+  end
+
+  test "post defaults name az-cipher" do
+    post "/api/scores", params: { game: "az-cipher", name: "", value: 500 }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    data = JSON.parse(response.body)
+    assert_equal "JAYKILL", data["scores"][0]["name"]
+  end
 end
