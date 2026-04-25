@@ -123,12 +123,62 @@ Each game gets a "High Scores" link on its game box in `public/index.html`. This
 - Games are single HTML files using HTML5 Canvas
 - Web Audio API for procedural music and sound effects
 - Speech Synthesis API for robot singing
-- Rack/Puma for serving via Hatchbox on Linode
+- Rails 8 / Ruby 3.4.2 / SQLite / Puma
+- Action Cable for real-time TV remote and trivia channels
+- Propshaft for asset pipeline (no Sprockets, no Webpack)
+- `rqrcode` gem for QR code generation
+- `bcrypt` for player session tokens
+- `honeybadger` for error monitoring
+- Minitest + rack-test for unit and integration tests
+
+## App Structure
+
+```
+app/
+  controllers/
+    api/              # JSON API -- scores, players, sessions, version, store, watch
+    rooms_controller  # TV room management
+    tv_controller     # TV display (big screen)
+    tv_remote_controller  # Phone remote
+    watch_controller  # /watch TV channel experience
+    code_controller   # QR-based store unlock (Cipher)
+    trivia_controller # Trivia game
+    learn_controller  # Learning tracks
+  models/
+    player.rb         # Persistent identity via session token
+    room.rb           # TV room (host + members)
+    score.rb          # Game leaderboard entry
+    game.rb           # Game metadata
+    learning_track.rb # Structured learning content
+    learning_channel.rb # Action Cable channel for learning
+  channels/
+    room_channel.rb       # TV room presence
+    tv_remote_channel.rb  # Phone-to-TV controller input
+    trivia_channel.rb     # Trivia game state
+  views/             # ERB, minimal -- most UI is in public/ or inline HTML
+public/
+  index.html         # Store front (shelf of games)
+  games/             # Self-contained game HTML files
+docs/
+  decisions/         # ADRs (Architecture Decision Records)
+```
+
+## Key Conventions
+
+- ADRs live in `docs/decisions/` -- read before touching TV, rooms, or player identity
+- API controllers live under `app/controllers/api/` and inherit from `Api::BaseController`
+- Game slugs must be registered in `config.ru` (`GAME_SORT` and `DEFAULT_NAMES` hashes)
+- Dev server runs on port 3001 (port 3000 is reserved for TXTavern)
+- No Turbo, no Stimulus -- this is not a standard Rails app; the frontend is vanilla JS and Canvas
 
 ## Development
 
-Games live in `public/`. Currently the main game is at `public/index.html`. Everything is self-contained with no external dependencies.
+Start the server: `bin/rails server -p 3001`
+
+Games live in `public/games/`. The store front is `public/index.html`. Game files are self-contained with no external dependencies.
+
+Run tests: `bin/rails test`
 
 ## Deployment
 
-Deployed via Hatchbox to a Linode server at https://ez-az.net.
+Deployed via Kamal to a Linode server at https://ez-az.net. After deploy, poll `/api/version` until the new version is confirmed live.

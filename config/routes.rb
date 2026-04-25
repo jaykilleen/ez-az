@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     resources :errors,  only: [:create]
     get "watch/position", to: "watch#position"
     put "watch/position", to: "watch#update_position"
+    get "tv_session",     to: "tv_session#show"
   end
 
   get "/errors", to: "errors_dashboard#index"
