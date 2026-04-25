@@ -80,7 +80,7 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
 
   test "help contains github link" do
     get "/help.html"
-    assert_includes response.body, "github.com/jaykilleen/easy-az"
+    assert_includes response.body, "github.com/jaykilleen/ez-az"
   end
 
   test "help contains back link" do

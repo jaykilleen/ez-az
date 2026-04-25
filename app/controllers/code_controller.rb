@@ -74,7 +74,7 @@ class CodeController < ApplicationController
 
   def index
     @grouped = CURATED.group_by { |entry| entry[:category] }
-    @github_repo = "jaykilleen/easy-az"
+    @github_repo = "jaykilleen/ez-az"
   end
 
   def show
@@ -88,7 +88,7 @@ class CodeController < ApplicationController
 
     @entry       = entry
     @source      = File.read(full_path)
-    @github_repo = "jaykilleen/easy-az"
+    @github_repo = "jaykilleen/ez-az"
     @github_url  = "https://github.com/#{@github_repo}/blob/main/#{entry[:path]}"
     @language    = language_for(entry[:path])
   end
