@@ -72,12 +72,34 @@
 
   /* waiting */
   .waiting-badge {
-    width: 100px; height: 100px; border-radius: 50%;
+    width: 80px; height: 80px; border-radius: 50%;
     background: #334; display: flex; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: 900; color: #fff;
+    font-size: 15px; font-weight: 900; color: #fff;
     font-family: "Courier New", monospace; letter-spacing: 0.04em;
   }
-  .waiting-msg { font-size: 15px; color: #8ab4c8; line-height: 1.6; }
+  .waiting-msg { font-size: 14px; color: #8ab4c8; line-height: 1.6; }
+  .waiting-players {
+    width: 100%; max-width: 300px;
+    background: rgba(255,255,255,0.04); border-radius: 12px;
+    overflow: hidden;
+  }
+  .waiting-players-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #445; padding: 10px 14px 6px;
+  }
+  .waiting-player-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .waiting-player-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .waiting-player-name { font-size: 14px; font-weight: 700; color: #fff; flex: 1; }
+  .waiting-player-you  { font-size: 11px; color: #00ffc8; letter-spacing: 0.06em; }
+  .waiting-host-note {
+    font-size: 12px; color: #445; line-height: 1.5;
+    padding: 0 4px;
+  }
 
   /* buzzer */
   .buzzer-content { gap: 12px; justify-content: flex-start; padding-top: 16px; }
@@ -201,7 +223,13 @@
     <!-- waiting: joined, waiting for host to start -->
     <div class="zone-content" data-screen="waiting" hidden>
       <div class="waiting-badge" id="waiting-badge">P1</div>
-      <div class="waiting-msg">Waiting for the host<br>to start the game&hellip;</div>
+      <div class="waiting-msg">You're in! Waiting to start&hellip;</div>
+      <div class="waiting-players" id="waiting-players">
+        <div class="waiting-players-title">In the room</div>
+      </div>
+      <div class="waiting-host-note">
+        The person holding the D-pad controls<br>when the game starts.
+      </div>
     </div>
 
     <!-- buzzer: trivia game in progress, joined -->
@@ -259,9 +287,11 @@
   var myColor       = null;
   var roomCode      = null;
   var triviaChannel = null;
+  var roomChannel   = null;
   var myTurn        = false;
   var letters       = ['A', 'B', 'C', 'D'];
-  var DPAD_SCREENS  = new Set(['shelf', 'lobby', 'watching']);
+  var DPAD_SCREENS  = new Set(['shelf', 'lobby', 'waiting', 'watching']);
+  var SLOT_COLORS   = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
 
   // ── Elements ────────────────────────────────────────────────────────
   var zoneDot   = document.getElementById('zone-dot');
@@ -273,7 +303,8 @@
   var nameInput     = document.getElementById('name-input');
   var joinBtn       = document.getElementById('join-btn');
   var joinError     = document.getElementById('join-error');
-  var waitingBadge  = document.getElementById('waiting-badge');
+  var waitingBadge   = document.getElementById('waiting-badge');
+  var waitingPlayers = document.getElementById('waiting-players');
   var buzzerInfo    = document.getElementById('buzzer-info');
   var buzzBtn       = document.getElementById('buzz-btn');
   var buzzStatus    = document.getElementById('buzz-status');
@@ -336,8 +367,39 @@
     buzzBtn.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
 
+    if (data.members) renderPlayers(data.members);
     showScreen('waiting');
     subscribeToTrivia(data.code, data.slot);
+    subscribeToRoom(data.code);
+  }
+
+  function renderPlayers(members) {
+    var rows = members.filter(function(m) { return m.role === 'player'; }).map(function(m) {
+      var color = SLOT_COLORS[m.slot] || '#fff';
+      var youTag = m.slot === mySlot ? '<span class="waiting-player-you">YOU</span>' : '';
+      return '<div class="waiting-player-row">' +
+        '<div class="waiting-player-dot" style="background:' + color + '"></div>' +
+        '<div class="waiting-player-name">' + esc(m.name) + '</div>' +
+        youTag +
+        '</div>';
+    });
+    waitingPlayers.innerHTML =
+      '<div class="waiting-players-title">In the room</div>' +
+      (rows.length ? rows.join('') : '<div class="waiting-player-row" style="color:#445;font-size:13px;">Just you so far…</div>');
+  }
+
+  function subscribeToRoom(code) {
+    if (roomChannel) return;
+    roomChannel = consumer.subscriptions.create(
+      { channel: 'RoomChannel', code: code },
+      {
+        received: function(data) {
+          if (data.type === 'member_joined' || data.type === 'member_left') {
+            if (data.members) renderPlayers(data.members);
+          }
+        }
+      }
+    );
   }
 
   function handleJoinError(data) {

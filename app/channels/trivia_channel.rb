@@ -22,7 +22,23 @@ class TriviaChannel < ApplicationCable::Channel
 
     stream_from stream_key
     s = get_session
-    transmit({ type: "sync", phase: s ? s[:phase] : "lobby" }) if s
+    return unless s
+
+    # Late joiners receive the current question so they can buzz in immediately
+    if %w[question buzzed].include?(s[:phase])
+      q = current_question(s)
+      transmit({
+        type:     "question",
+        q_index:  s[:q_index],
+        total:    s[:order].length,
+        question: q[:question],
+        options:  q[:options],
+        category: q[:category],
+        answer:   q[:answer]
+      })
+    else
+      transmit({ type: "sync", phase: s[:phase] })
+    end
   end
 
   def unsubscribed; end

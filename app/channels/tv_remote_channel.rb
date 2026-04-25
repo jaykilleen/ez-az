@@ -39,9 +39,8 @@ class TvRemoteChannel < ApplicationCable::Channel
     return transmit({ type: "join_error", message: "Enter your name" }) if name.blank?
 
     room = Room.active.find_by(code: code)
-    return transmit({ type: "join_error", message: "Room not found" })      unless room
-    return transmit({ type: "join_error", message: "Game already started" }) if room.playing?
-    return transmit({ type: "join_error", message: "Room is full" })         if room.full?
+    return transmit({ type: "join_error", message: "Room not found" }) unless room
+    return transmit({ type: "join_error", message: "Room is full" })   if room.full?
 
     slot = room.next_available_slot
     return transmit({ type: "join_error", message: "No slots available" }) unless slot
@@ -54,7 +53,8 @@ class TvRemoteChannel < ApplicationCable::Channel
     )
     RoomChannel.member_joined(room, membership)
 
-    transmit({ type: "joined", slot: slot, name: name, color: SLOT_COLORS[slot], code: code })
+    members = room.memberships.reload.map(&:display)
+    transmit({ type: "joined", slot: slot, name: name, color: SLOT_COLORS[slot], code: code, members: members })
   end
 
   private
