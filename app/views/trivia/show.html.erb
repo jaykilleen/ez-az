@@ -629,8 +629,7 @@
   var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
   if (initMembers.length) { knownMembers = initMembers; renderScoreBar(initMembers); }
 
-  // Phone remote token — stored by TV shelf page before navigating here
-  var remoteToken = sessionStorage.getItem('tvRemoteToken');
+  var remoteToken = <%= @room.tv_token.to_json.html_safe %>;
   var tvRemoteSub = null;
   if (remoteToken) {
     tvRemoteSub = consumer.subscriptions.create(

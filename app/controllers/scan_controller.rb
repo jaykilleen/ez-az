@@ -1,5 +1,7 @@
 class ScanController < ApplicationController
   layout "controller"
 
-  def show; end
+  def show
+    response.headers["Cache-Control"] = "no-store"
+  end
 end

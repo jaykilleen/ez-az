@@ -458,23 +458,29 @@
   var remoteDot       = document.getElementById('remote-dot');
 
   // ── Screen switching ────────────────────────────────────────────────
-  var PARTY_SCREENS = new Set(['buzzer']);
+  var PARTY_SCREENS  = new Set(['buzzer']);
+  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer']);
 
   function showScreen(name) {
     currentScreen = name;
     var isParty = PARTY_SCREENS.has(name);
+    var isDpad  = DPAD_SCREENS.has(name);
 
     document.querySelectorAll('.zone-content').forEach(function(el) {
       el.hidden = el.dataset.screen !== name;
     });
 
-    zoneTabs.hidden = !isParty;
+    zoneTabs.hidden = !TABBED_SCREENS.has(name);
 
     if (isParty) {
       applyTab(activeTab);
     } else {
-      zoneDpad.hidden = !DPAD_SCREENS.has(name);
+      zoneDpad.hidden = !isDpad;
       zoneOptionsPanel.hidden = true;
+      document.querySelectorAll('.zone-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.tab === 'game');
+      });
+      activeTab = 'game';
     }
   }
 
@@ -483,10 +489,18 @@
     document.querySelectorAll('.zone-tab').forEach(function(btn) {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
-    var buzzerEl = document.querySelector('[data-screen="buzzer"]');
-    buzzerEl.hidden   = tab === 'options';
-    zoneDpad.hidden   = tab !== 'remote';
-    zoneOptionsPanel.hidden = tab !== 'options';
+
+    if (PARTY_SCREENS.has(currentScreen)) {
+      var buzzerEl = document.querySelector('[data-screen="buzzer"]');
+      buzzerEl.hidden         = tab === 'options';
+      zoneDpad.hidden         = tab !== 'remote';
+      zoneOptionsPanel.hidden = tab !== 'options';
+    } else {
+      var isDpad = DPAD_SCREENS.has(currentScreen);
+      zoneOptionsPanel.hidden = tab !== 'options';
+      zoneDpad.hidden         = !isDpad || tab === 'options';
+    }
+
     if (tab === 'game') remoteDot.hidden = true;
   }
 

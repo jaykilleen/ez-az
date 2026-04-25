@@ -2706,7 +2706,7 @@
               },
               disconnected: function () { badge.classList.remove('connected'); },
               received: function (data) {
-                if (data.type === 'navigate') handleNavigate(data.direction);
+                if (data.type === 'navigate' && data.nav_type !== 'release') handleNavigate(data.direction);
               }
             }
           );
