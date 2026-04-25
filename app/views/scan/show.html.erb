@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0a0a12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Scan for Party — EZ-AZ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0a12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+    }
+
+    /* Banner */
+    .store-banner {
+      flex-shrink: 0;
+      padding: max(env(safe-area-inset-top), 14px) 20px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .store-banner a {
+      font-size: 14px;
+      font-weight: 900;
+      color: #00ffc8;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .banner-title {
+      font-size: 12px;
+      color: #445;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Viewfinder area */
+    .viewfinder-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Dim overlay outside reticle */
+    .dim-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      /* Radial cutout using box-shadow trick */
+      background: rgba(10, 10, 18, 0.5);
+    }
+
+    /* Aiming reticle */
+    .reticle {
+      position: absolute;
+      width: min(260px, 65vw);
+      height: min(260px, 65vw);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .reticle-corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-color: #00ffc8;
+      border-style: solid;
+      transition: border-color 0.2s;
+    }
+    .reticle-corner.tl { top: 0;    left: 0;   border-width: 4px 0 0 4px; }
+    .reticle-corner.tr { top: 0;    right: 0;  border-width: 4px 4px 0 0; }
+    .reticle-corner.bl { bottom: 0; left: 0;   border-width: 0 0 4px 4px; }
+    .reticle-corner.br { bottom: 0; right: 0;  border-width: 0 4px 4px 0; }
+
+    .reticle.found .reticle-corner { border-color: #fff; }
+    .reticle.error .reticle-corner { border-color: #ff4466; }
+
+    .reticle-line {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #00ffc8, transparent);
+      animation: scan-sweep 2s ease-in-out infinite;
+    }
+    .reticle.found .reticle-line,
+    .reticle.error .reticle-line { animation-play-state: paused; }
+
+    @keyframes scan-sweep {
+      0%,  100% { top: 8px;             opacity: 0.5; }
+      50%        { top: calc(100% - 10px); opacity: 1;   }
+    }
+
+    /* Bottom status bar */
+    .status-bar {
+      flex-shrink: 0;
+      padding: 16px 24px max(env(safe-area-inset-bottom), 16px);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #0a0a12;
+    }
+
+    .status-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #aaa;
+    }
+    .status-text.error  { color: #ff4466; }
+    .status-text.success { color: #00ffc8; }
+
+    /* Start button — shown before permission granted */
+    .start-btn {
+      padding: 14px 36px;
+      border-radius: 12px;
+      background: #00ffc8;
+      color: #0a0a12;
+      font-size: 16px;
+      font-weight: 900;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s;
+    }
+    .start-btn:active { opacity: 0.75; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="store-banner">
+    <a href="/">EZ-AZ</a>
+    <span class="banner-title">Scan for Party</span>
+  </div>
+
+  <div class="viewfinder-wrap">
+    <video id="video" playsinline autoplay muted></video>
+    <div class="dim-overlay"></div>
+    <div class="reticle" id="reticle">
+      <div class="reticle-corner tl"></div>
+      <div class="reticle-corner tr"></div>
+      <div class="reticle-corner bl"></div>
+      <div class="reticle-corner br"></div>
+      <div class="reticle-line"></div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-text" id="statusText">Tap to open your camera</div>
+    <button class="start-btn" id="startBtn">Open Camera</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var VIDEO_W = 640, VIDEO_H = 480;
+  var VALID_HOSTS = ['ez-az.net', 'localhost', '127.0.0.1'];
+
+  var videoEl   = document.getElementById('video');
+  var reticle   = document.getElementById('reticle');
+  var statusEl  = document.getElementById('statusText');
+  var startBtn  = document.getElementById('startBtn');
+
+  var scanning  = false;
+  var stream    = null;
+
+  startBtn.addEventListener('click', function () {
+    startBtn.style.display = 'none';
+    setStatus('Starting camera…');
+    startScanner();
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  function setStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status-text' + (type ? ' ' + type : '');
+  }
+
+  function setReticle(state) {
+    reticle.className = 'reticle' + (state ? ' ' + state : '');
+  }
+
+  function sleep(ms) {
+    return new Promise(function (r) { setTimeout(r, ms); });
+  }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload  = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // ── Camera ───────────────────────────────────────────────────────────────
+
+  async function startScanner() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width:  { ideal: VIDEO_W },
+          height: { ideal: VIDEO_H }
+        },
+        audio: false
+      });
+      videoEl.srcObject = stream;
+      await videoEl.play();
+      scanning = true;
+      setStatus('Point at the QR code on the TV');
+
+      if ('BarcodeDetector' in window) {
+        scanWithBarcodeDetector();
+      } else {
+        setStatus('Loading scanner…');
+        await loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js');
+        setStatus('Point at the QR code on the TV');
+        scanWithJsQR();
+      }
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        setStatus('Camera permission denied. Tap the button to try again.', 'error');
+      } else {
+        setStatus('Could not start camera: ' + err.message, 'error');
+      }
+      startBtn.textContent = 'Try Again';
+      startBtn.style.display = '';
+    }
+  }
+
+  // ── BarcodeDetector path ─────────────────────────────────────────────────
+
+  async function scanWithBarcodeDetector() {
+    var detector = new BarcodeDetector({ formats: ['qr_code'] });
+    while (scanning) {
+      try {
+        var results = await detector.detect(videoEl);
+        if (results.length) {
+          handleResult(results[0].rawValue);
+          return;
+        }
+      } catch (e) { /* frame decode error, keep going */ }
+      await sleep(150);
+    }
+  }
+
+  // ── jsQR fallback path ───────────────────────────────────────────────────
+
+  function scanWithJsQR() {
+    var canvas = document.createElement('canvas');
+    canvas.width  = VIDEO_W;
+    canvas.height = VIDEO_H;
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    function tick() {
+      if (!scanning) return;
+      if (videoEl.readyState < 2) { requestAnimationFrame(tick); return; }
+      ctx.drawImage(videoEl, 0, 0, VIDEO_W, VIDEO_H);
+      var img  = ctx.getImageData(0, 0, VIDEO_W, VIDEO_H);
+      var code = jsQR(img.data, img.width, img.height);
+      if (code) { handleResult(code.data); return; }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── Result handling ──────────────────────────────────────────────────────
+
+  function handleResult(raw) {
+    scanning = false;
+
+    try {
+      var url = new URL(raw);
+      if (
+        VALID_HOSTS.includes(url.hostname) &&
+        url.pathname === '/tv_remote/show' &&
+        url.searchParams.get('token')
+      ) {
+        setReticle('found');
+        setStatus('Connected! Loading your controller…', 'success');
+        stopCamera();
+        setTimeout(function () { window.location.href = raw; }, 400);
+        return;
+      }
+    } catch (e) { /* not a URL */ }
+
+    // Invalid QR — show error and resume
+    setReticle('error');
+    setStatus("That's not an EZ-AZ QR code. Point at the code on the TV.", 'error');
+    setTimeout(function () {
+      setReticle('');
+      setStatus('Point at the QR code on the TV');
+      scanning = true;
+    }, 2000);
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      stream = null;
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -243,6 +243,18 @@
     letter-spacing: 0.06em; cursor: pointer;
   }
   .back-btn:active { background: rgba(255,255,255,0.1); }
+  .fire-btn {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: rgba(255, 71, 87, 0.15); border: 3px solid rgba(255, 71, 87, 0.5);
+    color: #ff4757; font-size: 13px; font-weight: 900; letter-spacing: 0.06em;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none;
+    transition: background 0.08s, border-color 0.08s;
+  }
+  .fire-btn.pressed { background: rgba(255, 71, 87, 0.4); border-color: #ff4757; }
+  .zone-game-controls {
+    display: flex; align-items: center; gap: 28px;
+  }
 </style>
 
 <div class="zone">
@@ -361,18 +373,21 @@
 
   <!-- D-pad — shown when browsing non-game screens, or Remote tab active -->
   <div class="zone-dpad" id="zone-dpad" hidden>
-    <div class="dpad">
-      <div class="dpad-empty"></div>
-      <div class="dpad-btn" data-dir="up">&#9650;</div>
-      <div class="dpad-empty"></div>
+    <div class="zone-game-controls">
+      <div class="dpad">
+        <div class="dpad-empty"></div>
+        <div class="dpad-btn" data-dir="up">&#9650;</div>
+        <div class="dpad-empty"></div>
 
-      <div class="dpad-btn" data-dir="left">&#9664;</div>
-      <div class="dpad-btn dpad-center" data-dir="select">OK</div>
-      <div class="dpad-btn" data-dir="right">&#9654;</div>
+        <div class="dpad-btn" data-dir="left">&#9664;</div>
+        <div class="dpad-btn dpad-center" data-dir="select">OK</div>
+        <div class="dpad-btn" data-dir="right">&#9654;</div>
 
-      <div class="dpad-empty"></div>
-      <div class="dpad-btn" data-dir="down">&#9660;</div>
-      <div class="dpad-empty"></div>
+        <div class="dpad-empty"></div>
+        <div class="dpad-btn" data-dir="down">&#9660;</div>
+        <div class="dpad-empty"></div>
+      </div>
+      <div class="fire-btn" id="fire-btn" data-dir="action" hidden>FIRE</div>
     </div>
     <button class="back-btn" data-dir="back">← BACK</button>
   </div>
@@ -387,6 +402,7 @@
 
   // ── State ──────────────────────────────────────────────────────────
   var currentScreen    = 'disconnected';
+  var phoneId          = Math.random().toString(36).slice(2, 10);
   var mySlot           = null;
   var myColor          = null;
   var roomCode         = null;
@@ -403,6 +419,7 @@
   var zoneDot   = document.getElementById('zone-dot');
   var zoneStatus = document.getElementById('zone-status');
   var zoneDpad  = document.getElementById('zone-dpad');
+  var fireBtn   = document.getElementById('fire-btn');
 
   var lobbyGameName = document.getElementById('lobby-game-name');
   var lobbyRoomCode = document.getElementById('lobby-room-code');
@@ -481,11 +498,14 @@
     if (data.game_title) { lobbyGameName.textContent = data.game_title; }
 
     if (data.state === 'shelf') {
+      fireBtn.hidden = true;
       if (!mySlot) showScreen('shelf');
     } else if (data.state === 'lobby') {
+      fireBtn.hidden = true;
       if (mySlot) showScreen('waiting');
       else        showScreen('lobby');
     } else if (data.state === 'game') {
+      fireBtn.hidden = false;
       if (!mySlot) showScreen('watching');
       // if mySlot is set the buzzer is driven by TriviaChannel events
     }
@@ -688,9 +708,9 @@
   }
 
   // ── D-pad ─────────────────────────────────────────────────────────────
-  function sendNav(dir) {
-    remote.perform('navigate', { direction: dir });
-    if (navigator.vibrate) navigator.vibrate(18);
+  function sendNav(dir, navType) {
+    remote.perform('navigate', { direction: dir, nav_type: navType, phone_id: phoneId });
+    if (navType === 'press' && navigator.vibrate) navigator.vibrate(18);
   }
 
   document.querySelectorAll('[data-dir]').forEach(function(btn) {
@@ -698,11 +718,14 @@
     btn.addEventListener('touchstart', function(e) {
       e.preventDefault();
       btn.classList.add('pressed');
-      sendNav(dir);
+      sendNav(dir, 'press');
     }, { passive: false });
-    btn.addEventListener('touchend',   function() { btn.classList.remove('pressed'); });
-    btn.addEventListener('mousedown',  function() { btn.classList.add('pressed'); sendNav(dir); });
-    btn.addEventListener('mouseup',    function() { btn.classList.remove('pressed'); });
+    btn.addEventListener('touchend', function() {
+      btn.classList.remove('pressed');
+      sendNav(dir, 'release');
+    });
+    btn.addEventListener('mousedown', function() { btn.classList.add('pressed'); sendNav(dir, 'press'); });
+    btn.addEventListener('mouseup',   function() { btn.classList.remove('pressed'); sendNav(dir, 'release'); });
   });
 
   function esc(str) {

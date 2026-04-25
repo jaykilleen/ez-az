@@ -7,7 +7,7 @@ class Game
       tagline: "2-player co-op space shooter with 6 worlds and a Void King boss",
       path: "/games/space-dodge.html",
       icon: "rocket",
-      tv_optimised: false
+      tv_optimised: true
     },
     {
       slug: "dodgeball",
@@ -71,6 +71,10 @@ class Game
 
   def self.for_tv
     GAMES.select { |g| g[:tv_optimised] }
+  end
+
+  def self.coming_to_tv
+    GAMES.reject { |g| g[:tv_optimised] }
   end
 
   def self.find(slug)

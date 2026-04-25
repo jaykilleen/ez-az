@@ -4,8 +4,10 @@ class TvController < ApplicationController
   layout "tv"
 
   def show
-    @games = Game.for_tv
-    @tv_cols = [[@games.size, 1].max, 5].min
+    @games         = Game.for_tv
+    @coming_to_tv  = Game.coming_to_tv
+    all_count      = @games.size + @coming_to_tv.size
+    @tv_cols       = [[all_count, 1].max, 5].min
     @version = EzAz::Version::STRING
     @remote_token = SecureRandom.alphanumeric(6).upcase
 

@@ -1,5 +1,6 @@
 class TvRemoteChannel < ApplicationCable::Channel
-  ALLOWED_DIRS   = %w[left right up down select back].freeze
+  ALLOWED_DIRS   = %w[left right up down select back action].freeze
+  ALLOWED_TYPES  = %w[press release].freeze
   ALLOWED_STATES = %w[shelf lobby game].freeze
   SLOT_COLORS    = { 1 => "#ff4757", 2 => "#3742fa", 3 => "#ffa502", 4 => "#2ed573" }.freeze
 
@@ -14,11 +15,18 @@ class TvRemoteChannel < ApplicationCable::Channel
     STATES_MUTEX.synchronize { transmit(STATES[token]) if STATES[token] }
   end
 
-  # Phone→TV: D-pad press
+  # Phone→TV: D-pad press/release
   def navigate(data)
-    dir = data["direction"].to_s
+    dir      = data["direction"].to_s
+    nav_type = data["nav_type"].to_s
     return unless ALLOWED_DIRS.include?(dir)
-    ActionCable.server.broadcast("tv_remote:#{clean_token}", { type: "navigate", direction: dir })
+    return unless nav_type.blank? || ALLOWED_TYPES.include?(nav_type)
+    phone_id = data["phone_id"].to_s.gsub(/[^a-zA-Z0-9]/, "")[0, 16]
+    ActionCable.server.broadcast("tv_remote:#{clean_token}", {
+      type: "navigate", direction: dir,
+      nav_type: nav_type.presence || "press",
+      phone_id: phone_id.presence
+    })
   end
 
   # TV→phones: broadcast current TV state so phones know what to show

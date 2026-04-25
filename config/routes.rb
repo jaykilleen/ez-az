@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "/tv",        to: "tv#show"
   get "/tv/remote", to: "tv_remote#show", as: :tv_remote
   get "/learn",     to: "learn#show"
+  get "/scan",      to: "scan#show"
 
   get  "/games/trivia",       to: "trivia#new",  as: :new_trivia
   get  "/games/trivia/:code", to: "trivia#show", as: :trivia
