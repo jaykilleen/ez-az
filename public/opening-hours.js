@@ -84,11 +84,17 @@
   var storeOpen    = isOpen(new Date());
   var onClosedPage = location.pathname === "/closed.html";
 
-  if (!storeOpen && !onClosedPage) {
-    // Store is shut and we're trying to use it — send to the closed page
-    window.location.replace("/closed.html");
-  } else if (storeOpen && onClosedPage) {
-    // Store has opened while we were sitting on the closed page — send home
-    window.location.replace("/");
-  }
+  // Check for an after-hours override set via the server (e.g. for testing).
+  // Falls back to regular hours if the request fails or times out.
+  fetch("/api/store/status", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { if (d.override) storeOpen = true; })
+    .catch(function () { /* network error — use regular hours */ })
+    .finally(function () {
+      if (!storeOpen && !onClosedPage) {
+        window.location.replace("/closed.html");
+      } else if (storeOpen && onClosedPage) {
+        window.location.replace("/");
+      }
+    });
 })();

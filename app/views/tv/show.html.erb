@@ -459,6 +459,7 @@
       },
       received: function(data) {
         if (data.type !== 'navigate') return;
+        if (data.nav_type === 'release') return;
         var keyMap = {
           left: 'ArrowLeft', right: 'ArrowRight',
           up: 'ArrowUp',     down: 'ArrowDown',

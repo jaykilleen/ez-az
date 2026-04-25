@@ -30,7 +30,8 @@ Rails.application.routes.draw do
   namespace :api do
     resources :scores,  only: [:index, :create]
     resource  :session, only: [:show, :create, :destroy]
-    get "version", to: "version#show"
+    get "version",      to: "version#show"
+    get "store/status", to: "store#status"
     resources :players, only: [:create] do
       collection { get :check }
     end
