@@ -72,6 +72,18 @@ class TvRemoteChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("tv_remote:#{clean_token}", payload)
   end
 
+  def leave_room(_data = {})
+    return unless @current_room && @device_token.present?
+
+    membership = @current_room.memberships.find_by(device_token: @device_token)
+    return unless membership
+
+    RoomChannel.member_left(@current_room, membership)
+    membership.destroy
+    @slot_claimed = false
+    transmit({ type: "left" })
+  end
+
   def join_room(data)
     code = data["code"].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 6]
     name = data["name"].to_s.strip.upcase.slice(0, 12)

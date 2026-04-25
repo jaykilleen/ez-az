@@ -34,7 +34,7 @@ class Game
       tagline: "Maze runner with flashlight vision and 4 dinosaur heroes",
       path: "/games/descent.html",
       icon: "maze",
-      tv_optimised: false
+      tv_optimised: true
     },
     {
       slug: "cat-vs-mouse",
