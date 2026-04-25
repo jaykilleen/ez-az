@@ -36,8 +36,7 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-          echo "StrictHostKeyChecking accept-new" >> ~/.ssh/config
+          ssh-keyscan ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Write Kamal secrets
         run: |
