@@ -65,6 +65,26 @@ Things we're building toward:
 
 ---
 
+### v20260425.1 — 25 April 2026
+
+**Family Trivia. The living room game show.**
+
+This one is different. Every other game on the shelf is a single-player or local-multiplayer game — one screen, one keyboard, people crowded around a monitor. Family Trivia is the first game where everyone uses their own phone and a TV is the stage.
+
+Here's how it works. You scan one QR code when you walk up to the TV. That's it. Your phone becomes a reactive controller for the whole session — no second scan, no second URL, no app install. When the TV is on the shelf, your phone shows a D-pad to browse it. When a lobby opens, your phone shows a join form. When the game starts, your phone shows buzzer controls. All from the same page, all driven by ActionCable in real time. We're calling this the TV Zone.
+
+The mechanic: ten seconds to read the question (it's on the TV and your phone). Then ten seconds to answer — options appear on phones simultaneously, everyone picks their best guess. No racing to buzz first. No getting locked out because someone was faster. Just: what do you actually know? Correct answers score a point. Everyone plays every question. The whole family can compete, and nobody's left watching while someone else answers.
+
+We shipped 366 trivia questions across 17 categories: Animals, Australia, Science, Geography, History, Sports, Movies and TV, Music, Food and Cooking, Maths, Space, Video Games, Books, Dinosaurs, Human Body, Nature, Technology. The kids had memorised the original 28 questions. Problem solved.
+
+Two things we discovered. First: "host" is a confusing concept when the TV is the host. There's no host player — the person holding the D-pad just controls the TV, same as always. The phone Zone now explains this on the waiting screen: "The person holding the D-pad controls when the game starts." Second: letting people join after the game has already started matters. Families are chaotic. Someone's always still getting a drink when the game kicks off. Late joiners now receive the current question immediately and can start answering. We removed the guard that blocked this.
+
+What we're actually landing on: EZ-AZ isn't just a shelf. It's a place you go with your family. The TV is the campfire. The phones are the instruments. You walk into the lounge room, one scan, and everyone's playing. That's the product now. The ADR is in `docs/adr/001-tv-zone-phone-controller.md`.
+
+**Coming next:** Theme picker (choose a category before the game starts). NAPLAN curriculum packs — Year 3, 5, 7, 9 — so the whole family can do school-grade trivia together. The infrastructure is already there. Every question has a category. It's just a filter in the lobby.
+
+---
+
 ### v20260421.1 — 21 April 2026
 
 **Cipher is on the shelf.**
