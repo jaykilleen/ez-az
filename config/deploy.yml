@@ -26,6 +26,7 @@ env:
     RAILS_ENV: production
     RAILS_LOG_LEVEL: info
     RAILS_SERVE_STATIC_FILES: "true"
+    PORT: "3000"
   secret:
     - SECRET_KEY_BASE
     - HONEYBADGER_API_KEY
