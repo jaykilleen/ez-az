@@ -1,4 +1,6 @@
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
   .tv {
     width: 100vw;
     height: 100vh;
@@ -31,24 +33,25 @@
   }
 
   .tv-logo {
-    font-size: clamp(3rem, 7vw, 7rem);
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(2rem, 5vw, 5rem);
     font-weight: 900;
     line-height: 1;
-    letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #00ffc8 0%, #00a3ff 50%, #ff00aa 100%);
+    letter-spacing: 0.04em;
+    background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: pulse 6s ease-in-out infinite;
+    animation: neonFlicker 4s ease-in-out infinite;
   }
 
-  @keyframes pulse {
-    0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 255, 200, 0.4)); }
-    50% { filter: drop-shadow(0 0 35px rgba(255, 0, 170, 0.5)); }
+  @keyframes neonFlicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 24%, 55% { opacity: 0.6; }
   }
 
   .tv-tagline {
-    font-size: clamp(1rem, 1.8vw, 1.8rem);
+    font-size: clamp(0.7rem, 1.2vw, 1.2rem);
     color: #8ab4c8;
     font-weight: 500;
   }
@@ -146,15 +149,15 @@
   }
 
   .tv-game {
-    flex: 0 0 22vw;
-    min-width: 220px;
+    flex: 0 0 auto;
+    width: clamp(140px, 14vw, 200px);
     background: linear-gradient(135deg, #13131f, #1a1a2e);
     border: 3px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.2vw;
-    padding: 2.5vh 1.5vw;
+    padding: 1.5vh 1vw;
     display: flex;
     flex-direction: column;
-    gap: 1.2vh;
+    gap: 1vh;
     text-decoration: none;
     color: inherit;
     transition: transform 180ms ease-out, border-color 180ms, box-shadow 180ms;
@@ -175,29 +178,36 @@
 
   .tv-game-icon {
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 11 / 14;
     border-radius: 0.6vw;
     overflow: hidden;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .tv-game-icon canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   .tv-game-title {
-    font-size: clamp(1.3rem, 1.8vw, 2rem);
-    font-weight: 800;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.55rem, 0.8vw, 0.9rem);
+    font-weight: 400;
     color: #fff;
-    letter-spacing: -0.01em;
+    line-height: 1.4;
   }
 
   .tv-game-creators {
-    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    font-size: clamp(0.75rem, 0.9vw, 1rem);
     color: #00ffc8;
     font-weight: 600;
   }
 
   .tv-game-tagline {
-    font-size: clamp(0.8rem, 1vw, 1rem);
+    font-size: clamp(0.7rem, 0.85vw, 0.95rem);
     color: #8ab4c8;
     line-height: 1.35;
     flex: 1;
@@ -278,10 +288,18 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
-
-  /* Game icon styles per-slug */
-  .icon-svg { width: 80%; height: 80%; }
 </style>
+
+<% cover_ids = {
+  'space-dodge'  => 'spaceDodgeCover',
+  'dodgeball'    => 'dodgeballCover',
+  'corrupted'    => 'corruptedCover',
+  'descent'      => 'descentCover',
+  'cat-vs-mouse' => 'catMouseCover',
+  'bloom'        => 'bloomCover',
+  'az-cipher'    => 'cipherCover',
+  'trivia'       => 'triviaCover'
+} %>
 
 <div class="tv">
   <header class="tv-header">
@@ -328,9 +346,12 @@
   <section class="tv-main" aria-label="Game shelf">
     <div class="tv-shelf" id="tv-shelf" role="list">
       <% @games.each_with_index do |game, i| %>
+        <% canvas_id = cover_ids[game[:slug]] %>
         <a class="tv-game" role="listitem" href="<%= game[:path] %>" data-index="<%= i %>" tabindex="<%= i == 0 ? 0 : -1 %>">
           <div class="tv-game-icon">
-            <%= game_icon_svg(game[:icon]) %>
+            <% if canvas_id %>
+              <canvas id="<%= canvas_id %>" width="220" height="280" style="width:100%;height:100%;display:block;"></canvas>
+            <% end %>
           </div>
           <div class="tv-game-title"><%= game[:title] %></div>
           <div class="tv-game-creators">by <%= game[:creators] %></div>
@@ -428,3 +449,5 @@
     focusGame(0);
   })();
 </script>
+
+<script src="/game-covers.js"></script>
