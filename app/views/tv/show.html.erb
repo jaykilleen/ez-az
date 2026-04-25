@@ -5,7 +5,7 @@
     width: 100vw;
     height: 100vh;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto;
     grid-template-columns: minmax(0, 1fr);
     padding: 3vh 4vw;
     gap: 2vh;
@@ -30,6 +30,15 @@
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
+  }
+
+  .tv-version {
+    font-family: "Courier New", monospace;
+    font-size: clamp(0.6rem, 0.8vw, 0.85rem);
+    color: #335;
+    letter-spacing: 0.06em;
+    align-self: flex-end;
+    padding-bottom: 0.15em;
   }
 
   .tv-logo {
@@ -164,23 +173,21 @@
   }
 
   .tv-main {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   .tv-shelf {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(var(--tv-cols, 5), clamp(140px, 14vw, 220px));
+    justify-content: center;
     gap: 2vw;
-    overflow: hidden;
-    padding: 3vh 0;
-    align-items: stretch;
+    padding: 2vh 0;
   }
 
   .tv-game {
-    flex: 0 0 auto;
-    width: clamp(140px, 14vw, 200px);
     background: linear-gradient(135deg, #13131f, #1a1a2e);
     border: 3px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.2vw;
@@ -336,6 +343,7 @@
     <div class="tv-brand">
       <div class="tv-logo">EZ-AZ</div>
       <div class="tv-tagline">The Family Video Game Store</div>
+      <div class="tv-version">v<%= @version %></div>
     </div>
     <button class="tv-cast-btn" id="tv-cast-btn" hidden title="Cast to TV">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -375,12 +383,12 @@
       </svg>
     </div>
     <div class="tv-speech">
-      Welcome! Pick a game with <em>&larr; &rarr;</em> and press <em>OK</em> to play.
+      Welcome! Browse games with <em>&larr; &uarr; &darr; &rarr;</em> and press <em>OK</em> to play.
     </div>
   </section>
 
   <section class="tv-main" aria-label="Game shelf">
-    <div class="tv-shelf" id="tv-shelf" role="list">
+    <div class="tv-shelf" id="tv-shelf" role="list" style="--tv-cols: <%= @tv_cols %>">
       <% @games.each_with_index do |game, i| %>
         <% canvas_id = cover_ids[game[:slug]] %>
         <a class="tv-game" role="listitem" href="<%= game[:path] %>" data-index="<%= i %>" tabindex="<%= i == 0 ? 0 : -1 %>">
@@ -403,6 +411,8 @@
     </a>
     <div class="tv-hint">
       <span class="tv-key">&larr;</span>
+      <span class="tv-key">&uarr;</span>
+      <span class="tv-key">&darr;</span>
       <span class="tv-key">&rarr;</span>
       <span>Browse</span>
       <span class="tv-key">OK</span>
@@ -421,6 +431,7 @@
     var learnBtn = document.getElementById('tv-learn-btn');
     var focusedIndex = 0;
     var learnFocused = false;
+    var COLS = parseInt(shelf.style.getPropertyValue('--tv-cols')) || 5;
 
     function focusGame(index) {
       index = Math.max(0, Math.min(games.length - 1, index));
@@ -432,7 +443,7 @@
       learnFocused = false;
       focusedIndex = index;
       games[index].focus();
-      scrollIntoView(games[index]);
+      games[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 
     function focusLearn() {
@@ -442,34 +453,32 @@
       learnBtn.focus();
     }
 
-    function scrollIntoView(el) {
-      var r = el.getBoundingClientRect();
-      var w = window.innerWidth;
-      if (r.left < w * 0.1 || r.right > w * 0.9) {
-        el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-    }
-
     document.addEventListener('keydown', function(e) {
+      var col = focusedIndex % COLS;
+      var lastRow = Math.floor((games.length - 1) / COLS);
+      var row = Math.floor(focusedIndex / COLS);
+
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          if (learnFocused) { focusGame(games.length - 1); }
-          else { focusGame(focusedIndex - 1); }
+          if (learnFocused) { focusGame(focusedIndex); break; }
+          if (col > 0) focusGame(focusedIndex - 1);
           break;
         case 'ArrowRight':
           e.preventDefault();
           if (learnFocused) break;
-          if (focusedIndex === games.length - 1) { focusLearn(); }
-          else { focusGame(focusedIndex + 1); }
+          if (col < COLS - 1 && focusedIndex + 1 < games.length) focusGame(focusedIndex + 1);
           break;
         case 'ArrowDown':
           e.preventDefault();
-          focusLearn();
+          if (learnFocused) break;
+          if (row < lastRow) focusGame(Math.min(focusedIndex + COLS, games.length - 1));
+          else focusLearn();
           break;
         case 'ArrowUp':
           e.preventDefault();
-          if (learnFocused) focusGame(focusedIndex);
+          if (learnFocused) { focusGame(focusedIndex); break; }
+          if (row > 0) focusGame(focusedIndex - COLS);
           break;
         case 'Enter':
         case ' ':

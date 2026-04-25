@@ -6,7 +6,8 @@ class Game
       creators: "Charlie & Cooper",
       tagline: "2-player co-op space shooter with 6 worlds and a Void King boss",
       path: "/games/space-dodge.html",
-      icon: "rocket"
+      icon: "rocket",
+      tv_optimised: false
     },
     {
       slug: "dodgeball",
@@ -14,7 +15,8 @@ class Game
       creators: "Lachie",
       tagline: "Top-down 2v2 dodgeball tournament, best of 3 rounds",
       path: "/games/dodgeball.html",
-      icon: "dodgeball"
+      icon: "dodgeball",
+      tv_optimised: false
     },
     {
       slug: "corrupted",
@@ -22,7 +24,8 @@ class Game
       creators: "Charlie & Cooper",
       tagline: "First-person raycaster zombie fighter, 6 themed worlds",
       path: "/games/corrupted.html",
-      icon: "zombie"
+      icon: "zombie",
+      tv_optimised: false
     },
     {
       slug: "descent",
@@ -30,7 +33,8 @@ class Game
       creators: "Jaykill",
       tagline: "Maze runner with flashlight vision and 4 dinosaur heroes",
       path: "/games/descent.html",
-      icon: "maze"
+      icon: "maze",
+      tv_optimised: false
     },
     {
       slug: "cat-vs-mouse",
@@ -38,7 +42,8 @@ class Game
       creators: "Lil",
       tagline: "Rope puzzle across 8 levels, hook pegs and trap the mouse",
       path: "/games/cat-vs-mouse.html",
-      icon: "cat"
+      icon: "cat",
+      tv_optimised: false
     },
     {
       slug: "bloom",
@@ -46,7 +51,8 @@ class Game
       creators: "Az",
       tagline: "Chill exploration, time-based scoring, no pressure",
       path: "/games/bloom.html",
-      icon: "bloom"
+      icon: "bloom",
+      tv_optimised: false
     },
     {
       slug: "trivia",
@@ -54,12 +60,17 @@ class Game
       creators: "Az",
       tagline: "Scan the QR code — everyone plays on their phone. First to buzz wins!",
       path: "/games/trivia",
-      icon: "trivia"
+      icon: "trivia",
+      tv_optimised: true
     }
   ].freeze
 
   def self.all
     GAMES
+  end
+
+  def self.for_tv
+    GAMES.select { |g| g[:tv_optimised] }
   end
 
   def self.find(slug)

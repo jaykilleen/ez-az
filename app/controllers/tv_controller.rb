@@ -4,7 +4,9 @@ class TvController < ApplicationController
   layout "tv"
 
   def show
-    @games = Game.all
+    @games = Game.for_tv
+    @tv_cols = [[@games.size, 1].max, 5].min
+    @version = EzAz::Version::STRING
     @remote_token = SecureRandom.alphanumeric(6).upcase
 
     remote_url = tv_remote_url(token: @remote_token)
