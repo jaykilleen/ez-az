@@ -36,9 +36,13 @@ jobs:
       - name: Add server to known hosts
         run: ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Write Kamal secrets
+        run: |
+          cat > .kamal/secrets <<EOF
+          KAMAL_REGISTRY_PASSWORD=${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+          SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+          HONEYBADGER_API_KEY=${{ secrets.HONEYBADGER_API_KEY }}
+          EOF
+
       - name: Deploy
-        env:
-          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
-          HONEYBADGER_API_KEY: ${{ secrets.HONEYBADGER_API_KEY }}
         run: kamal deploy
