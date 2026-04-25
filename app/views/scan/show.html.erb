@@ -16,7 +16,6 @@
       background: #0a0a12;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow: hidden;
       overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -25,6 +24,7 @@
       display: flex;
       flex-direction: column;
       height: 100dvh;
+      overflow: hidden;
     }
 
     /* Banner */
@@ -34,17 +34,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .store-banner a {
+    .zone-brand {
       font-size: 14px;
       font-weight: 900;
       color: #00ffc8;
       text-decoration: none;
       letter-spacing: 0.1em;
     }
-    .banner-title {
-      font-size: 12px;
+    .zone-sub {
+      font-size: 11px;
       color: #445;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -122,14 +122,14 @@
     /* Bottom status bar */
     .status-bar {
       flex-shrink: 0;
-      padding: 16px 24px max(env(safe-area-inset-bottom), 16px);
+      padding: 16px 24px max(env(safe-area-inset-bottom), 20px);
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 12px;
       background: #0a0a12;
+      overflow: visible;
     }
 
     .status-text {
@@ -160,8 +160,8 @@
 <div class="page">
 
   <div class="store-banner">
-    <a href="/">EZ-AZ</a>
-    <span class="banner-title">Scan for Party</span>
+    <a href="/" class="zone-brand">EZ-AZ</a>
+    <span class="zone-sub">Scan for Party</span>
   </div>
 
   <div class="viewfinder-wrap">
@@ -303,12 +303,13 @@
 
   function handleResult(raw) {
     scanning = false;
+    raw = raw.trim();
 
     try {
       var url = new URL(raw);
       if (
         VALID_HOSTS.includes(url.hostname) &&
-        url.pathname === '/tv_remote/show' &&
+        url.pathname === '/tv/remote' &&
         url.searchParams.get('token')
       ) {
         setReticle('found');
