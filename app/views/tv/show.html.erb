@@ -507,6 +507,9 @@
   consumer.subscriptions.create(
     { channel: 'TvRemoteChannel', token: token },
     {
+      connected: function() {
+        this.perform('set_state', { state: 'shelf' });
+      },
       received: function(data) {
         if (data.type !== 'navigate') return;
         var keyMap = {

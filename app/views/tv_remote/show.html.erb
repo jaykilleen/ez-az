@@ -1,185 +1,513 @@
 <style>
   [hidden] { display: none !important; }
 
-  .remote {
-    flex: 1;
+  .zone {
     display: flex; flex-direction: column;
-    min-height: 100vh;
+    height: 100dvh;
     user-select: none; -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
 
-  .remote-top {
-    padding: max(env(safe-area-inset-top), 14px) 20px 14px;
+  /* ── Status bar ── */
+  .zone-bar {
+    padding: max(env(safe-area-inset-top), 14px) 20px 12px;
     display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
   }
-  .remote-label {
-    font-size: 13px; font-weight: 700; color: #00ffc8;
-    letter-spacing: 0.08em; text-transform: uppercase;
-  }
-  .remote-status {
-    font-size: 12px; color: #445;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .remote-status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #334; transition: background 0.3s;
-  }
-  .remote-status-dot.live { background: #00ffc8; box-shadow: 0 0 6px #00ffc8; }
+  .zone-brand { font-size: 14px; font-weight: 900; color: #00ffc8; letter-spacing: 0.1em; }
+  .zone-conn  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #445; }
+  .zone-dot   { width: 8px; height: 8px; border-radius: 50%; background: #334; transition: background 0.3s; }
+  .zone-dot.live { background: #00ffc8; box-shadow: 0 0 6px #00ffc8; }
 
-  .remote-body {
+  /* ── Main scrollable area ── */
+  .zone-main {
+    flex: 1; overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .zone-content {
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 28px; padding: 24px;
+    padding: 24px 20px; gap: 20px; text-align: center;
   }
 
-  .remote-hint {
-    font-size: 13px; color: #445; text-align: center; line-height: 1.5;
+  /* shelf */
+  .zone-hint { font-size: 15px; color: #445; line-height: 1.7; }
+  .zone-hint strong { color: #00ffc8; }
+
+  /* lobby */
+  .lobby-banner { display: flex; flex-direction: column; gap: 4px; }
+  .lobby-game-name { font-size: clamp(1.4rem, 5vw, 1.8rem); font-weight: 900; color: #fff; }
+  .lobby-room-code { font-size: 13px; color: #00ffc8; font-family: "Courier New", monospace; letter-spacing: 0.12em; }
+  .lobby-join-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+  .zone-name-input {
+    width: 100%; padding: 14px 18px;
+    border-radius: 12px; background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(0,255,200,0.3); color: #fff;
+    font-size: 20px; font-weight: 700; letter-spacing: 0.12em;
+    text-align: center; outline: none;
+    font-family: "Courier New", monospace;
+    box-sizing: border-box;
+  }
+  .zone-name-input:focus { border-color: #00ffc8; }
+  .zone-join-btn {
+    padding: 16px; border-radius: 12px;
+    background: #00ffc8; color: #0a0a12;
+    font-size: 16px; font-weight: 900; border: none; cursor: pointer;
+    letter-spacing: 0.04em; transition: opacity 0.15s;
+  }
+  .zone-join-btn:disabled { opacity: 0.5; }
+  .zone-join-error { color: #ff4757; font-size: 13px; }
+  .lobby-divider {
+    font-size: 11px; color: #334; letter-spacing: 0.1em; text-transform: uppercase;
+    position: relative; width: 100%; max-width: 300px;
+  }
+  .lobby-divider::before, .lobby-divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 38%; height: 1px; background: rgba(255,255,255,0.08);
+  }
+  .lobby-divider::before { left: 0; }
+  .lobby-divider::after  { right: 0; }
+
+  /* waiting */
+  .waiting-badge {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: #334; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: #fff;
+    font-family: "Courier New", monospace; letter-spacing: 0.04em;
+  }
+  .waiting-msg { font-size: 15px; color: #8ab4c8; line-height: 1.6; }
+
+  /* buzzer */
+  .buzzer-content { gap: 12px; justify-content: flex-start; padding-top: 16px; }
+  .buzzer-info { font-size: 13px; color: #8ab4c8; font-family: "Courier New", monospace; letter-spacing: 0.08em; }
+  .buzz-btn {
+    width: min(68vw, 52vh); height: min(68vw, 52vh);
+    border-radius: 50%; background: var(--buzz-color, #00ffc8);
+    border: none; display: flex; align-items: center; justify-content: center;
+    font-size: clamp(2.5rem, 11vw, 5rem); font-weight: 900; color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 50px color-mix(in srgb, var(--buzz-color, #00ffc8) 40%, transparent);
+    transition: transform 0.1s; touch-action: manipulation;
+  }
+  .buzz-btn:active { transform: scale(0.93); }
+  .buzz-btn:disabled { opacity: 0.3; filter: grayscale(0.6); }
+  .buzz-status { font-size: clamp(1rem, 4vw, 1.3rem); color: rgba(255,255,255,0.6); line-height: 1.4; }
+  .buzz-answers {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; width: 100%; max-width: 460px;
+  }
+  .answer-btn {
+    padding: 14px 10px; border-radius: 12px;
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+    color: #fff; font-size: clamp(0.85rem, 3.5vw, 1.05rem); font-weight: 700;
+    text-align: center; cursor: pointer; line-height: 1.3; touch-action: manipulation;
+    transition: background 0.08s;
+  }
+  .answer-btn:active { background: rgba(255,255,255,0.2); }
+  .answer-btn .aletter {
+    display: block; font-size: 0.75em; color: rgba(255,255,255,0.45);
+    margin-bottom: 4px; font-family: "Courier New", monospace;
+  }
+  .back-to-store {
+    display: block; padding: 14px 24px; border-radius: 12px;
+    background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.55); font-size: 14px; font-weight: 700;
+    text-decoration: none; margin-top: 8px;
   }
 
-  /* D-pad */
+  /* watching */
+  .watching-hint { color: #8ab4c8; }
+
+  /* disconnected */
+  .disconnected-title { font-size: 20px; color: #fff; font-weight: 700; }
+  .disconnected-msg   { font-size: 14px; color: #556; line-height: 1.6; }
+
+  /* ── D-pad ── */
+  .zone-dpad {
+    flex-shrink: 0; display: flex; flex-direction: column;
+    align-items: center; gap: 18px;
+    padding: 18px 20px max(env(safe-area-inset-bottom), 20px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
   .dpad {
     display: grid;
-    grid-template-columns: 80px 80px 80px;
-    grid-template-rows: 80px 80px 80px;
+    grid-template-columns: 72px 72px 72px;
+    grid-template-rows: 72px 72px 72px;
     gap: 8px;
   }
   .dpad-btn {
-    border-radius: 16px;
-    background: rgba(0,255,200,0.08);
+    border-radius: 14px; background: rgba(0,255,200,0.08);
     border: 2px solid rgba(0,255,200,0.25);
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px; color: #00ffc8;
-    cursor: pointer;
+    font-size: 26px; color: #00ffc8; cursor: pointer;
     transition: background 0.08s, border-color 0.08s;
   }
-  .dpad-btn:active, .dpad-btn.pressed {
-    background: rgba(0,255,200,0.25);
-    border-color: #00ffc8;
+  .dpad-btn.pressed, .dpad-btn:active {
+    background: rgba(0,255,200,0.25); border-color: #00ffc8;
   }
   .dpad-center {
-    grid-column: 2; grid-row: 2;
-    background: rgba(0,255,200,0.12);
-    border-color: rgba(0,255,200,0.4);
+    background: rgba(0,255,200,0.12); border-color: rgba(0,255,200,0.4);
     font-size: 13px; font-weight: 800; letter-spacing: 0.06em;
-    color: #00ffc8;
   }
-  .dpad-center:active, .dpad-center.pressed {
-    background: #00ffc8;
-    color: #0a0a12;
-  }
-  .dpad-empty { background: none; border: none; pointer-events: none; }
-
-  /* Back button */
+  .dpad-center.pressed { background: #00ffc8; color: #0a0a12; }
+  .dpad-empty { background: none !important; border: none !important; pointer-events: none; }
   .back-btn {
-    padding: 14px 32px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.05);
-    border: 2px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.5);
-    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
-    cursor: pointer;
-    transition: background 0.08s;
+    padding: 12px 28px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.45); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; cursor: pointer;
   }
-  .back-btn:active { background: rgba(255,255,255,0.12); }
-
-  /* Disconnected overlay */
-  .remote-disconnected {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px; padding: 40px; text-align: center;
-  }
-  .remote-disconnected h2 { font-size: 20px; color: #fff; }
-  .remote-disconnected p { font-size: 14px; color: #556; line-height: 1.5; }
+  .back-btn:active { background: rgba(255,255,255,0.1); }
 </style>
 
-<div class="remote">
-  <div class="remote-top">
-    <div class="remote-label">EZ-AZ Remote</div>
-    <div class="remote-status">
-      <span class="remote-status-dot" id="status-dot"></span>
-      <span id="status-text">Connecting...</span>
+<div class="zone">
+
+  <div class="zone-bar">
+    <span class="zone-brand">EZ-AZ</span>
+    <div class="zone-conn">
+      <span class="zone-dot" id="zone-dot"></span>
+      <span id="zone-status">Connecting...</span>
     </div>
   </div>
 
-  <div class="remote-body" id="remote-body">
-    <div class="remote-hint">Use the arrows to browse games.<br>Press <strong style="color:#00ffc8">OK</strong> to launch.</div>
+  <div class="zone-main">
 
+    <!-- shelf: browsing the game shelf -->
+    <div class="zone-content" data-screen="shelf">
+      <div class="zone-hint">
+        Use the arrows to browse games.<br>
+        Press <strong>OK</strong> to launch.
+      </div>
+    </div>
+
+    <!-- lobby: a game lobby is open on TV -->
+    <div class="zone-content" data-screen="lobby" hidden>
+      <div class="lobby-banner">
+        <div class="lobby-game-name" id="lobby-game-name">Family Trivia</div>
+        <div class="lobby-room-code" id="lobby-room-code">Room …</div>
+      </div>
+      <div class="lobby-join-form">
+        <input class="zone-name-input" id="name-input" type="text"
+               placeholder="YOUR NAME" maxlength="12"
+               autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <button class="zone-join-btn" id="join-btn">Join Game &rarr;</button>
+        <div class="zone-join-error" id="join-error" hidden></div>
+      </div>
+      <div class="lobby-divider">or use as remote</div>
+    </div>
+
+    <!-- waiting: joined, waiting for host to start -->
+    <div class="zone-content" data-screen="waiting" hidden>
+      <div class="waiting-badge" id="waiting-badge">P1</div>
+      <div class="waiting-msg">Waiting for the host<br>to start the game&hellip;</div>
+    </div>
+
+    <!-- buzzer: trivia game in progress, joined -->
+    <div class="zone-content buzzer-content" data-screen="buzzer" hidden>
+      <div class="buzzer-info" id="buzzer-info">P1</div>
+      <button class="buzz-btn" id="buzz-btn">BUZZ!</button>
+      <div class="buzz-status" id="buzz-status"></div>
+      <div class="buzz-answers" id="buzz-answers" hidden></div>
+    </div>
+
+    <!-- watching: game in progress, not joined -->
+    <div class="zone-content" data-screen="watching" hidden>
+      <div class="zone-hint watching-hint">
+        Game in progress.<br>Use the remote to control.
+      </div>
+    </div>
+
+    <!-- disconnected -->
+    <div class="zone-content" data-screen="disconnected" hidden>
+      <div class="disconnected-title">TV disconnected</div>
+      <div class="disconnected-msg">Go back to the TV<br>and scan the QR code again.</div>
+    </div>
+
+  </div>
+
+  <!-- D-pad — hidden when not browsing -->
+  <div class="zone-dpad" id="zone-dpad" hidden>
     <div class="dpad">
       <div class="dpad-empty"></div>
-      <div class="dpad-btn" id="btn-up" data-dir="up">▲</div>
+      <div class="dpad-btn" data-dir="up">&#9650;</div>
       <div class="dpad-empty"></div>
 
-      <div class="dpad-btn" id="btn-left" data-dir="left">◀</div>
-      <div class="dpad-btn dpad-center" id="btn-select" data-dir="select">OK</div>
-      <div class="dpad-btn" id="btn-right" data-dir="right">▶</div>
+      <div class="dpad-btn" data-dir="left">&#9664;</div>
+      <div class="dpad-btn dpad-center" data-dir="select">OK</div>
+      <div class="dpad-btn" data-dir="right">&#9654;</div>
 
       <div class="dpad-empty"></div>
-      <div class="dpad-btn" id="btn-down" data-dir="down">▼</div>
+      <div class="dpad-btn" data-dir="down">&#9660;</div>
       <div class="dpad-empty"></div>
     </div>
-
-    <button class="back-btn" id="btn-back">← BACK</button>
+    <button class="back-btn" data-dir="back">← BACK</button>
   </div>
 
-  <div class="remote-disconnected" id="remote-disconnected" hidden>
-    <h2>TV disconnected</h2>
-    <p>The TV may have refreshed or gone to sleep.<br>Go back to the TV and scan the QR code again.</p>
-  </div>
 </div>
 
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
 
-  var token   = <%= @token.to_json.html_safe %>;
-  var dot     = document.getElementById('status-dot');
-  var statusTxt = document.getElementById('status-text');
-  var bodyEl  = document.getElementById('remote-body');
-  var discEl  = document.getElementById('remote-disconnected');
-
+  var token    = <%= @token.to_json.html_safe %>;
   var consumer = createConsumer();
+
+  // ── State ──────────────────────────────────────────────────────────
+  var currentScreen = 'disconnected';
+  var mySlot        = null;
+  var myColor       = null;
+  var roomCode      = null;
+  var triviaChannel = null;
+  var myTurn        = false;
+  var letters       = ['A', 'B', 'C', 'D'];
+  var DPAD_SCREENS  = new Set(['shelf', 'lobby', 'watching']);
+
+  // ── Elements ────────────────────────────────────────────────────────
+  var zoneDot   = document.getElementById('zone-dot');
+  var zoneStatus = document.getElementById('zone-status');
+  var zoneDpad  = document.getElementById('zone-dpad');
+
+  var lobbyGameName = document.getElementById('lobby-game-name');
+  var lobbyRoomCode = document.getElementById('lobby-room-code');
+  var nameInput     = document.getElementById('name-input');
+  var joinBtn       = document.getElementById('join-btn');
+  var joinError     = document.getElementById('join-error');
+  var waitingBadge  = document.getElementById('waiting-badge');
+  var buzzerInfo    = document.getElementById('buzzer-info');
+  var buzzBtn       = document.getElementById('buzz-btn');
+  var buzzStatus    = document.getElementById('buzz-status');
+  var buzzAnswers   = document.getElementById('buzz-answers');
+
+  // ── Screen switching ────────────────────────────────────────────────
+  function showScreen(name) {
+    currentScreen = name;
+    document.querySelectorAll('.zone-content').forEach(function(el) {
+      el.hidden = el.dataset.screen !== name;
+    });
+    zoneDpad.hidden = !DPAD_SCREENS.has(name);
+  }
+
+  // ── TV Remote channel ────────────────────────────────────────────────
   var remote = consumer.subscriptions.create(
     { channel: 'TvRemoteChannel', token: token },
     {
-      connected() {
-        dot.classList.add('live');
-        statusTxt.textContent = 'Connected';
-        bodyEl.removeAttribute('hidden');
-        discEl.setAttribute('hidden', '');
+      connected: function() {
+        zoneDot.classList.add('live');
+        zoneStatus.textContent = 'Connected';
+        if (currentScreen === 'disconnected') showScreen('shelf');
       },
-      disconnected() {
-        dot.classList.remove('live');
-        statusTxt.textContent = 'Disconnected';
-        bodyEl.setAttribute('hidden', '');
-        discEl.removeAttribute('hidden');
+      disconnected: function() {
+        zoneDot.classList.remove('live');
+        zoneStatus.textContent = 'Disconnected';
+        showScreen('disconnected');
+      },
+      received: function(data) {
+        if (data.type === 'tv_state')   handleTvState(data);
+        if (data.type === 'joined')     handleJoined(data);
+        if (data.type === 'join_error') handleJoinError(data);
+        // 'navigate' events are ignored on the phone
       }
     }
   );
 
-  function send(dir) {
+  function handleTvState(data) {
+    if (data.room_code)  { roomCode = data.room_code; lobbyRoomCode.textContent = 'Room ' + data.room_code; }
+    if (data.game_title) { lobbyGameName.textContent = data.game_title; }
+
+    if (data.state === 'shelf') {
+      if (!mySlot) showScreen('shelf');
+    } else if (data.state === 'lobby') {
+      if (mySlot) showScreen('waiting');
+      else        showScreen('lobby');
+    } else if (data.state === 'game') {
+      if (!mySlot) showScreen('watching');
+      // if mySlot is set the buzzer is driven by TriviaChannel events
+    }
+  }
+
+  function handleJoined(data) {
+    mySlot   = data.slot;
+    myColor  = data.color;
+    roomCode = data.code;
+
+    waitingBadge.textContent = 'P' + mySlot;
+    waitingBadge.style.background = myColor;
+    buzzBtn.style.setProperty('--buzz-color', myColor);
+    buzzerInfo.textContent = 'P' + mySlot;
+
+    showScreen('waiting');
+    subscribeToTrivia(data.code, data.slot);
+  }
+
+  function handleJoinError(data) {
+    joinError.textContent = data.message;
+    joinError.hidden = false;
+    joinBtn.disabled = false;
+    joinBtn.textContent = 'Join Game →';
+  }
+
+  // ── Join form ─────────────────────────────────────────────────────────
+  joinBtn.addEventListener('click', function() {
+    var name = nameInput.value.trim();
+    if (!name) { showJoinError('Enter your name first'); return; }
+    if (!roomCode) { showJoinError('No game open on TV'); return; }
+    joinError.hidden = true;
+    joinBtn.disabled = true;
+    joinBtn.textContent = 'Joining…';
+    remote.perform('join_room', { code: roomCode, name: name });
+  });
+
+  nameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') joinBtn.click();
+  });
+
+  function showJoinError(msg) {
+    joinError.textContent = msg;
+    joinError.hidden = false;
+  }
+
+  // ── Trivia subscription ───────────────────────────────────────────────
+  function subscribeToTrivia(code, slot) {
+    if (triviaChannel) return;
+    triviaChannel = consumer.subscriptions.create(
+      { channel: 'TriviaChannel', code: code, slot: slot },
+      {
+        received: function(data) {
+          switch (data.type) {
+            case 'question':  onQuestion(data);  break;
+            case 'buzzed':    onBuzzed(data);    break;
+            case 'answered':  onAnswered(data);  break;
+            case 'revealed':  onRevealed(data);  break;
+            case 'game_over': onGameOver(data);  break;
+          }
+        }
+      }
+    );
+  }
+
+  // ── Trivia event handlers ─────────────────────────────────────────────
+  function onQuestion(data) {
+    myTurn = false;
+    showScreen('buzzer');
+    buzzerInfo.textContent = 'P' + mySlot + '  ·  Q' + (data.q_index + 1) + ' / ' + data.total;
+    buzzBtn.style.display = '';
+    buzzBtn.disabled = false;
+    buzzBtn.textContent = 'BUZZ!';
+    buzzAnswers.hidden = true;
+    buzzAnswers.innerHTML = '';
+    buzzStatus.textContent = 'Tap to buzz in!';
+  }
+
+  function onBuzzed(data) {
+    if (data.slot === mySlot) {
+      myTurn = true;
+      buzzBtn.style.display = 'none';
+      buzzStatus.textContent = 'You buzzed! Pick your answer:';
+      showAnswers(data.options);
+      if (navigator.vibrate) navigator.vibrate(80);
+    } else {
+      myTurn = false;
+      buzzBtn.disabled = true;
+      buzzBtn.textContent = '⏸';
+      buzzStatus.textContent = esc(data.name) + ' buzzed in…';
+    }
+  }
+
+  function onAnswered(data) {
+    buzzAnswers.innerHTML = '';
+    buzzAnswers.hidden = true;
+    buzzBtn.style.display = '';
+    buzzBtn.textContent = 'BUZZ!';
+    if (data.slot === mySlot) {
+      if (data.correct) {
+        buzzStatus.textContent = 'Correct! +1 point';
+        buzzBtn.disabled = true; buzzBtn.textContent = '✓';
+      } else {
+        buzzStatus.textContent = 'Wrong! Wait for next question.';
+        buzzBtn.disabled = true; buzzBtn.textContent = '✗';
+      }
+    } else {
+      if (data.correct) {
+        buzzStatus.textContent = esc(data.name) + ' got it right!';
+        buzzBtn.disabled = true;
+      } else {
+        buzzStatus.textContent = esc(data.name) + ' was wrong — buzz in!';
+        buzzBtn.disabled = false;
+      }
+    }
+  }
+
+  function onRevealed(data) {
+    buzzAnswers.innerHTML = '';
+    buzzAnswers.hidden = true;
+    buzzBtn.style.display = '';
+    buzzBtn.disabled = true; buzzBtn.textContent = '→';
+    buzzStatus.textContent = 'Next question coming up…';
+  }
+
+  function onGameOver(data) {
+    buzzBtn.style.display = 'none';
+    buzzAnswers.hidden = true;
+    buzzStatus.innerHTML = 'Game over! Check the TV for results.';
+    var link = document.createElement('a');
+    link.href = '/'; link.className = 'back-to-store';
+    link.textContent = '← Back to Store';
+    buzzStatus.insertAdjacentElement('afterend', link);
+  }
+
+  function showAnswers(options) {
+    buzzAnswers.innerHTML = '';
+    options.forEach(function(opt, i) {
+      var btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.innerHTML = '<span class="aletter">' + letters[i] + '</span>' + esc(opt);
+      btn.addEventListener('click', function() {
+        if (!myTurn || !triviaChannel) return;
+        myTurn = false;
+        triviaChannel.perform('answer', { index: i });
+        buzzAnswers.querySelectorAll('.answer-btn').forEach(function(b) { b.disabled = true; });
+        if (navigator.vibrate) navigator.vibrate(40);
+      });
+      buzzAnswers.appendChild(btn);
+    });
+    buzzAnswers.hidden = false;
+  }
+
+  // ── Buzz button ───────────────────────────────────────────────────────
+  buzzBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (buzzBtn.disabled || !triviaChannel) return;
+    triviaChannel.perform('buzz', {});
+    buzzBtn.disabled = true; buzzBtn.textContent = '…';
+    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+  }, { passive: false });
+  buzzBtn.addEventListener('click', function() {
+    if (buzzBtn.disabled || !triviaChannel) return;
+    triviaChannel.perform('buzz', {});
+    buzzBtn.disabled = true; buzzBtn.textContent = '…';
+    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+  });
+
+  // ── D-pad ─────────────────────────────────────────────────────────────
+  function sendNav(dir) {
     remote.perform('navigate', { direction: dir });
     if (navigator.vibrate) navigator.vibrate(18);
   }
 
-  // Bind all d-pad buttons
-  document.querySelectorAll('.dpad-btn[data-dir]').forEach(function(btn) {
-    var dir = btn.getAttribute('data-dir');
+  document.querySelectorAll('[data-dir]').forEach(function(btn) {
+    var dir = btn.dataset.dir;
     btn.addEventListener('touchstart', function(e) {
       e.preventDefault();
       btn.classList.add('pressed');
-      send(dir);
+      sendNav(dir);
     }, { passive: false });
-    btn.addEventListener('touchend', function() {
-      btn.classList.remove('pressed');
-    });
-    // Mouse fallback for testing on desktop
-    btn.addEventListener('mousedown', function() { btn.classList.add('pressed'); send(dir); });
-    btn.addEventListener('mouseup', function() { btn.classList.remove('pressed'); });
+    btn.addEventListener('touchend',   function() { btn.classList.remove('pressed'); });
+    btn.addEventListener('mousedown',  function() { btn.classList.add('pressed'); sendNav(dir); });
+    btn.addEventListener('mouseup',    function() { btn.classList.remove('pressed'); });
   });
 
-  document.getElementById('btn-back').addEventListener('click', function() {
-    send('back');
-  });
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 </script>

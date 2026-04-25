@@ -423,6 +423,9 @@
     qIndex = data.q_index + 1;
     qTotal = data.total;
     phase = 'question';
+    if (data.q_index === 0 && tvRemoteSub) {
+      tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Family Trivia' });
+    }
 
     hideBuzz();
     showPhase('question');
@@ -602,10 +605,14 @@
 
   // Phone remote — pick up the token the TV shelf stored before navigating here
   var remoteToken = sessionStorage.getItem('tvRemoteToken');
+  var tvRemoteSub = null;
   if (remoteToken) {
-    consumer.subscriptions.create(
+    tvRemoteSub = consumer.subscriptions.create(
       { channel: 'TvRemoteChannel', token: remoteToken },
       {
+        connected: function() {
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Family Trivia' });
+        },
         received: function(data) {
           if (data.type !== 'navigate') return;
           var keyMap = {
