@@ -366,7 +366,10 @@
       </button>
       <button class="tv-reload-btn" onclick="window.location.reload()" title="Reload page">&#8635; Reload</button>
     </div>
-    <div class="tv-status"><span class="dot"></span>Ready</div>
+    <div class="tv-status">
+      <span class="dot"></span>
+      <span>Room <strong style="color:#fff;letter-spacing:0.12em;font-family:'Courier New',monospace"><%= @room.code %></strong></span>
+    </div>
   </footer>
 </div>
 
@@ -446,7 +449,7 @@
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
 
-  var token = <%= @remote_token.to_json.html_safe %>;
+  var token = <%= @room.tv_token.to_json.html_safe %>;
   sessionStorage.setItem('tvRemoteToken', token);
   sessionStorage.setItem('tvAcPath', '<%= asset_path("actioncable.esm.js") %>');
   var consumer = createConsumer();

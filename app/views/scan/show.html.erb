@@ -178,7 +178,23 @@
 
   <div class="status-bar">
     <div class="status-text" id="statusText">Tap to open your camera</div>
+    <button class="start-btn" id="rejoinBtn" style="background:rgba(0,255,200,0.1);border:2px solid rgba(0,255,200,0.4);color:#00ffc8;" hidden>
+      Rejoin last session
+    </button>
     <button class="start-btn" id="startBtn">Open Camera</button>
+    <div id="codeEntryWrap" style="width:100%;max-width:280px;">
+      <div style="font-size:12px;color:#334;text-align:center;margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase;">Have a room code?</div>
+      <div style="display:flex;gap:8px;">
+        <input id="codeInput" type="text" maxlength="4"
+               placeholder="ABCD"
+               autocapitalize="characters" autocomplete="off" spellcheck="false"
+               style="flex:1;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.15);color:#fff;font-size:18px;font-weight:700;letter-spacing:0.2em;text-align:center;font-family:'Courier New',monospace;outline:none;">
+        <button id="codeJoinBtn"
+                style="padding:12px 18px;border-radius:10px;background:#00ffc8;color:#0a0a12;font-size:14px;font-weight:900;border:none;cursor:pointer;letter-spacing:0.04em;opacity:0.5;"
+                disabled>Go</button>
+      </div>
+      <div id="codeError" style="font-size:13px;color:#ff4466;text-align:center;margin-top:6px;" hidden></div>
+    </div>
   </div>
 
 </div>
@@ -192,14 +208,46 @@
   var reticle   = document.getElementById('reticle');
   var statusEl  = document.getElementById('statusText');
   var startBtn  = document.getElementById('startBtn');
+  var rejoinBtn = document.getElementById('rejoinBtn');
+  var codeInput   = document.getElementById('codeInput');
+  var codeJoinBtn = document.getElementById('codeJoinBtn');
+  var codeError   = document.getElementById('codeError');
 
   var scanning  = false;
   var stream    = null;
+
+  // ── Rejoin last session ──────────────────────────────────────────────────
+  var lastUrl = localStorage.getItem('ezaz_last_zone_url');
+  if (lastUrl) {
+    rejoinBtn.hidden = false;
+    rejoinBtn.addEventListener('click', function() {
+      window.location.href = lastUrl;
+    });
+  }
 
   startBtn.addEventListener('click', function () {
     startBtn.style.display = 'none';
     setStatus('Starting camera…');
     startScanner();
+  });
+
+  // ── Code entry ───────────────────────────────────────────────────────────
+  codeInput.addEventListener('input', function() {
+    var val = codeInput.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    codeInput.value = val;
+    codeJoinBtn.disabled = val.length < 4;
+    codeJoinBtn.style.opacity = val.length < 4 ? '0.5' : '1';
+    codeError.hidden = true;
+  });
+
+  codeJoinBtn.addEventListener('click', function() {
+    var code = codeInput.value.trim().toUpperCase();
+    if (code.length < 4) return;
+    window.location.href = '/tv/remote?code=' + encodeURIComponent(code);
+  });
+
+  codeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && codeInput.value.length >= 4) codeJoinBtn.click();
   });
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -315,6 +363,7 @@
         setReticle('found');
         setStatus('Connected! Loading your controller…', 'success');
         stopCamera();
+        localStorage.setItem('ezaz_last_zone_url', raw);
         setTimeout(function () { window.location.href = raw; }, 400);
         return;
       }

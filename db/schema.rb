@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_25_000001) do
   create_table "counters", force: :cascade do |t|
     t.string "key", null: false
     t.integer "value", default: 0, null: false
@@ -36,17 +36,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_000001) do
 
   create_table "players", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "device_token"
     t.integer "failed_attempts", default: 0, null: false
     t.datetime "locked_until"
-    t.string "pin_digest", null: false
+    t.string "pin_digest"
     t.datetime "updated_at", null: false
     t.string "username", null: false
+    t.index ["device_token"], name: "index_players_on_device_token", unique: true, where: "device_token IS NOT NULL"
     t.index ["username"], name: "index_players_on_username", unique: true
   end
 
   create_table "room_memberships", force: :cascade do |t|
     t.boolean "connected", default: true, null: false
     t.datetime "created_at", null: false
+    t.string "device_token"
     t.string "name", limit: 12, null: false
     t.integer "player_id"
     t.integer "role", default: 1, null: false
@@ -54,6 +57,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_000001) do
     t.string "session_id"
     t.integer "slot", null: false
     t.datetime "updated_at", null: false
+    t.index ["device_token"], name: "index_room_memberships_on_device_token"
     t.index ["player_id"], name: "index_room_memberships_on_player_id"
     t.index ["room_id", "session_id"], name: "index_room_memberships_on_room_id_and_session_id", unique: true, where: "session_id IS NOT NULL"
     t.index ["room_id", "slot"], name: "index_room_memberships_on_room_id_and_slot", unique: true
@@ -66,9 +70,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_000001) do
     t.datetime "expires_at", null: false
     t.string "game_slug"
     t.integer "state", default: 0, null: false
+    t.string "tv_token"
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_rooms_on_code", unique: true
     t.index ["expires_at"], name: "index_rooms_on_expires_at"
+    t.index ["tv_token"], name: "index_rooms_on_tv_token", unique: true, where: "tv_token IS NOT NULL"
   end
 
   create_table "scores", force: :cascade do |t|

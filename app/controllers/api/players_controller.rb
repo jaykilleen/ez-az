@@ -16,8 +16,25 @@ module Api
       end
     end
 
+    # POST /api/players/claim
+    # Body: { username }
+    # One-tap identity claim — no pin required. Returns device_token once.
+    def claim
+      username = params[:username].to_s.strip
+      return render json: { error: "Name required" }, status: :unprocessable_entity if username.blank?
+
+      if Player.exists?(username: username.upcase.gsub(/[^A-Z0-9_]/, "").first(16))
+        return render json: { error: "Name taken — try another" }, status: :conflict
+      end
+
+      player = Player.claim!(username)
+      render json: { device_token: player.device_token, username: player.username, player_id: player.id },
+             status: :created
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error: e.record.errors.full_messages.first }, status: :unprocessable_entity
+    end
+
     # GET /api/players/check?username=FOO
-    # Returns whether the username already exists (so the client can show Login vs Register)
     def check
       username = params[:username].to_s.strip.upcase
       exists   = Player.exists?(username: username)

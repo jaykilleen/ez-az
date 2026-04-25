@@ -1,6 +1,6 @@
 class Room < ApplicationRecord
   MAX_PLAYERS     = 4
-  DEFAULT_TTL     = 2.hours
+  DEFAULT_TTL     = 4.hours
   CODE_ALPHABET   = "BCDFGHJKLMNPQRSTVWXYZ23456789".chars.freeze  # no vowels, no 0/O/1/I
 
   enum :state, { lobby: 0, playing: 1, finished: 2 }
@@ -24,6 +24,11 @@ class Room < ApplicationRecord
       code = Array.new(4) { CODE_ALPHABET.sample }.join
       break code unless exists?(code: code)
     end
+  end
+
+  # Create a new TV party session room.
+  def self.create_tv_session!
+    create!(tv_token: SecureRandom.alphanumeric(8).upcase)
   end
 
   def host

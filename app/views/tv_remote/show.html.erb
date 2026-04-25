@@ -32,6 +32,10 @@
     padding: 24px 20px; gap: 20px; text-align: center;
   }
 
+  /* claim */
+  .claim-title { font-size: clamp(1.2rem, 5vw, 1.6rem); font-weight: 900; color: #fff; }
+  .claim-hint  { font-size: 14px; color: #556; line-height: 1.6; }
+
   /* shelf */
   .zone-hint { font-size: 15px; color: #445; line-height: 1.7; }
   .zone-hint strong { color: #00ffc8; }
@@ -269,6 +273,19 @@
 
   <div class="zone-main">
 
+    <!-- claim: first visit, pick a name -->
+    <div class="zone-content" data-screen="claim" hidden>
+      <div class="claim-title">What's your name?</div>
+      <div class="claim-hint">We'll save your spot if you disconnect.</div>
+      <div class="lobby-join-form">
+        <input class="zone-name-input" id="claim-input" type="text"
+               placeholder="YOUR NAME" maxlength="12"
+               autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <button class="zone-join-btn" id="claim-btn">Let's Go &rarr;</button>
+        <div class="zone-join-error" id="claim-error" hidden></div>
+      </div>
+    </div>
+
     <!-- shelf: browsing the game shelf -->
     <div class="zone-content" data-screen="shelf">
       <div class="zone-hint">
@@ -325,7 +342,7 @@
 
       <!-- locked: answered, awaiting reveal -->
       <div id="phone-locked" class="phone-locked" hidden>
-        <div class="phone-locked-icon">✓</div>
+        <div class="phone-locked-icon">&#10003;</div>
         <div class="phone-locked-msg">Locked in!<br>Waiting for reveal…</div>
       </div>
 
@@ -397,17 +414,18 @@
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
 
-  var token    = <%= @token.to_json.html_safe %>;
-  var consumer = createConsumer();
+  var token       = <%= @token.to_json.html_safe %>;
+  var roomCode    = <%= @room_code.to_json.html_safe %>;
+  var deviceToken = localStorage.getItem('ezaz_device_token') || '';
+  var myUsername  = localStorage.getItem('ezaz_username') || '';
 
   // ── State ──────────────────────────────────────────────────────────
   var currentScreen    = 'disconnected';
-  var phoneId          = Math.random().toString(36).slice(2, 10);
   var mySlot           = null;
   var myColor          = null;
-  var roomCode         = null;
   var triviaChannel    = null;
   var roomChannel      = null;
+  var remote           = null;
   var myAnswerIndex    = null;
   var phoneTimerInterval = null;
   var activeTab        = 'game';
@@ -420,6 +438,10 @@
   var zoneStatus = document.getElementById('zone-status');
   var zoneDpad  = document.getElementById('zone-dpad');
   var fireBtn   = document.getElementById('fire-btn');
+
+  var claimInput = document.getElementById('claim-input');
+  var claimBtn   = document.getElementById('claim-btn');
+  var claimError = document.getElementById('claim-error');
 
   var lobbyGameName = document.getElementById('lobby-game-name');
   var lobbyRoomCode = document.getElementById('lobby-room-code');
@@ -471,27 +493,80 @@
   });
 
   // ── TV Remote channel ────────────────────────────────────────────────
-  var remote = consumer.subscriptions.create(
-    { channel: 'TvRemoteChannel', token: token },
-    {
-      connected: function() {
-        zoneDot.classList.add('live');
-        zoneStatus.textContent = 'Connected';
-        if (currentScreen === 'disconnected') showScreen('shelf');
-      },
-      disconnected: function() {
-        zoneDot.classList.remove('live');
-        zoneStatus.textContent = 'Disconnected';
-        showScreen('disconnected');
-      },
-      received: function(data) {
-        if (data.type === 'tv_state')   handleTvState(data);
-        if (data.type === 'joined')     handleJoined(data);
-        if (data.type === 'join_error') handleJoinError(data);
-        // 'navigate' events are ignored on the phone
+  var consumer = createConsumer();
+
+  function connectToTv() {
+    remote = consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: token, device_token: deviceToken },
+      {
+        connected: function() {
+          zoneDot.classList.add('live');
+          zoneStatus.textContent = 'Connected';
+          if (currentScreen === 'disconnected' || currentScreen === 'claim') showScreen('shelf');
+        },
+        disconnected: function() {
+          zoneDot.classList.remove('live');
+          zoneStatus.textContent = 'Disconnected';
+          showScreen('disconnected');
+        },
+        received: function(data) {
+          if (data.type === 'tv_state')   handleTvState(data);
+          if (data.type === 'joined')     handleJoined(data);
+          if (data.type === 'join_error') handleJoinError(data);
+          if (data.type === 'rejoined')   handleRejoined(data);
+          if (data.type === 'slot_assigned') handleSlotAssigned(data);
+          // 'navigate' events are ignored on the phone
+        }
       }
-    }
-  );
+    );
+  }
+
+  // ── Startup: claim or connect ────────────────────────────────────────
+  if (deviceToken) {
+    connectToTv();
+  } else {
+    showScreen('claim');
+  }
+
+  // ── Claim form ───────────────────────────────────────────────────────
+  claimBtn.addEventListener('click', function() {
+    var name = claimInput.value.trim();
+    if (!name) { claimError.textContent = 'Enter a name first'; claimError.hidden = false; return; }
+    claimBtn.disabled = true;
+    claimBtn.textContent = 'Saving…';
+    claimError.hidden = true;
+    fetch('/api/players/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      if (res.ok) {
+        localStorage.setItem('ezaz_device_token', res.data.device_token);
+        localStorage.setItem('ezaz_username', res.data.username);
+        deviceToken = res.data.device_token;
+        myUsername  = res.data.username;
+        connectToTv();
+        showScreen('shelf');
+      } else {
+        claimError.textContent = res.data.error || 'Could not save name';
+        claimError.hidden = false;
+        claimBtn.disabled = false;
+        claimBtn.textContent = 'Let\'s Go →';
+      }
+    })
+    .catch(function() {
+      claimError.textContent = 'Connection error — try again';
+      claimError.hidden = false;
+      claimBtn.disabled = false;
+      claimBtn.textContent = 'Let\'s Go →';
+    });
+  });
+
+  claimInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') claimBtn.click();
+  });
 
   function handleTvState(data) {
     if (data.room_code)  { roomCode = data.room_code; lobbyRoomCode.textContent = 'Room ' + data.room_code; }
@@ -525,6 +600,21 @@
     showScreen('waiting');
     subscribeToTrivia(data.code, data.slot);
     subscribeToRoom(data.code);
+  }
+
+  function handleRejoined(data) {
+    mySlot  = data.slot;
+    myColor = data.color;
+    waitingBadge.textContent = 'P' + mySlot;
+    waitingBadge.style.background = myColor;
+    document.documentElement.style.setProperty('--buzz-color', myColor);
+    buzzerInfo.textContent = 'P' + mySlot;
+  }
+
+  function handleSlotAssigned(data) {
+    if (data.phone_id !== deviceToken) return;
+    mySlot  = data.slot;
+    myColor = data.color;
   }
 
   function renderPlayers(members) {
@@ -709,7 +799,8 @@
 
   // ── D-pad ─────────────────────────────────────────────────────────────
   function sendNav(dir, navType) {
-    remote.perform('navigate', { direction: dir, nav_type: navType, phone_id: phoneId });
+    if (!remote) return;
+    remote.perform('navigate', { direction: dir, nav_type: navType, phone_id: deviceToken });
     if (navType === 'press' && navigator.vibrate) navigator.vibrate(18);
   }
 

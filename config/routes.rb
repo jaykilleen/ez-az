@@ -33,7 +33,10 @@ Rails.application.routes.draw do
     get "version",      to: "version#show"
     get "store/status", to: "store#status"
     resources :players, only: [:create] do
-      collection { get :check }
+      collection do
+        get  :check
+        post :claim
+      end
     end
     resources :errors,  only: [:create]
   end

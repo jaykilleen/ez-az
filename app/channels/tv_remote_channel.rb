@@ -4,7 +4,6 @@ class TvRemoteChannel < ApplicationCable::Channel
   ALLOWED_STATES = %w[shelf lobby game].freeze
   SLOT_COLORS    = { 1 => "#ff4757", 2 => "#3742fa", 3 => "#ffa502", 4 => "#2ed573" }.freeze
 
-  # In-memory state per token so late-connecting phones get the current TV state immediately
   STATES       = {}
   STATES_MUTEX = Mutex.new
 
@@ -12,24 +11,57 @@ class TvRemoteChannel < ApplicationCable::Channel
     token = clean_token
     return reject if token.blank?
     stream_from "tv_remote:#{token}"
+
+    @current_room  = Room.active.find_by(tv_token: token)
+    @device_token  = clean_device_token
+    @slot_claimed  = false
+
+    if @current_room && @device_token.present?
+      membership = @current_room.memberships.find_by(device_token: @device_token)
+      if membership
+        membership.update_column(:connected, true)
+        transmit({
+          type:     "rejoined",
+          slot:     membership.slot,
+          name:     membership.name,
+          color:    SLOT_COLORS[membership.slot],
+          phone_id: @device_token
+        })
+        @slot_claimed = true
+      end
+    end
+
     STATES_MUTEX.synchronize { transmit(STATES[token]) if STATES[token] }
   end
 
-  # Phone→TV: D-pad press/release
+  def unsubscribed
+    if @current_room && @device_token.present?
+      @current_room.memberships
+                   .where(device_token: @device_token)
+                   .update_all(connected: false)
+    end
+  end
+
   def navigate(data)
     dir      = data["direction"].to_s
     nav_type = data["nav_type"].to_s
     return unless ALLOWED_DIRS.include?(dir)
     return unless nav_type.blank? || ALLOWED_TYPES.include?(nav_type)
-    phone_id = data["phone_id"].to_s.gsub(/[^a-zA-Z0-9]/, "")[0, 16]
+
+    phone_id = data["phone_id"].to_s.gsub(/[^a-zA-Z0-9]/, "")[0, 64]
+
+    if @current_room && phone_id.present? && !@slot_claimed
+      ensure_membership_for(phone_id)
+    end
+
     ActionCable.server.broadcast("tv_remote:#{clean_token}", {
-      type: "navigate", direction: dir,
-      nav_type: nav_type.presence || "press",
-      phone_id: phone_id.presence
+      type:      "navigate",
+      direction: dir,
+      nav_type:  nav_type.presence || "press",
+      phone_id:  phone_id.presence
     })
   end
 
-  # TV→phones: broadcast current TV state so phones know what to show
   def set_state(data)
     state = data["state"].to_s
     return unless ALLOWED_STATES.include?(state)
@@ -40,7 +72,6 @@ class TvRemoteChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("tv_remote:#{clean_token}", payload)
   end
 
-  # Phone joins a trivia room in-page — no browser navigation required
   def join_room(data)
     code = data["code"].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 6]
     name = data["name"].to_s.strip.upcase.slice(0, 12)
@@ -53,10 +84,14 @@ class TvRemoteChannel < ApplicationCable::Channel
     slot = room.next_available_slot
     return transmit({ type: "join_error", message: "No slots available" }) unless slot
 
+    player = @device_token.present? ? Player.find_by(device_token: @device_token) : nil
+
     membership = room.memberships.create!(
       name:       name,
       slot:       slot,
       role:       :player,
+      device_token: @device_token.presence,
+      player:     player,
       session_id: SecureRandom.hex(16)
     )
     RoomChannel.member_joined(room, membership)
@@ -69,5 +104,41 @@ class TvRemoteChannel < ApplicationCable::Channel
 
   def clean_token
     params[:token].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 8]
+  end
+
+  def clean_device_token
+    params[:device_token].to_s.gsub(/[^a-zA-Z0-9]/, "")[0, 64]
+  end
+
+  def ensure_membership_for(phone_id)
+    @slot_claimed = true
+    return if @current_room.memberships.exists?(device_token: phone_id)
+
+    player = Player.find_by(device_token: phone_id)
+
+    (1..Room::MAX_PLAYERS).each do |slot|
+      next if @current_room.memberships.exists?(slot: slot)
+      name = player&.username || "P#{slot}"
+      begin
+        membership = @current_room.memberships.create!(
+          name:         name,
+          slot:         slot,
+          role:         :player,
+          device_token: phone_id,
+          player:       player,
+          session_id:   SecureRandom.hex(16)
+        )
+        ActionCable.server.broadcast("tv_remote:#{clean_token}", {
+          type:     "slot_assigned",
+          slot:     membership.slot,
+          name:     membership.name,
+          color:    SLOT_COLORS[membership.slot],
+          phone_id: phone_id
+        })
+        return
+      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+        next
+      end
+    end
   end
 end

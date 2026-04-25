@@ -4,14 +4,15 @@ class TvController < ApplicationController
   layout "tv"
 
   def show
-    @games         = Game.for_tv
-    @coming_to_tv  = Game.coming_to_tv
-    all_count      = @games.size + @coming_to_tv.size
-    @tv_cols       = [[all_count, 1].max, 5].min
-    @version = EzAz::Version::STRING
-    @remote_token = SecureRandom.alphanumeric(6).upcase
+    @games        = Game.for_tv
+    @coming_to_tv = Game.coming_to_tv
+    all_count     = @games.size + @coming_to_tv.size
+    @tv_cols      = [[all_count, 1].max, 5].min
+    @version      = EzAz::Version::STRING
 
-    remote_url = tv_remote_url(token: @remote_token, v: @version)
+    @room = Room.create_tv_session!
+
+    remote_url = tv_remote_url(token: @room.tv_token, code: @room.code, v: @version)
     svg = RQRCode::QRCode.new(remote_url).as_svg(
       color: "00ffc8",
       shape_rendering: "crispEdges",
