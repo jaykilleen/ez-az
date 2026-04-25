@@ -1,0 +1,185 @@
+<style>
+  [hidden] { display: none !important; }
+
+  .remote {
+    flex: 1;
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .remote-top {
+    padding: max(env(safe-area-inset-top), 14px) 20px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .remote-label {
+    font-size: 13px; font-weight: 700; color: #00ffc8;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .remote-status {
+    font-size: 12px; color: #445;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .remote-status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #334; transition: background 0.3s;
+  }
+  .remote-status-dot.live { background: #00ffc8; box-shadow: 0 0 6px #00ffc8; }
+
+  .remote-body {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 28px; padding: 24px;
+  }
+
+  .remote-hint {
+    font-size: 13px; color: #445; text-align: center; line-height: 1.5;
+  }
+
+  /* D-pad */
+  .dpad {
+    display: grid;
+    grid-template-columns: 80px 80px 80px;
+    grid-template-rows: 80px 80px 80px;
+    gap: 8px;
+  }
+  .dpad-btn {
+    border-radius: 16px;
+    background: rgba(0,255,200,0.08);
+    border: 2px solid rgba(0,255,200,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #00ffc8;
+    cursor: pointer;
+    transition: background 0.08s, border-color 0.08s;
+  }
+  .dpad-btn:active, .dpad-btn.pressed {
+    background: rgba(0,255,200,0.25);
+    border-color: #00ffc8;
+  }
+  .dpad-center {
+    grid-column: 2; grid-row: 2;
+    background: rgba(0,255,200,0.12);
+    border-color: rgba(0,255,200,0.4);
+    font-size: 13px; font-weight: 800; letter-spacing: 0.06em;
+    color: #00ffc8;
+  }
+  .dpad-center:active, .dpad-center.pressed {
+    background: #00ffc8;
+    color: #0a0a12;
+  }
+  .dpad-empty { background: none; border: none; pointer-events: none; }
+
+  /* Back button */
+  .back-btn {
+    padding: 14px 32px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.08s;
+  }
+  .back-btn:active { background: rgba(255,255,255,0.12); }
+
+  /* Disconnected overlay */
+  .remote-disconnected {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 40px; text-align: center;
+  }
+  .remote-disconnected h2 { font-size: 20px; color: #fff; }
+  .remote-disconnected p { font-size: 14px; color: #556; line-height: 1.5; }
+</style>
+
+<div class="remote">
+  <div class="remote-top">
+    <div class="remote-label">EZ-AZ Remote</div>
+    <div class="remote-status">
+      <span class="remote-status-dot" id="status-dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+  </div>
+
+  <div class="remote-body" id="remote-body">
+    <div class="remote-hint">Use the arrows to browse games.<br>Press <strong style="color:#00ffc8">OK</strong> to launch.</div>
+
+    <div class="dpad">
+      <div class="dpad-empty"></div>
+      <div class="dpad-btn" id="btn-up" data-dir="up">▲</div>
+      <div class="dpad-empty"></div>
+
+      <div class="dpad-btn" id="btn-left" data-dir="left">◀</div>
+      <div class="dpad-btn dpad-center" id="btn-select" data-dir="select">OK</div>
+      <div class="dpad-btn" id="btn-right" data-dir="right">▶</div>
+
+      <div class="dpad-empty"></div>
+      <div class="dpad-btn" id="btn-down" data-dir="down">▼</div>
+      <div class="dpad-empty"></div>
+    </div>
+
+    <button class="back-btn" id="btn-back">← BACK</button>
+  </div>
+
+  <div class="remote-disconnected" id="remote-disconnected" hidden>
+    <h2>TV disconnected</h2>
+    <p>The TV may have refreshed or gone to sleep.<br>Go back to the TV and scan the QR code again.</p>
+  </div>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var token   = <%= @token.to_json.html_safe %>;
+  var dot     = document.getElementById('status-dot');
+  var statusTxt = document.getElementById('status-text');
+  var bodyEl  = document.getElementById('remote-body');
+  var discEl  = document.getElementById('remote-disconnected');
+
+  var consumer = createConsumer();
+  var remote = consumer.subscriptions.create(
+    { channel: 'TvRemoteChannel', token: token },
+    {
+      connected() {
+        dot.classList.add('live');
+        statusTxt.textContent = 'Connected';
+        bodyEl.removeAttribute('hidden');
+        discEl.setAttribute('hidden', '');
+      },
+      disconnected() {
+        dot.classList.remove('live');
+        statusTxt.textContent = 'Disconnected';
+        bodyEl.setAttribute('hidden', '');
+        discEl.removeAttribute('hidden');
+      }
+    }
+  );
+
+  function send(dir) {
+    remote.perform('navigate', { direction: dir });
+    if (navigator.vibrate) navigator.vibrate(18);
+  }
+
+  // Bind all d-pad buttons
+  document.querySelectorAll('.dpad-btn[data-dir]').forEach(function(btn) {
+    var dir = btn.getAttribute('data-dir');
+    btn.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      send(dir);
+    }, { passive: false });
+    btn.addEventListener('touchend', function() {
+      btn.classList.remove('pressed');
+    });
+    // Mouse fallback for testing on desktop
+    btn.addEventListener('mousedown', function() { btn.classList.add('pressed'); send(dir); });
+    btn.addEventListener('mouseup', function() { btn.classList.remove('pressed'); });
+  });
+
+  document.getElementById('btn-back').addEventListener('click', function() {
+    send('back');
+  });
+</script>

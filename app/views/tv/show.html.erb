@@ -309,7 +309,7 @@
     </div>
     <div class="tv-qr">
       <div class="tv-qr-label">
-        <strong>Scan to play on your phone</strong>
+        <strong>Scan to control &amp; play</strong>
         ez-az.net
       </div>
       <div class="tv-qr-code"><%= @qr_code_svg %></div>
@@ -451,3 +451,26 @@
 </script>
 
 <script src="/game-covers.js"></script>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var token = <%= @remote_token.to_json.html_safe %>;
+  var consumer = createConsumer();
+
+  consumer.subscriptions.create(
+    { channel: 'TvRemoteChannel', token: token },
+    {
+      received: function(data) {
+        if (data.type !== 'navigate') return;
+        var keyMap = {
+          left: 'ArrowLeft', right: 'ArrowRight',
+          up: 'ArrowUp',     down: 'ArrowDown',
+          select: 'Enter',   back: 'Escape'
+        };
+        var key = keyMap[data.direction];
+        if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+      }
+    }
+  );
+</script>
