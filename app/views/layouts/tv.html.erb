@@ -28,6 +28,10 @@
 </head>
 <body>
   <%= yield %>
-  <script src="/dev-bar.js"></script>
+  <script>
+    // Dev bar sets body margin-top which breaks the fullscreen TV layout — cancel it
+    var bar = document.getElementById('az-dev-bar');
+    if (bar) { bar.style.display = 'none'; document.body.style.marginTop = '0'; }
+  </script>
 </body>
 </html>

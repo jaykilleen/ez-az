@@ -4,6 +4,7 @@
     height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
     padding: 3vh 4vw;
     gap: 2vh;
     background:
@@ -17,12 +18,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 3vw;
+    overflow: hidden;
   }
 
   .tv-brand {
     display: flex;
     align-items: baseline;
     gap: 1.5vw;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .tv-logo {
@@ -49,6 +54,7 @@
   }
 
   .tv-qr {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 1.2vw;
@@ -72,12 +78,19 @@
     margin-bottom: 0.3vh;
   }
 
-  .tv-qr svg {
+  .tv-qr-code {
     width: clamp(110px, 11vw, 180px);
     height: clamp(110px, 11vw, 180px);
     background: #0a0a12;
     padding: 0.6vw;
     border-radius: 0.6vw;
+    flex-shrink: 0;
+  }
+
+  .tv-qr-code svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 
   .tv-greeting {
@@ -281,7 +294,7 @@
         <strong>Scan to play on your phone</strong>
         ez-az.net
       </div>
-      <%= @qr_code_svg %>
+      <div class="tv-qr-code"><%= @qr_code_svg %></div>
     </div>
   </header>
 
