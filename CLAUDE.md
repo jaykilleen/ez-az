@@ -163,6 +163,40 @@ docs/
   decisions/         # ADRs (Architecture Decision Records)
 ```
 
+## Zone Component Names
+
+The phone companion system has established names. Use these in conversation and code comments.
+
+**Phone side (the Zone)** — `tv_remote/show.html.erb`, served at `/tv/remote`
+
+| Name | What it is |
+|------|-----------|
+| Zone | The whole phone companion experience |
+| Zone Bar | Top strip: EZ-AZ brand + live connection dot |
+| Zone Screen | The current main content panel (one of the states below) |
+| Zone Rail | Three-tab navigation bar at the bottom (game / remote / options) |
+| Zone Pad | The D-pad directional controller |
+| Action Button | The circular FIRE button on the Pad |
+| Options Panel | The overlay shown when the Options tab is active |
+
+Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `watching` · `disconnected`
+
+**TV side (the Stage)**
+
+| Name | What it is |
+|------|-----------|
+| Stage | Whatever is on the big screen |
+| Shelf | The store front Stage (`public/index.html`) |
+| Party Stage | Any game-specific TV view with Zone support |
+| QR Badge | The always-visible scan badge on the Shelf |
+
+**The engine**
+
+- `TvRemote` / `TvRemoteChannel` — the ActionCable protocol between Stage and Zone
+- `DPAD_SCREENS` — Zone Screen states where the Pad is shown
+- `TABBED_SCREENS` — Zone Screen states where the Rail is shown
+- See ADR 001 and ADR 005 for architecture decisions
+
 ## Key Conventions
 
 - ADRs live in `docs/decisions/` -- read before touching TV, rooms, or player identity
