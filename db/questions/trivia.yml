@@ -137,3 +137,1692 @@
   options: ["Blue", "Green", "Red", "Purple"]
   answer: 2
   category: "World"
+- question: "What is the largest animal in the world?"
+  options: ["African Elephant", "Blue Whale", "Giant Squid", "Whale Shark"]
+  answer: 1
+  category: "Animals"
+
+- question: "How many legs does a spider have?"
+  options: ["6", "8", "10", "12"]
+  answer: 1
+  category: "Animals"
+
+- question: "What do you call a group of lions?"
+  options: ["Pack", "Herd", "Flock", "Pride"]
+  answer: 3
+  category: "Animals"
+
+- question: "Which animal is known as the fastest land animal?"
+  options: ["Lion", "Horse", "Greyhound", "Cheetah"]
+  answer: 3
+  category: "Animals"
+
+- question: "What is the only mammal that can truly fly?"
+  options: ["Flying Squirrel", "Bat", "Sugar Glider", "Flying Lemur"]
+  answer: 1
+  category: "Animals"
+
+- question: "How long is an elephant pregnant before giving birth?"
+  options: ["6 months", "12 months", "18 months", "22 months"]
+  answer: 3
+  category: "Animals"
+
+- question: "What is a baby kangaroo called?"
+  options: ["Joey", "Cub", "Foal", "Kit"]
+  answer: 0
+  category: "Animals"
+
+- question: "Which bird lays the largest egg?"
+  options: ["Ostrich", "Emu", "Penguin", "Albatross"]
+  answer: 0
+  category: "Animals"
+
+- question: "How many hearts does an octopus have?"
+  options: ["3", "1", "2", "4"]
+  answer: 0
+  category: "Animals"
+
+- question: "What is the name for a group of wolves?"
+  options: ["Pack", "Herd", "Pod", "Colony"]
+  answer: 0
+  category: "Animals"
+
+- question: "Which animal sleeps the most hours per day on average?"
+  options: ["Koala", "Sloth", "Cat", "Lion"]
+  answer: 0
+  category: "Animals"
+
+- question: "What colour is a polar bear's skin under its white fur?"
+  options: ["Black", "Pink", "White", "Grey"]
+  answer: 0
+  category: "Animals"
+
+- question: "Which ocean animal can change its colour to match its surroundings?"
+  options: ["Shark", "Dolphin", "Octopus", "Stingray"]
+  answer: 2
+  category: "Animals"
+
+- question: "A group of fish swimming together is called a what?"
+  options: ["Flock", "School", "Pod", "Colony"]
+  answer: 1
+  category: "Animals"
+
+- question: "Which is the only continent where penguins live in the wild?"
+  options: ["Arctic", "Antarctica", "Africa", "Australia"]
+  answer: 1
+  category: "Animals"
+
+- question: "What do caterpillars turn into?"
+  options: ["Butterflies or Moths", "Dragonflies", "Beetles", "Wasps"]
+  answer: 0
+  category: "Animals"
+
+- question: "How many eyes does a bee have?"
+  options: ["2", "3", "4", "5"]
+  answer: 3
+  category: "Animals"
+
+- question: "What is the world's largest reptile?"
+  options: ["Komodo Dragon", "Saltwater Crocodile", "Nile Crocodile", "Anaconda"]
+  answer: 1
+  category: "Animals"
+
+- question: "Which animal has the longest lifespan?"
+  options: ["Elephant", "Tortoise", "Blue Whale", "Parrot"]
+  answer: 1
+  category: "Animals"
+
+- question: "What do you call a female fox?"
+  options: ["Vixen", "Doe", "Hen", "Dam"]
+  answer: 0
+  category: "Animals"
+
+- question: "How do dolphins communicate with each other?"
+  options: ["Visual signals", "Echolocation and clicks", "Smells", "Tail movements"]
+  answer: 1
+  category: "Animals"
+
+- question: "Which animal is famous for its ability to regrow its tail?"
+  options: ["Gecko", "Frog", "Turtle", "Snake"]
+  answer: 0
+  category: "Animals"
+
+- question: "What is the name of the natural armour on an armadillo?"
+  options: ["Carapace", "Shell", "Scales", "Ossicles"]
+  answer: 0
+  category: "Animals"
+
+- question: "Which insect produces honey?"
+  options: ["Bee", "Ant", "Wasp", "Butterfly"]
+  answer: 0
+  category: "Animals"
+
+- question: "What is the largest species of penguin?"
+  options: ["Rockhopper Penguin", "King Penguin", "Macaroni Penguin", "Emperor Penguin"]
+  answer: 3
+  category: "Animals"
+
+- question: "What is the capital city of Australia?"
+  options: ["Sydney", "Melbourne", "Brisbane", "Canberra"]
+  answer: 3
+  category: "Australia"
+
+- question: "Which Australian animal carries its young in a pouch?"
+  options: ["Dingo", "Wombat", "Platypus", "Echidna"]
+  answer: 1
+  category: "Australia"
+
+- question: "What is the name of Australia's famous rock formation in the Northern Territory?"
+  options: ["The Olgas", "Uluru", "Devil's Marbles", "The Bungle Bungles"]
+  answer: 1
+  category: "Australia"
+
+- question: "What colours are on the Australian flag?"
+  options: ["Red, White and Blue", "Blue, White and Gold", "Red, Blue and Green", "Green, Gold and Blue"]
+  answer: 0
+  category: "Australia"
+
+- question: "What is Australia's national flower?"
+  options: ["Golden Wattle", "Waratah", "Bottlebrush", "Banksia"]
+  answer: 0
+  category: "Australia"
+
+- question: "Which Australian state has the most people?"
+  options: ["Victoria", "Queensland", "Western Australia", "New South Wales"]
+  answer: 3
+  category: "Australia"
+
+- question: "What is the name of the sea between Australia and New Zealand?"
+  options: ["Tasman Sea", "Bass Strait", "Torres Strait", "Cook Strait"]
+  answer: 0
+  category: "Australia"
+
+- question: "Which city is home to the Sydney Opera House?"
+  options: ["Melbourne", "Brisbane", "Canberra", "Sydney"]
+  answer: 3
+  category: "Australia"
+
+- question: "Australia is home to which venomous monotreme?"
+  options: ["Platypus", "Wombat", "Quoll", "Bandicoot"]
+  answer: 0
+  category: "Australia"
+
+- question: "What sport is the AFL code of football associated with?"
+  options: ["Rugby League", "Soccer", "Australian Rules Football", "Rugby Union"]
+  answer: 2
+  category: "Australia"
+
+- question: "What is Australia's largest desert?"
+  options: ["Simpson Desert", "Gibson Desert", "Great Victoria Desert", "Tanami Desert"]
+  answer: 2
+  category: "Australia"
+
+- question: "Which country is closest to Australia's northern tip?"
+  options: ["Indonesia", "Papua New Guinea", "East Timor", "Philippines"]
+  answer: 1
+  category: "Australia"
+
+- question: "What is the name of the reef system off the Queensland coast?"
+  options: ["The Coral Sea Reef", "The Great Barrier Reef", "The Queensland Reef", "The Pacific Reef"]
+  answer: 1
+  category: "Australia"
+
+- question: "Australia was first colonised by Europeans from which country?"
+  options: ["France", "Spain", "Netherlands", "Britain"]
+  answer: 3
+  category: "Australia"
+
+- question: "What animal appears on the Australian coat of arms alongside the kangaroo?"
+  options: ["Koala", "Wombat", "Platypus", "Emu"]
+  answer: 3
+  category: "Australia"
+
+- question: "In which year did Australia become a federation?"
+  options: ["1901", "1788", "1850", "1920"]
+  answer: 0
+  category: "Australia"
+
+- question: "What is the name of Australia's famous outback wilderness region?"
+  options: ["The Bush", "The Red Centre", "The Outback", "The Interior"]
+  answer: 2
+  category: "Australia"
+
+- question: "Which Australian city hosted the 2000 Summer Olympics?"
+  options: ["Melbourne", "Brisbane", "Canberra", "Sydney"]
+  answer: 3
+  category: "Australia"
+
+- question: "What is the currency used in Australia?"
+  options: ["New Zealand Dollar", "Australian Pound", "Australian Dollar", "Pacific Dollar"]
+  answer: 2
+  category: "Australia"
+
+- question: "Tasmania is separated from mainland Australia by which body of water?"
+  options: ["Cook Strait", "Bass Strait", "Torres Strait", "Spencer Gulf"]
+  answer: 1
+  category: "Australia"
+
+- question: "What is the longest river in Australia?"
+  options: ["Darling River", "Murrumbidgee River", "Lachlan River", "Murray River"]
+  answer: 3
+  category: "Australia"
+
+- question: "Which Aboriginal language group gives Uluru its name?"
+  options: ["Pitjantjatjara", "Yolngu", "Warlpiri", "Arrernte"]
+  answer: 0
+  category: "Australia"
+
+- question: "What does water boil at in degrees Celsius at sea level?"
+  options: ["90 degrees", "95 degrees", "110 degrees", "100 degrees"]
+  answer: 3
+  category: "Science"
+
+- question: "What gas do plants absorb from the air to make food?"
+  options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"]
+  answer: 2
+  category: "Science"
+
+- question: "How many bones are in the adult human body?"
+  options: ["186", "206", "226", "246"]
+  answer: 1
+  category: "Science"
+
+- question: "What is the chemical symbol for water?"
+  options: ["WA", "H2O", "HO2", "W2O"]
+  answer: 1
+  category: "Science"
+
+- question: "Which planet is known as the Red Planet?"
+  options: ["Venus", "Jupiter", "Saturn", "Mars"]
+  answer: 3
+  category: "Science"
+
+- question: "What is the powerhouse of the cell?"
+  options: ["Nucleus", "Ribosome", "Cell wall", "Mitochondria"]
+  answer: 3
+  category: "Science"
+
+- question: "What force keeps us on the ground?"
+  options: ["Magnetism", "Friction", "Inertia", "Gravity"]
+  answer: 3
+  category: "Science"
+
+- question: "What is the hardest natural substance on Earth?"
+  options: ["Gold", "Iron", "Quartz", "Diamond"]
+  answer: 3
+  category: "Science"
+
+- question: "How many colours are in a rainbow?"
+  options: ["5", "6", "7", "8"]
+  answer: 2
+  category: "Science"
+
+- question: "What type of energy does the sun produce?"
+  options: ["Chemical energy", "Nuclear energy", "Mechanical energy", "Electrical energy"]
+  answer: 1
+  category: "Science"
+
+- question: "What is the smallest unit of matter?"
+  options: ["Molecule", "Cell", "Atom", "Proton"]
+  answer: 2
+  category: "Science"
+
+- question: "What do you call a scientist who studies weather?"
+  options: ["Geologist", "Meteorologist", "Biologist", "Astronomer"]
+  answer: 1
+  category: "Science"
+
+- question: "Which gas makes up most of Earth's atmosphere?"
+  options: ["Oxygen", "Carbon Dioxide", "Hydrogen", "Nitrogen"]
+  answer: 3
+  category: "Science"
+
+- question: "What is the process by which plants make their own food using sunlight?"
+  options: ["Photosynthesis", "Respiration", "Germination", "Osmosis"]
+  answer: 0
+  category: "Science"
+
+- question: "What state of matter does water turn into when frozen?"
+  options: ["Solid", "Gas", "Liquid", "Plasma"]
+  answer: 0
+  category: "Science"
+
+- question: "Which element has the chemical symbol O?"
+  options: ["Osmium", "Oganesson", "Oxygen", "Oxide"]
+  answer: 2
+  category: "Science"
+
+- question: "What type of simple machine is a ramp?"
+  options: ["Lever", "Inclined plane", "Pulley", "Wheel and axle"]
+  answer: 1
+  category: "Science"
+
+- question: "How long does light from the Sun take to reach Earth?"
+  options: ["About 1 minute", "About 8 minutes", "About 30 minutes", "About 1 hour"]
+  answer: 1
+  category: "Science"
+
+- question: "What is the chemical symbol for gold?"
+  options: ["Gd", "Go", "Gl", "Au"]
+  answer: 3
+  category: "Science"
+
+- question: "Which type of rock is formed from cooled lava?"
+  options: ["Sedimentary", "Metamorphic", "Granite", "Igneous"]
+  answer: 3
+  category: "Science"
+
+- question: "What do you call an animal that eats only plants?"
+  options: ["Herbivore", "Carnivore", "Omnivore", "Insectivore"]
+  answer: 0
+  category: "Science"
+
+- question: "What is the closest planet to the Sun?"
+  options: ["Mercury", "Venus", "Earth", "Mars"]
+  answer: 0
+  category: "Science"
+
+- question: "Which organ filters the blood in your body?"
+  options: ["Heart", "Liver", "Kidney", "Spleen"]
+  answer: 2
+  category: "Science"
+
+- question: "What is the name of the force that resists motion between two surfaces?"
+  options: ["Gravity", "Magnetism", "Tension", "Friction"]
+  answer: 3
+  category: "Science"
+
+- question: "What is the tallest mountain in the world?"
+  options: ["K2", "Mount Everest", "Mont Blanc", "Kilimanjaro"]
+  answer: 1
+  category: "Geography"
+
+- question: "What is the largest ocean in the world?"
+  options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"]
+  answer: 3
+  category: "Geography"
+
+- question: "How many continents are there on Earth?"
+  options: ["5", "6", "7", "8"]
+  answer: 2
+  category: "Geography"
+
+- question: "What is the longest river in the world?"
+  options: ["Amazon", "Nile", "Yangtze", "Mississippi"]
+  answer: 1
+  category: "Geography"
+
+- question: "Which country has the most people in the world?"
+  options: ["USA", "Russia", "China", "India"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the capital of France?"
+  options: ["Berlin", "Madrid", "Rome", "Paris"]
+  answer: 3
+  category: "Geography"
+
+- question: "Which is the smallest country in the world?"
+  options: ["Monaco", "Liechtenstein", "San Marino", "Vatican City"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the largest country in the world by area?"
+  options: ["Canada", "China", "Russia", "USA"]
+  answer: 2
+  category: "Geography"
+
+- question: "Which desert is the largest in the world?"
+  options: ["Gobi Desert", "Sahara Desert", "Arabian Desert", "Antarctic Desert"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the capital of Japan?"
+  options: ["Osaka", "Kyoto", "Hiroshima", "Tokyo"]
+  answer: 3
+  category: "Geography"
+
+- question: "Which country is known as the Land of the Rising Sun?"
+  options: ["China", "South Korea", "Thailand", "Japan"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the name of the largest rainforest in the world?"
+  options: ["Congo Rainforest", "Amazon Rainforest", "Daintree Rainforest", "Tongass Rainforest"]
+  answer: 1
+  category: "Geography"
+
+- question: "What is the capital of the United Kingdom?"
+  options: ["Edinburgh", "Dublin", "Cardiff", "London"]
+  answer: 3
+  category: "Geography"
+
+- question: "On which continent is Egypt located?"
+  options: ["Asia", "Europe", "Africa", "Middle East"]
+  answer: 2
+  category: "Geography"
+
+- question: "Which country is home to the Amazon River?"
+  options: ["Peru", "Colombia", "Venezuela", "Brazil"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the capital of Brazil?"
+  options: ["Rio de Janeiro", "Sao Paulo", "Brasilia", "Salvador"]
+  answer: 2
+  category: "Geography"
+
+- question: "Which European country is shaped like a boot?"
+  options: ["Spain", "Greece", "Italy", "Portugal"]
+  answer: 2
+  category: "Geography"
+
+- question: "Which ocean is the Titanic wreck located in?"
+  options: ["Pacific Ocean", "Atlantic Ocean", "Indian Ocean", "Arctic Ocean"]
+  answer: 1
+  category: "Geography"
+
+- question: "What mountain range runs along the border of France and Spain?"
+  options: ["Alps", "Pyrenees", "Apennines", "Carpathians"]
+  answer: 1
+  category: "Geography"
+
+- question: "Which country has the most natural lakes?"
+  options: ["Russia", "USA", "Finland", "Canada"]
+  answer: 3
+  category: "Geography"
+
+- question: "What is the name of the sea between Europe and Africa?"
+  options: ["Red Sea", "Black Sea", "Mediterranean Sea", "Caspian Sea"]
+  answer: 2
+  category: "Geography"
+
+- question: "In which country would you find the Eiffel Tower?"
+  options: ["France", "Belgium", "Germany", "Switzerland"]
+  answer: 0
+  category: "Geography"
+
+- question: "What is the capital of the United States of America?"
+  options: ["Washington D.C.", "New York City", "Los Angeles", "Chicago"]
+  answer: 0
+  category: "Geography"
+
+- question: "What is the tallest man-made structure in the world?"
+  options: ["Burj Khalifa", "CN Tower", "Empire State Building", "Shanghai Tower"]
+  answer: 0
+  category: "Geography"
+
+- question: "In what year did World War II end?"
+  options: ["1943", "1944", "1945", "1946"]
+  answer: 2
+  category: "History"
+
+- question: "Who was the first person to walk on the Moon?"
+  options: ["Buzz Aldrin", "Yuri Gagarin", "Alan Shepard", "Neil Armstrong"]
+  answer: 3
+  category: "History"
+
+- question: "Which ancient wonder of the world is still standing today?"
+  options: ["Colossus of Rhodes", "Lighthouse of Alexandria", "Great Pyramid of Giza", "Hanging Gardens of Babylon"]
+  answer: 2
+  category: "History"
+
+- question: "Who invented the telephone?"
+  options: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"]
+  answer: 1
+  category: "History"
+
+- question: "In which year did the Titanic sink?"
+  options: ["1908", "1910", "1912", "1914"]
+  answer: 2
+  category: "History"
+
+- question: "Who was the first President of the United States?"
+  options: ["Thomas Jefferson", "John Adams", "Abraham Lincoln", "George Washington"]
+  answer: 3
+  category: "History"
+
+- question: "Which empire built the Colosseum in Rome?"
+  options: ["Roman Empire", "Greek Empire", "Ottoman Empire", "Byzantine Empire"]
+  answer: 0
+  category: "History"
+
+- question: "Who painted the Mona Lisa?"
+  options: ["Leonardo da Vinci", "Michelangelo", "Raphael", "Caravaggio"]
+  answer: 0
+  category: "History"
+
+- question: "In which country were the first Olympic Games held in ancient times?"
+  options: ["Rome", "Egypt", "Greece", "Persia"]
+  answer: 2
+  category: "History"
+
+- question: "What was the name of the ship Charles Darwin sailed on during his famous voyage?"
+  options: ["HMS Victory", "HMS Endeavour", "HMS Beagle", "HMS Discovery"]
+  answer: 2
+  category: "History"
+
+- question: "Who invented the light bulb?"
+  options: ["Nikola Tesla", "Thomas Edison", "Benjamin Franklin", "James Watt"]
+  answer: 1
+  category: "History"
+
+- question: "In which century did Christopher Columbus first sail to the Americas?"
+  options: ["14th century", "15th century", "16th century", "17th century"]
+  answer: 1
+  category: "History"
+
+- question: "Which country built the Great Wall?"
+  options: ["Japan", "Korea", "Mongolia", "China"]
+  answer: 3
+  category: "History"
+
+- question: "What type of vehicle did the Wright Brothers invent?"
+  options: ["Aeroplane", "Car", "Submarine", "Helicopter"]
+  answer: 0
+  category: "History"
+
+- question: "Who was Cleopatra?"
+  options: ["A Greek goddess", "A Roman emperor's wife", "Queen of Ancient Egypt", "A Spartan warrior"]
+  answer: 2
+  category: "History"
+
+- question: "In which year did Australia's gold rush begin in Victoria?"
+  options: ["1841", "1851", "1861", "1871"]
+  answer: 1
+  category: "History"
+
+- question: "Which explorer was the first to circumnavigate the globe?"
+  options: ["Christopher Columbus", "James Cook", "Vasco da Gama", "Ferdinand Magellan"]
+  answer: 3
+  category: "History"
+
+- question: "What was the name of the first artificial satellite launched into space?"
+  options: ["Explorer 1", "Vanguard", "Sputnik 1", "Luna 1"]
+  answer: 2
+  category: "History"
+
+- question: "Which ancient civilisation built the pyramids?"
+  options: ["Romans", "Greeks", "Mayans", "Egyptians"]
+  answer: 3
+  category: "History"
+
+- question: "In what year did World War I begin?"
+  options: ["1914", "1910", "1912", "1916"]
+  answer: 0
+  category: "History"
+
+- question: "Who wrote the Declaration of Independence?"
+  options: ["George Washington", "Benjamin Franklin", "Thomas Jefferson", "John Adams"]
+  answer: 2
+  category: "History"
+
+- question: "Which sport is played at Wimbledon?"
+  options: ["Cricket", "Golf", "Tennis", "Polo"]
+  answer: 2
+  category: "Sports"
+
+- question: "How many players are on a basketball team on the court at one time?"
+  options: ["4", "5", "6", "7"]
+  answer: 1
+  category: "Sports"
+
+- question: "In which country did the sport of cricket originate?"
+  options: ["Australia", "India", "South Africa", "England"]
+  answer: 3
+  category: "Sports"
+
+- question: "How many players are on a soccer team?"
+  options: ["11", "9", "10", "12"]
+  answer: 0
+  category: "Sports"
+
+- question: "What do you call it in cricket when a batter is dismissed for zero runs?"
+  options: ["Zero", "Blank", "Duck", "Nil"]
+  answer: 2
+  category: "Sports"
+
+- question: "In which sport would you perform a slam dunk?"
+  options: ["Basketball", "Volleyball", "Netball", "Handball"]
+  answer: 0
+  category: "Sports"
+
+- question: "How many holes are there in a standard game of golf?"
+  options: ["18", "9", "12", "24"]
+  answer: 0
+  category: "Sports"
+
+- question: "What colour belt is the highest rank in karate?"
+  options: ["Red", "Brown", "Blue", "Black"]
+  answer: 3
+  category: "Sports"
+
+- question: "In which sport do teams compete for the Ashes?"
+  options: ["Rugby", "Cricket", "Soccer", "Tennis"]
+  answer: 1
+  category: "Sports"
+
+- question: "What is the maximum score in a single turn in ten-pin bowling?"
+  options: ["30", "10", "20", "40"]
+  answer: 0
+  category: "Sports"
+
+- question: "How long is a standard Olympic swimming pool?"
+  options: ["25 metres", "50 metres", "75 metres", "100 metres"]
+  answer: 1
+  category: "Sports"
+
+- question: "Which country invented the game of rugby?"
+  options: ["Australia", "New Zealand", "Scotland", "England"]
+  answer: 3
+  category: "Sports"
+
+- question: "In tennis, what is the term for a score of zero?"
+  options: ["Love", "Nil", "Zero", "Blank"]
+  answer: 0
+  category: "Sports"
+
+- question: "How many rings are on the Olympic flag?"
+  options: ["4", "5", "6", "7"]
+  answer: 1
+  category: "Sports"
+
+- question: "What sport uses a puck instead of a ball?"
+  options: ["Ice Hockey", "Lacrosse", "Field Hockey", "Polo"]
+  answer: 0
+  category: "Sports"
+
+- question: "Which Australian city has an NRL team called the Rabbitohs?"
+  options: ["Melbourne", "Brisbane", "Perth", "Sydney"]
+  answer: 3
+  category: "Sports"
+
+- question: "What is the term for hitting a cricket ball over the boundary without it bouncing?"
+  options: ["Four", "Six", "Eight", "Boundary"]
+  answer: 1
+  category: "Sports"
+
+- question: "In which sport do you use a shuttlecock?"
+  options: ["Badminton", "Squash", "Table Tennis", "Racquetball"]
+  answer: 0
+  category: "Sports"
+
+- question: "How many players are on an Australian rules football team?"
+  options: ["15", "16", "17", "18"]
+  answer: 3
+  category: "Sports"
+
+- question: "What is the name of the trophy awarded to the winner of the Rugby World Cup?"
+  options: ["Webb Ellis Cup", "Bledisloe Cup", "World Cup Trophy", "Hansen Trophy"]
+  answer: 0
+  category: "Sports"
+
+- question: "In the movie Finding Nemo, what type of fish is Nemo?"
+  options: ["Goldfish", "Clownfish", "Angelfish", "Triggerfish"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "Which Disney princess has a magical horse named Maximus?"
+  options: ["Cinderella", "Belle", "Rapunzel", "Ariel"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "What is the name of the cowboy's horse in Toy Story?"
+  options: ["Silver", "Bullseye", "Scout", "Spirit"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "In which movie does a lion cub named Simba grow up to be king?"
+  options: ["Bambi", "The Jungle Book", "The Lion King", "Madagascar"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "What is the name of the snowman in Frozen?"
+  options: ["Sven", "Hans", "Kristoff", "Olaf"]
+  answer: 3
+  category: "Movies & TV"
+
+- question: "Who voices Woody in the Toy Story films?"
+  options: ["Jim Carrey", "Tom Hanks", "Robin Williams", "Bill Murray"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "What colour is Shrek?"
+  options: ["Green", "Yellow", "Blue", "Brown"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "In the Harry Potter series, what is the name of Harry's owl?"
+  options: ["Hedwig", "Errol", "Pigwidgeon", "Hermes"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "Which movie features a character named WALL-E?"
+  options: ["Up", "Ratatouille", "The Incredibles", "WALL-E"]
+  answer: 3
+  category: "Movies & TV"
+
+- question: "What is the name of the sequel where Dory looks for her parents?"
+  options: ["Finding Nemo 2", "Finding Dory", "The Blue Fish", "Ocean Journey"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "In which setting is the movie Moana set?"
+  options: ["Hawaii", "Fiji", "Polynesia", "New Zealand"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "Which superhero is known as the Caped Crusader?"
+  options: ["Superman", "Spider-Man", "Batman", "Iron Man"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "What is the name of the planet in the movie Avatar?"
+  options: ["Pandora", "Kepler", "Andromeda", "Horizon"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "Which animated movie features a rat who loves to cook?"
+  options: ["Bee Movie", "Antz", "A Bug's Life", "Ratatouille"]
+  answer: 3
+  category: "Movies & TV"
+
+- question: "In The Incredibles, what is the name of Violet and Dash's baby brother?"
+  options: ["Jake", "Jack-Jack", "Joey", "Jimmy"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "Who is Elsa's sister in the movie Frozen?"
+  options: ["Anna", "Ariel", "Merida", "Moana"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "What type of animal is Dumbo?"
+  options: ["Donkey", "Dog", "Elephant", "Horse"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "Which movie features a wooden puppet who wants to be a real boy?"
+  options: ["Bambi", "Fantasia", "Cinderella", "Pinocchio"]
+  answer: 3
+  category: "Movies & TV"
+
+- question: "What is the name of the bear in Disney's movie Brave?"
+  options: ["Angus", "Merida", "Mor'du", "Hamish"]
+  answer: 2
+  category: "Movies & TV"
+
+- question: "In Inside Out, which emotion is coloured yellow?"
+  options: ["Sadness", "Anger", "Disgust", "Joy"]
+  answer: 3
+  category: "Movies & TV"
+
+- question: "Who sings Let It Go in the movie Frozen?"
+  options: ["Elsa", "Anna", "Kristoff", "Olaf"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "What is the name of the toy store owner in Toy Story 2?"
+  options: ["Al", "Sid", "Andy", "Buzz"]
+  answer: 0
+  category: "Movies & TV"
+
+- question: "How many strings does a standard guitar have?"
+  options: ["4", "5", "6", "7"]
+  answer: 2
+  category: "Music"
+
+- question: "Which instrument is known as the king of instruments?"
+  options: ["Piano", "Violin", "Organ", "Harp"]
+  answer: 2
+  category: "Music"
+
+- question: "What is the name for a group of musicians who play classical music together?"
+  options: ["Band", "Choir", "Orchestra", "Ensemble"]
+  answer: 2
+  category: "Music"
+
+- question: "Which Australian singer is known for hits like Happy Little Pill?"
+  options: ["Troye Sivan", "Sia", "Cody Simpson", "Kylie Minogue"]
+  answer: 0
+  category: "Music"
+
+- question: "What do you call the speed of a piece of music?"
+  options: ["Pitch", "Rhythm", "Tempo", "Volume"]
+  answer: 2
+  category: "Music"
+
+- question: "How many keys does a standard piano have?"
+  options: ["72", "80", "88", "96"]
+  answer: 2
+  category: "Music"
+
+- question: "What do you call a musician who performs alone?"
+  options: ["Duo", "Soloist", "Conductor", "Virtuoso"]
+  answer: 1
+  category: "Music"
+
+- question: "What instrument does a drummer play?"
+  options: ["A brass instrument", "A wind instrument", "A string instrument", "A percussion instrument"]
+  answer: 3
+  category: "Music"
+
+- question: "Which band is famous for the song Yellow Submarine?"
+  options: ["The Rolling Stones", "The Beach Boys", "The Beatles", "Led Zeppelin"]
+  answer: 2
+  category: "Music"
+
+- question: "What is the term for music written down on paper?"
+  options: ["Lyrics", "Sheet music", "Score sheet", "Music notes"]
+  answer: 1
+  category: "Music"
+
+- question: "Which Australian group sang Down Under?"
+  options: ["INXS", "Crowded House", "Midnight Oil", "Men at Work"]
+  answer: 3
+  category: "Music"
+
+- question: "Which instrument family does the flute belong to?"
+  options: ["Brass", "Percussion", "Woodwind", "String"]
+  answer: 2
+  category: "Music"
+
+- question: "What do you call the person who leads an orchestra?"
+  options: ["Director", "Leader", "Conductor", "Maestro"]
+  answer: 2
+  category: "Music"
+
+- question: "What is a beat in music?"
+  options: ["A regular pulse in music", "A type of instrument", "The loudness of a song", "A musical chord"]
+  answer: 0
+  category: "Music"
+
+- question: "Which singer is known as the Queen of Pop?"
+  options: ["Beyonce", "Rihanna", "Taylor Swift", "Madonna"]
+  answer: 3
+  category: "Music"
+
+- question: "What is the lowest male singing voice called?"
+  options: ["Bass", "Baritone", "Tenor", "Alto"]
+  answer: 0
+  category: "Music"
+
+- question: "How many musicians play in a string quartet?"
+  options: ["4", "2", "3", "5"]
+  answer: 0
+  category: "Music"
+
+- question: "What do you call music that tells a story without words?"
+  options: ["Jazz", "Opera", "Programme music", "Chamber music"]
+  answer: 2
+  category: "Music"
+
+- question: "What is the main ingredient in guacamole?"
+  options: ["Tomato", "Avocado", "Lime", "Jalapeno"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "What is the name of the Australian biscuit made with oats, coconut and golden syrup?"
+  options: ["Tim Tam", "Iced VoVo", "Anzac Biscuit", "Lamington"]
+  answer: 2
+  category: "Food & Cooking"
+
+- question: "Which country is pizza originally from?"
+  options: ["France", "Greece", "Spain", "Italy"]
+  answer: 3
+  category: "Food & Cooking"
+
+- question: "What colours make up a watermelon inside and outside?"
+  options: ["Yellow outside, red inside", "Green outside, red inside", "Green outside, yellow inside", "Red outside, green inside"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "What is the Australian chocolate cake rolled in coconut called?"
+  options: ["Lamington", "Pavlova", "Tim Tam", "Neenish Tart"]
+  answer: 0
+  category: "Food & Cooking"
+
+- question: "Which grain is most commonly used to make bread?"
+  options: ["Rice", "Corn", "Wheat", "Barley"]
+  answer: 2
+  category: "Food & Cooking"
+
+- question: "What makes bread rise when baking?"
+  options: ["Salt", "Sugar", "Butter", "Yeast"]
+  answer: 3
+  category: "Food & Cooking"
+
+- question: "What is the name of the dark brown spread popular in Australia made from yeast extract?"
+  options: ["Marmite", "Vegemite", "Promite", "Bovril"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "Which fruit is used to make a traditional pavlova topping?"
+  options: ["Blueberries", "Passion fruit and strawberries", "Peaches", "Grapes"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "What is the main ingredient in hummus?"
+  options: ["Lentils", "Chickpeas", "Peanuts", "Almonds"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "What do you call the outer skin of an orange?"
+  options: ["Rind", "Peel", "Zest", "Shell"]
+  answer: 1
+  category: "Food & Cooking"
+
+- question: "Which country is sushi originally from?"
+  options: ["China", "Korea", "Thailand", "Japan"]
+  answer: 3
+  category: "Food & Cooking"
+
+- question: "What is the name of the method of cooking food slowly in liquid?"
+  options: ["Braising", "Roasting", "Grilling", "Steaming"]
+  answer: 0
+  category: "Food & Cooking"
+
+- question: "What ingredient do you add to water when cooking pasta to season it?"
+  options: ["Salt", "Sugar", "Seasoning", "Vinegar"]
+  answer: 0
+  category: "Food & Cooking"
+
+- question: "Which vegetable is the main ingredient in a traditional pumpkin soup?"
+  options: ["Carrot", "Squash", "Sweet Potato", "Pumpkin"]
+  answer: 3
+  category: "Food & Cooking"
+
+- question: "What type of pastry is used to make a classic apple pie?"
+  options: ["Filo pastry", "Choux pastry", "Puff pastry", "Shortcrust pastry"]
+  answer: 3
+  category: "Food & Cooking"
+
+- question: "What is 7 multiplied by 8?"
+  options: ["54", "56", "58", "64"]
+  answer: 1
+  category: "Maths"
+
+- question: "What is 144 divided by 12?"
+  options: ["10", "11", "12", "13"]
+  answer: 2
+  category: "Maths"
+
+- question: "How many sides does a hexagon have?"
+  options: ["5", "6", "7", "8"]
+  answer: 1
+  category: "Maths"
+
+- question: "What is the next number in the sequence: 2, 4, 8, 16?"
+  options: ["24", "28", "30", "32"]
+  answer: 3
+  category: "Maths"
+
+- question: "What is half of 250?"
+  options: ["100", "115", "125", "150"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is the value of Pi to two decimal places?"
+  options: ["3.12", "3.14", "3.16", "3.18"]
+  answer: 1
+  category: "Maths"
+
+- question: "How many degrees are in a right angle?"
+  options: ["45", "60", "90", "180"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is 15% of 200?"
+  options: ["25", "30", "35", "40"]
+  answer: 1
+  category: "Maths"
+
+- question: "What is the square root of 81?"
+  options: ["9", "7", "8", "10"]
+  answer: 0
+  category: "Maths"
+
+- question: "How many faces does a cube have?"
+  options: ["6", "4", "5", "8"]
+  answer: 0
+  category: "Maths"
+
+- question: "What is 1000 minus 378?"
+  options: ["612", "622", "632", "642"]
+  answer: 1
+  category: "Maths"
+
+- question: "How many seconds are in one hour?"
+  options: ["360", "600", "3600", "6000"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is 9 to the power of 2?"
+  options: ["18", "27", "72", "81"]
+  answer: 3
+  category: "Maths"
+
+- question: "What do you call a triangle with all sides equal?"
+  options: ["Isosceles", "Scalene", "Equilateral", "Right-angled"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is 3/4 as a decimal?"
+  options: ["0.5", "0.6", "0.7", "0.75"]
+  answer: 3
+  category: "Maths"
+
+- question: "What is the perimeter of a square with sides of 5 cm?"
+  options: ["10 cm", "15 cm", "25 cm", "20 cm"]
+  answer: 3
+  category: "Maths"
+
+- question: "Which number is a prime number?"
+  options: ["9", "15", "21", "23"]
+  answer: 3
+  category: "Maths"
+
+- question: "If you have 3 dozen eggs, how many eggs do you have?"
+  options: ["24", "30", "36", "42"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is the largest planet in our solar system?"
+  options: ["Saturn", "Uranus", "Neptune", "Jupiter"]
+  answer: 3
+  category: "Space"
+
+- question: "How many planets are in our solar system?"
+  options: ["7", "8", "9", "10"]
+  answer: 1
+  category: "Space"
+
+- question: "What is the name of Earth's natural satellite?"
+  options: ["Titan", "Moon", "Io", "Europa"]
+  answer: 1
+  category: "Space"
+
+- question: "Which planets have rings around them?"
+  options: ["Jupiter only", "Uranus only", "Saturn only", "Saturn and Uranus both do"]
+  answer: 3
+  category: "Space"
+
+- question: "What do you call a rocky body that orbits the Sun, mostly found between Mars and Jupiter?"
+  options: ["Comet", "Meteor", "Nebula", "Asteroid"]
+  answer: 3
+  category: "Space"
+
+- question: "What is the name of the galaxy we live in?"
+  options: ["Andromeda", "Triangulum", "Whirlpool", "Milky Way"]
+  answer: 3
+  category: "Space"
+
+- question: "Who was the first human to travel to space?"
+  options: ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "Alan Shepard"]
+  answer: 2
+  category: "Space"
+
+- question: "What do we call it when the Moon passes between the Earth and the Sun?"
+  options: ["Lunar eclipse", "Solar eclipse", "Transit", "Occultation"]
+  answer: 1
+  category: "Space"
+
+- question: "What is the name of the force that keeps planets orbiting the Sun?"
+  options: ["Magnetism", "Friction", "Electromagnetism", "Gravity"]
+  answer: 3
+  category: "Space"
+
+- question: "How long does it take Earth to orbit the Sun?"
+  options: ["24 hours", "365 days", "100 days", "28 days"]
+  answer: 1
+  category: "Space"
+
+- question: "What is a light-year a measure of?"
+  options: ["Time", "Speed", "Distance", "Brightness"]
+  answer: 2
+  category: "Space"
+
+- question: "What is the name of NASA's famous space telescope?"
+  options: ["Chandra", "Hubble", "Spitzer", "Kepler"]
+  answer: 1
+  category: "Space"
+
+- question: "Which planet is closest in size to Earth?"
+  options: ["Venus", "Mars", "Mercury", "Saturn"]
+  answer: 0
+  category: "Space"
+
+- question: "What is the name of the bright band of stars visible across the sky at night?"
+  options: ["The Milky Way", "The Aurora", "The Zodiac", "The Ecliptic"]
+  answer: 0
+  category: "Space"
+
+- question: "What do astronomers call a star that has exploded?"
+  options: ["Black hole", "Pulsar", "Quasar", "Supernova"]
+  answer: 3
+  category: "Space"
+
+- question: "How hot is the surface of the Sun approximately?"
+  options: ["1,000 degrees C", "5,500 degrees C", "10,000 degrees C", "100,000 degrees C"]
+  answer: 1
+  category: "Space"
+
+- question: "What is the name of the robotic vehicle sent to explore Mars?"
+  options: ["Explorer", "Voyager", "Rover", "Pioneer"]
+  answer: 2
+  category: "Space"
+
+- question: "What is the name of the closest star to Earth after the Sun?"
+  options: ["Sirius", "Proxima Centauri", "Betelgeuse", "Vega"]
+  answer: 1
+  category: "Space"
+
+- question: "What is the main character's name in the Super Mario games?"
+  options: ["Luigi", "Toad", "Mario", "Yoshi"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In Minecraft, what do you need to make a diamond pickaxe?"
+  options: ["Iron and diamonds", "3 diamonds and 2 sticks", "Gold and diamonds", "Diamonds and wood"]
+  answer: 1
+  category: "Video Games"
+
+- question: "In Pokemon, what type is Pikachu?"
+  options: ["Electric", "Fire", "Water", "Grass"]
+  answer: 0
+  category: "Video Games"
+
+- question: "What is the name of the princess Mario is always rescuing?"
+  options: ["Princess Peach", "Princess Zelda", "Princess Daisy", "Princess Rosalina"]
+  answer: 0
+  category: "Video Games"
+
+- question: "Which game features a character called Link who carries a sword and shield?"
+  options: ["Hyrule Warriors", "The Legend of Zelda", "Fire Emblem", "Splatoon"]
+  answer: 1
+  category: "Video Games"
+
+- question: "In Minecraft, what is the name of the final boss?"
+  options: ["Ender Dragon", "Wither", "Elder Guardian", "Ghast"]
+  answer: 0
+  category: "Video Games"
+
+- question: "What colour is Yoshi in most Mario games?"
+  options: ["Blue", "Red", "Yellow", "Green"]
+  answer: 3
+  category: "Video Games"
+
+- question: "What is the name of Sonic the Hedgehog's nemesis?"
+  options: ["Dr Robotnik (Eggman)", "Metal Sonic", "Shadow", "Rouge"]
+  answer: 0
+  category: "Video Games"
+
+- question: "In Pokemon, how many original starter Pokemon were there in Pokemon Red and Blue?"
+  options: ["1", "2", "3", "4"]
+  answer: 2
+  category: "Video Games"
+
+- question: "What company created the Mario franchise?"
+  options: ["Sega", "Sony", "Nintendo", "Atari"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In Among Us, what are the players trying to find?"
+  options: ["The ghost", "The impostor", "The key", "The exit"]
+  answer: 1
+  category: "Video Games"
+
+- question: "In Animal Crossing: New Horizons, who do you pay rent to?"
+  options: ["Blathers", "K.K. Slider", "Tom Nook", "Isabelle"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In Fortnite, what is the goal of the game?"
+  options: ["Collect as many resources as possible", "Be the last player or team standing", "Build the tallest structure", "Complete quests the fastest"]
+  answer: 1
+  category: "Video Games"
+
+- question: "What type of game is Stardew Valley?"
+  options: ["Racing game", "First-person shooter", "Farming and life simulation", "Fighting game"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In Roblox, what is the in-game currency called?"
+  options: ["Coins", "Gems", "Robux", "Credits"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In which video game do you build shelters, hunt, and survive the night against monsters called Creepers?"
+  options: ["Terraria", "Fortnite", "Minecraft", "Valheim"]
+  answer: 2
+  category: "Video Games"
+
+- question: "What colour hats do Mario and Luigi wear?"
+  options: ["Mario blue, Luigi red", "Mario green, Luigi red", "Mario red, Luigi green", "Mario yellow, Luigi blue"]
+  answer: 2
+  category: "Video Games"
+
+- question: "In what game do you catch and battle with pocket monsters?"
+  options: ["Digimon", "Yokai Watch", "Monster Hunter", "Pokemon"]
+  answer: 3
+  category: "Video Games"
+
+- question: "Which video game character is famous for collecting rings?"
+  options: ["Mario", "Crash Bandicoot", "Sonic the Hedgehog", "Spyro"]
+  answer: 2
+  category: "Video Games"
+
+- question: "Who wrote the Harry Potter books?"
+  options: ["J.K. Rowling", "Roald Dahl", "J.R.R. Tolkien", "C.S. Lewis"]
+  answer: 0
+  category: "Books"
+
+- question: "What is the name of the school Harry Potter attends?"
+  options: ["Beauxbatons", "Durmstrang", "Ilvermorny", "Hogwarts"]
+  answer: 3
+  category: "Books"
+
+- question: "In The Lion, the Witch and the Wardrobe, what is the name of the magical land the children find?"
+  options: ["Neverland", "Narnia", "Middle-earth", "Wonderland"]
+  answer: 1
+  category: "Books"
+
+- question: "Who is the author of Charlie and the Chocolate Factory?"
+  options: ["Roald Dahl", "A.A. Milne", "Eric Carle", "Dr Seuss"]
+  answer: 0
+  category: "Books"
+
+- question: "What is the name of the hobbit in The Hobbit by J.R.R. Tolkien?"
+  options: ["Bilbo Baggins", "Frodo Baggins", "Samwise Gamgee", "Pippin Took"]
+  answer: 0
+  category: "Books"
+
+- question: "What does the caterpillar turn into in The Very Hungry Caterpillar?"
+  options: ["A butterfly", "A moth", "A dragonfly", "A beetle"]
+  answer: 0
+  category: "Books"
+
+- question: "What is the name of the bear in A.A. Milne's stories?"
+  options: ["Baloo", "Rupert", "Paddington", "Winnie-the-Pooh"]
+  answer: 3
+  category: "Books"
+
+- question: "In which book does a girl fall down a rabbit hole and meet talking animals?"
+  options: ["Peter Pan", "The Wizard of Oz", "Alice's Adventures in Wonderland", "Gulliver's Travels"]
+  answer: 2
+  category: "Books"
+
+- question: "Who wrote Charlotte's Web?"
+  options: ["Beatrix Potter", "E.B. White", "Laura Ingalls Wilder", "Beverly Cleary"]
+  answer: 1
+  category: "Books"
+
+- question: "What is the name of the spider in Charlotte's Web?"
+  options: ["Fern", "Charlotte", "Wilbur", "Templeton"]
+  answer: 1
+  category: "Books"
+
+- question: "Which book features a boy who doesn't want to grow up and lives in Neverland?"
+  options: ["Tom Sawyer", "Gulliver's Travels", "Treasure Island", "Peter Pan"]
+  answer: 3
+  category: "Books"
+
+- question: "In Matilda by Roald Dahl, what special power does Matilda have?"
+  options: ["She can fly", "She can turn invisible", "She can move objects with her mind", "She can talk to animals"]
+  answer: 2
+  category: "Books"
+
+- question: "What is the name of the first book in the Percy Jackson series?"
+  options: ["The Sea of Monsters", "The Lightning Thief", "The Titan's Curse", "The Battle of the Labyrinth"]
+  answer: 1
+  category: "Books"
+
+- question: "Who wrote the Diary of a Wimpy Kid series?"
+  options: ["Jeff Kinney", "Tom Gates", "Dav Pilkey", "Lincoln Peirce"]
+  answer: 0
+  category: "Books"
+
+- question: "Which book features a boy raised by wolves in the jungle?"
+  options: ["Tarzan", "The Jungle Book", "Call of the Wild", "White Fang"]
+  answer: 1
+  category: "Books"
+
+- question: "In Captain Underpants, who is the author and illustrator?"
+  options: ["Dav Pilkey", "Jeff Kinney", "Lincoln Peirce", "Tom Angleberger"]
+  answer: 0
+  category: "Books"
+
+- question: "What type of animal is the main character in Watership Down?"
+  options: ["Rabbit", "Mouse", "Badger", "Fox"]
+  answer: 0
+  category: "Books"
+
+- question: "Who wrote the Treehouse series popular with Australian kids?"
+  options: ["Paul Jennings", "Andy Griffiths", "Morris Gleitzman", "John Marsden"]
+  answer: 1
+  category: "Books"
+
+- question: "What type of eater was T. rex?"
+  options: ["Herbivore", "Omnivore", "Carnivore", "Insectivore"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "What does the name dinosaur mean in Greek?"
+  options: ["Great lizard", "Terrible lizard", "Ancient beast", "Giant reptile"]
+  answer: 1
+  category: "Dinosaurs"
+
+- question: "How long ago did non-avian dinosaurs go extinct?"
+  options: ["66 million years ago", "6 million years ago", "36 million years ago", "166 million years ago"]
+  answer: 0
+  category: "Dinosaurs"
+
+- question: "Which dinosaur had three horns on its face?"
+  options: ["Stegosaurus", "Ankylosaurus", "Triceratops", "Parasaurolophus"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "Which dinosaur had bony plates along its back and a spiked tail?"
+  options: ["Ankylosaurus", "Stegosaurus", "Kentrosaurus", "Euoplocephalus"]
+  answer: 1
+  category: "Dinosaurs"
+
+- question: "What did scientists believe caused the mass extinction of the dinosaurs?"
+  options: ["A massive volcanic winter", "A large asteroid impact", "A global ice age", "A worldwide drought"]
+  answer: 1
+  category: "Dinosaurs"
+
+- question: "Which meat-eating dinosaur had feathers and was likely warm-blooded?"
+  options: ["Velociraptor", "Tyrannosaurus rex", "Allosaurus", "Spinosaurus"]
+  answer: 0
+  category: "Dinosaurs"
+
+- question: "What is the largest meat-eating dinosaur ever discovered?"
+  options: ["Tyrannosaurus rex", "Giganotosaurus", "Spinosaurus", "Allosaurus"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "Which group of animals are dinosaurs most closely related to alive today?"
+  options: ["Lizards", "Crocodiles", "Birds", "Turtles"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "What is the process called when hard parts of a dead animal are replaced by minerals over millions of years?"
+  options: ["Mineralisation", "Petrifaction", "Calcification", "Fossilisation"]
+  answer: 3
+  category: "Dinosaurs"
+
+- question: "Which dinosaur had a very long neck and was one of the largest animals to walk on Earth?"
+  options: ["Camarasaurus", "Brachiosaurus", "Diplodocus", "Apatosaurus"]
+  answer: 1
+  category: "Dinosaurs"
+
+- question: "What period came first: the Jurassic or the Cretaceous?"
+  options: ["Jurassic came first", "They were at the same time", "Cretaceous came first", "They alternated"]
+  answer: 0
+  category: "Dinosaurs"
+
+- question: "What is the name of the scientist who studies dinosaurs and fossils?"
+  options: ["Geologist", "Archaeologist", "Palaeontologist", "Zoologist"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "Which dinosaur is known for its armoured club tail?"
+  options: ["Ankylosaurus", "Stegosaurus", "Triceratops", "Pachycephalosaurus"]
+  answer: 0
+  category: "Dinosaurs"
+
+- question: "What is the name of the duck-billed dinosaur with a long head crest?"
+  options: ["Edmontosaurus", "Iguanodon", "Parasaurolophus", "Corythosaurus"]
+  answer: 2
+  category: "Dinosaurs"
+
+- question: "In which period did the dinosaurs first appear?"
+  options: ["Jurassic", "Cretaceous", "Permian", "Triassic"]
+  answer: 3
+  category: "Dinosaurs"
+
+- question: "How many chambers does the human heart have?"
+  options: ["4", "2", "3", "5"]
+  answer: 0
+  category: "Human Body"
+
+- question: "What is the largest organ in the human body?"
+  options: ["Liver", "Lungs", "Skin", "Brain"]
+  answer: 2
+  category: "Human Body"
+
+- question: "How many teeth does an adult human usually have?"
+  options: ["32", "28", "30", "34"]
+  answer: 0
+  category: "Human Body"
+
+- question: "What is the name of the bone that protects the brain?"
+  options: ["Vertebrae", "Sternum", "Skull", "Pelvis"]
+  answer: 2
+  category: "Human Body"
+
+- question: "Which organ produces insulin?"
+  options: ["Liver", "Spleen", "Kidney", "Pancreas"]
+  answer: 3
+  category: "Human Body"
+
+- question: "How many litres of blood does an average adult human body contain?"
+  options: ["3 litres", "5 litres", "7 litres", "9 litres"]
+  answer: 1
+  category: "Human Body"
+
+- question: "What is the name of the tube that carries food from your mouth to your stomach?"
+  options: ["Trachea", "Larynx", "Pharynx", "Oesophagus"]
+  answer: 3
+  category: "Human Body"
+
+- question: "Which is the longest bone in the human body?"
+  options: ["Humerus", "Tibia", "Femur", "Radius"]
+  answer: 2
+  category: "Human Body"
+
+- question: "How many senses do humans traditionally have?"
+  options: ["3", "4", "6", "5"]
+  answer: 3
+  category: "Human Body"
+
+- question: "What carries oxygen from the lungs to the rest of the body?"
+  options: ["White blood cells", "Platelets", "Red blood cells", "Plasma"]
+  answer: 2
+  category: "Human Body"
+
+- question: "What is the tough material that makes up your fingernails and toenails?"
+  options: ["Keratin", "Collagen", "Melanin", "Chitin"]
+  answer: 0
+  category: "Human Body"
+
+- question: "Which part of the eye controls how much light enters?"
+  options: ["Cornea", "Retina", "Iris", "Pupil"]
+  answer: 2
+  category: "Human Body"
+
+- question: "What is the average normal human body temperature in degrees Celsius?"
+  options: ["35.5", "36.5", "37.5", "38.5"]
+  answer: 1
+  category: "Human Body"
+
+- question: "What is the name of the part of the brain responsible for balance?"
+  options: ["Cerebrum", "Brain stem", "Hippocampus", "Cerebellum"]
+  answer: 3
+  category: "Human Body"
+
+- question: "What do you call the process by which the body breaks down food into nutrients?"
+  options: ["Absorption", "Respiration", "Digestion", "Circulation"]
+  answer: 2
+  category: "Human Body"
+
+- question: "What is the name of the fluid that cushions the brain inside the skull?"
+  options: ["Cerebrospinal fluid", "Blood", "Lymph", "Plasma"]
+  answer: 0
+  category: "Human Body"
+
+- question: "How many vertebrae does the adult human spine typically have?"
+  options: ["33", "24", "30", "36"]
+  answer: 0
+  category: "Human Body"
+
+- question: "What is the process by which plants lose water through their leaves?"
+  options: ["Evaporation", "Perspiration", "Condensation", "Transpiration"]
+  answer: 3
+  category: "Nature"
+
+- question: "What do you call the layer of gases surrounding Earth?"
+  options: ["Biosphere", "Hydrosphere", "Atmosphere", "Lithosphere"]
+  answer: 2
+  category: "Nature"
+
+- question: "What causes thunder during a storm?"
+  options: ["Lightning rapidly heating air", "Clouds colliding", "Rain hitting the ground", "Wind gusts"]
+  answer: 0
+  category: "Nature"
+
+- question: "What is the name of the natural process that cycles water between the ocean, atmosphere and land?"
+  options: ["The carbon cycle", "The nitrogen cycle", "The water cycle", "The oxygen cycle"]
+  answer: 2
+  category: "Nature"
+
+- question: "What is the term for the variety of life on Earth?"
+  options: ["Ecosystem", "Food web", "Biodiversity", "Habitat"]
+  answer: 2
+  category: "Nature"
+
+- question: "Which natural feature is formed when a river drops off a cliff?"
+  options: ["Gorge", "Canyon", "Waterfall", "Rapid"]
+  answer: 2
+  category: "Nature"
+
+- question: "What are the colourful displays of lights in the night sky in polar regions called?"
+  options: ["Aurora (or Northern/Southern Lights)", "Northern Lights only", "Aurora Borealis only", "Polar glow"]
+  answer: 0
+  category: "Nature"
+
+- question: "Which process forms a rainbow?"
+  options: ["Reflection only", "Refraction only", "Both refraction and reflection of light", "Diffraction"]
+  answer: 2
+  category: "Nature"
+
+- question: "What is the name for molten rock underground?"
+  options: ["Lava", "Magma", "Basalt", "Obsidian"]
+  answer: 1
+  category: "Nature"
+
+- question: "What do you call a place where a river meets the sea?"
+  options: ["Delta", "Lagoon", "Bay", "Estuary"]
+  answer: 3
+  category: "Nature"
+
+- question: "What causes the tides in the ocean?"
+  options: ["The Moon's gravity", "The Sun only", "Underwater earthquakes", "Wind patterns"]
+  answer: 0
+  category: "Nature"
+
+- question: "What is the outermost layer of the Earth called?"
+  options: ["Mantle", "Core", "Crust", "Lithosphere"]
+  answer: 2
+  category: "Nature"
+
+- question: "What is the term for an animal that is active at night?"
+  options: ["Diurnal", "Crepuscular", "Arboreal", "Nocturnal"]
+  answer: 3
+  category: "Nature"
+
+- question: "What is the name of the microscopic organisms that are the basis of most ocean food chains?"
+  options: ["Krill", "Algae", "Plankton", "Bacteria"]
+  answer: 2
+  category: "Nature"
+
+- question: "What do you call the hard outer shell of insects?"
+  options: ["Exoskeleton", "Carapace", "Scale", "Cuticle"]
+  answer: 0
+  category: "Nature"
+
+- question: "What is the name for the layer of dark organic material in soil?"
+  options: ["Humus", "Clay", "Silt", "Loam"]
+  answer: 0
+  category: "Nature"
+
+- question: "What do you call a large wave caused by an undersea earthquake?"
+  options: ["Tidal wave", "Storm surge", "Tsunami", "Rogue wave"]
+  answer: 2
+  category: "Nature"
+
+- question: "What is the name of the dark spots sometimes visible on the surface of the Sun?"
+  options: ["Solar flares", "Sunspots", "Solar prominences", "Coronal holes"]
+  answer: 1
+  category: "Nature"
+
+- question: "What is the term for the gradual movement of continents over millions of years?"
+  options: ["Continental shift", "Plate movement", "Tectonic drift", "Continental drift"]
+  answer: 3
+  category: "Nature"
+
+- question: "What do you call a fungus and algae living together in a partnership?"
+  options: ["Moss", "Lichen", "Mould", "Fern"]
+  answer: 1
+  category: "Nature"
+
+- question: "What does CPU stand for?"
+  options: ["Computer Power Unit", "Central Processing Unit", "Core Processing Unit", "Computer Programming Unit"]
+  answer: 1
+  category: "Technology"
+
+- question: "What is the name of the world's largest search engine?"
+  options: ["Yahoo", "Bing", "Google", "DuckDuckGo"]
+  answer: 2
+  category: "Technology"
+
+- question: "What does USB stand for?"
+  options: ["Universal Serial Bus", "Universal System Bridge", "Universal Storage Box", "Unified Serial Bus"]
+  answer: 0
+  category: "Technology"
+
+- question: "What is the name of the operating system made by Apple for Macs?"
+  options: ["Windows", "Linux", "macOS", "Chrome OS"]
+  answer: 2
+  category: "Technology"
+
+- question: "What does www stand for at the beginning of a website address?"
+  options: ["World Wide Workshop", "World Wide Web", "Wide Wireless Web", "World Web Works"]
+  answer: 1
+  category: "Technology"
+
+- question: "What is the name of the language used to build web pages?"
+  options: ["Java", "Python", "C++", "HTML"]
+  answer: 3
+  category: "Technology"
+
+- question: "What does RAM stand for in computers?"
+  options: ["Remote Access Memory", "Random Access Memory", "Rapid Access Module", "Read And Memorise"]
+  answer: 1
+  category: "Technology"
+
+- question: "Which company makes the iPhone?"
+  options: ["Samsung", "Google", "Microsoft", "Apple"]
+  answer: 3
+  category: "Technology"
+
+- question: "What do you call a reusable set of instructions in a computer program?"
+  options: ["Function", "Variable", "Loop", "Array"]
+  answer: 0
+  category: "Technology"
+
+- question: "What is the name of the online video platform owned by Google?"
+  options: ["YouTube", "Vimeo", "TikTok", "Twitch"]
+  answer: 0
+  category: "Technology"
+
+- question: "What does AI stand for in technology?"
+  options: ["Automated Intelligence", "Artificial Intelligence", "Advanced Integration", "Applied Interface"]
+  answer: 1
+  category: "Technology"
+
+- question: "What is the name of the programming language named after a type of snake?"
+  options: ["Cobra", "Anaconda", "Viper", "Python"]
+  answer: 3
+  category: "Technology"
+
+- question: "How many bits are in one byte?"
+  options: ["4", "8", "16", "32"]
+  answer: 1
+  category: "Technology"
+
+- question: "What does it mean to save to the cloud?"
+  options: ["Saving files to the weather station", "Saving files to remote servers on the internet", "Saving files to a USB drive", "Saving files in compressed format"]
+  answer: 1
+  category: "Technology"
+
+- question: "What is the name of the company that makes the Android operating system?"
+  options: ["Apple", "Microsoft", "Samsung", "Google"]
+  answer: 3
+  category: "Technology"
+
+- question: "What is a QR code used for?"
+  options: ["Storing passwords", "Quick reading of encoded information with a camera", "Broadcasting radio signals", "Charging devices wirelessly"]
+  answer: 1
+  category: "Technology"
+
+- question: "What do you call the main circuit board inside a computer?"
+  options: ["Processor board", "Circuit hub", "Motherboard", "Logic panel"]
+  answer: 2
+  category: "Technology"
+
+- question: "What does Wi-Fi allow you to do?"
+  options: ["Connect to the internet without cables", "Charge your device wirelessly", "Share files using Bluetooth", "Boost mobile signal"]
+  answer: 0
+  category: "Technology"
+
+- question: "What is the name of the system that tells your device where you are in the world?"
+  options: ["GPS", "WiFi", "Bluetooth", "NFC"]
+  answer: 0
+  category: "Technology"
+
+- question: "What do you call a program that secretly harms your computer without your permission?"
+  options: ["Virus", "Bug", "Cookie", "Script"]
+  answer: 0
+  category: "Technology"
