@@ -1,7 +1,7 @@
 class TvRemoteChannel < ApplicationCable::Channel
   ALLOWED_DIRS   = %w[left right up down select back action].freeze
   ALLOWED_TYPES  = %w[press release].freeze
-  ALLOWED_STATES = %w[shelf lobby game].freeze
+  ALLOWED_STATES = %w[shelf lobby game watch].freeze
   SLOT_COLORS    = { 1 => "#ff4757", 2 => "#3742fa", 3 => "#ffa502", 4 => "#2ed573" }.freeze
 
   STATES       = {}

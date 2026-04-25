@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a12">
+  <title>Watch — EZ-AZ</title>
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #0a0a12;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* --- Player --- */
+    .player-wrap {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: #000;
+    }
+
+    #yt-player {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* --- Header overlay --- */
+    .watch-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px 60px;
+      background: linear-gradient(to bottom, rgba(10,10,18,0.92) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .watch-header a { pointer-events: auto; }
+
+    .channel-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .store-link {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.7rem, 1.2vw, 1rem);
+      font-weight: 900;
+      background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+      line-height: 1;
+    }
+
+    .ch-divider {
+      width: 1px; height: 24px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .ch-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.75rem, 1.5vw, 1.1rem);
+      color: #00ffc8;
+      line-height: 1;
+    }
+
+    .ch-emoji {
+      font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+      line-height: 1;
+    }
+
+    .ch-name {
+      font-size: clamp(0.75rem, 1.5vw, 1.1rem);
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .watch-qr {
+      width: clamp(70px, 7vw, 110px);
+      height: clamp(70px, 7vw, 110px);
+      flex-shrink: 0;
+      background: #0a0a12;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,255,200,0.25);
+    }
+
+    /* --- Footer overlay --- */
+    .watch-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 60px 24px 20px;
+      background: linear-gradient(to top, rgba(10,10,18,0.92) 0%, transparent 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .video-meta { flex: 1; min-width: 0; }
+
+    .video-title {
+      font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .video-sub {
+      margin-top: 4px;
+      font-size: clamp(0.7rem, 1.2vw, 0.95rem);
+      color: #888;
+      display: flex;
+      gap: 12px;
+    }
+
+    .video-pos { color: #00ffc8; font-weight: 700; }
+
+    .nav-hint {
+      flex-shrink: 0;
+      font-size: clamp(0.6rem, 0.9vw, 0.8rem);
+      color: #555;
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    /* --- Channel guide bar --- */
+    .guide {
+      position: fixed;
+      bottom: -160px;
+      left: 0; right: 0;
+      z-index: 20;
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px 20px;
+      background: rgba(10, 10, 18, 0.97);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      overflow-x: auto;
+      scrollbar-width: none;
+      transition: bottom 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .guide::-webkit-scrollbar { display: none; }
+
+    .guide.visible { bottom: 0; }
+
+    .guide-ch {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      min-width: 130px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      pointer-events: auto;
+    }
+
+    .guide-ch:hover { border-color: rgba(255,255,255,0.3); }
+
+    .guide-ch.active {
+      border-color: #00ffc8;
+      background: rgba(0,255,200,0.1);
+    }
+
+    .guide-ch-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: #555;
+    }
+
+    .guide-ch.active .guide-ch-num { color: #00ffc8; }
+
+    .guide-ch-emoji { font-size: 1.6rem; }
+
+    .guide-ch-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ccc;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+
+    .guide-ch.active .guide-ch-name { color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="player-wrap">
+  <div id="yt-player"></div>
+</div>
+
+<header class="watch-header">
+  <div class="channel-bar">
+    <a href="/" class="store-link">EZ-AZ</a>
+    <div class="ch-divider"></div>
+    <span class="ch-num"  id="chNum">CH 01</span>
+    <span class="ch-emoji" id="chEmoji"></span>
+    <span class="ch-name"  id="chName"></span>
+  </div>
+  <div class="watch-qr"><%= @qr_code_svg %></div>
+</header>
+
+<footer class="watch-footer">
+  <div class="video-meta">
+    <div class="video-title" id="videoTitle"></div>
+    <div class="video-sub">
+      <span class="video-pos"  id="videoPos"></span>
+      <span class="video-note" id="videoNote"></span>
+    </div>
+  </div>
+  <div class="nav-hint">
+    ↑↓ Channel &nbsp; ←→ Video<br>
+    ⬤ Play/Pause &nbsp; ← Home
+  </div>
+</footer>
+
+<div class="guide" id="guide">
+  <% @tracks.each_with_index do |track, i| %>
+    <div class="guide-ch<%= i == 0 ? ' active' : '' %>"
+         data-idx="<%= i %>"
+         onclick="selectChannel(<%= i %>)">
+      <span class="guide-ch-num">CH <%= sprintf('%02d', i + 1) %></span>
+      <span class="guide-ch-emoji"><%= track[:emoji] %></span>
+      <span class="guide-ch-name"><%= track[:title] %></span>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Globals needed before YouTube IFrame API calls the callback
+  window._ytCallbacks = [];
+  window.onYouTubeIframeAPIReady = function() {
+    window._ytReady = true;
+    window._ytCallbacks.forEach(function(fn) { fn(); });
+    window._ytCallbacks = [];
+  };
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var tracks       = <%= raw @tracks.to_json %>;
+  var token        = <%= @room.tv_token.to_json.html_safe %>;
+  var trackIdx     = 0;
+  var videoIdx     = 0;
+  var player       = null;
+  var syncTimer    = null;
+  var guideTimer   = null;
+
+  // ── Display ──────────────────────────────────────────────────────────────
+
+  function updateDisplay() {
+    var t = tracks[trackIdx];
+    var v = t.videos[videoIdx];
+    document.getElementById('chNum').textContent   = 'CH ' + String(trackIdx + 1).padStart(2, '0');
+    document.getElementById('chEmoji').textContent = t.emoji;
+    document.getElementById('chName').textContent  = t.title;
+    document.getElementById('videoTitle').textContent = v.title;
+    document.getElementById('videoPos').textContent   = (videoIdx + 1) + ' / ' + t.videos.length;
+    document.getElementById('videoNote').textContent  = v.note || '';
+    document.querySelectorAll('.guide-ch').forEach(function(el, i) {
+      el.classList.toggle('active', i === trackIdx);
+    });
+  }
+
+  function showGuide() {
+    document.getElementById('guide').classList.add('visible');
+    clearTimeout(guideTimer);
+    guideTimer = setTimeout(function() {
+      document.getElementById('guide').classList.remove('visible');
+    }, 3000);
+  }
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+
+  function loadVideo() {
+    if (player) player.loadVideoById(tracks[trackIdx].videos[videoIdx].youtube_id);
+  }
+
+  window.selectChannel = function(idx) {
+    trackIdx = idx;
+    videoIdx = 0;
+    loadVideo();
+    updateDisplay();
+    showGuide();
+    savePosition();
+  };
+
+  function changeChannel(delta) {
+    selectChannel((trackIdx + delta + tracks.length) % tracks.length);
+  }
+
+  function advanceVideo(delta) {
+    var t = tracks[trackIdx];
+    videoIdx = (videoIdx + delta + t.videos.length) % t.videos.length;
+    loadVideo();
+    updateDisplay();
+    savePosition();
+  }
+
+  function togglePlayPause() {
+    if (!player) return;
+    var state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+      player.pauseVideo();
+    } else {
+      player.playVideo();
+    }
+  }
+
+  function handleNav(dir) {
+    switch (dir) {
+      case 'up':     changeChannel(-1);    break;
+      case 'down':   changeChannel(1);     break;
+      case 'left':   advanceVideo(-1);     break;
+      case 'right':  advanceVideo(1);      break;
+      case 'select': togglePlayPause();    break;
+      case 'back':   window.location.href = '/'; break;
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    switch (e.key) {
+      case 'ArrowUp':                      e.preventDefault(); changeChannel(-1); break;
+      case 'ArrowDown':                    e.preventDefault(); changeChannel(1);  break;
+      case 'ArrowLeft':                    e.preventDefault(); advanceVideo(-1);  break;
+      case 'ArrowRight':                   e.preventDefault(); advanceVideo(1);   break;
+      case 'Enter': case ' ':              e.preventDefault(); togglePlayPause(); break;
+      case 'Escape': case 'Backspace':     window.location.href = '/';            break;
+    }
+  });
+
+  // ── Position persistence ─────────────────────────────────────────────────
+
+  function savePosition() {
+    var track = tracks[trackIdx];
+    localStorage.setItem('ezaz_watch_track', track.slug);
+    localStorage.setItem('ezaz_watch_video', videoIdx);
+    var dt = localStorage.getItem('ezaz_device_token');
+    if (dt) {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(function() {
+        fetch('/api/watch/position', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ device_token: dt, track_slug: track.slug, video_index: videoIdx })
+        }).catch(function() {});
+      }, 600);
+    }
+  }
+
+  function applyPosition(slug, vidIdx) {
+    var idx = tracks.findIndex(function(t) { return t.slug === slug; });
+    if (idx < 0) return;
+    var t = tracks[idx];
+    trackIdx = idx;
+    videoIdx = Math.min(vidIdx || 0, t.videos.length - 1);
+    updateDisplay();
+    if (player) player.loadVideoById(t.videos[videoIdx].youtube_id);
+  }
+
+  function loadSavedPosition() {
+    var dt = localStorage.getItem('ezaz_device_token');
+    if (dt) {
+      fetch('/api/watch/position?device_token=' + encodeURIComponent(dt))
+        .then(function(r) { return r.ok ? r.json() : {}; })
+        .then(function(d) { if (d.track_slug) applyPosition(d.track_slug, d.video_index); })
+        .catch(function() {});
+    } else {
+      var slug = localStorage.getItem('ezaz_watch_track');
+      var vi   = parseInt(localStorage.getItem('ezaz_watch_video') || '0', 10);
+      if (slug) applyPosition(slug, isNaN(vi) ? 0 : vi);
+    }
+  }
+
+  // ── YouTube player ────────────────────────────────────────────────────────
+
+  function initPlayer() {
+    player = new YT.Player('yt-player', {
+      videoId: tracks[trackIdx].videos[videoIdx].youtube_id,
+      playerVars: {
+        autoplay:       1,
+        controls:       0,
+        rel:            0,
+        modestbranding: 1,
+        iv_load_policy: 3,
+        fs:             0,
+        playsinline:    1
+      },
+      events: {
+        onReady: function(e) { e.target.playVideo(); },
+        onStateChange: function(e) {
+          if (e.data === YT.PlayerState.ENDED) advanceVideo(1);
+        }
+      }
+    });
+  }
+
+  if (window._ytReady) {
+    initPlayer();
+  } else {
+    window._ytCallbacks.push(initPlayer);
+  }
+
+  // ── ActionCable ───────────────────────────────────────────────────────────
+
+  var consumer     = createConsumer();
+  var subscription = consumer.subscriptions.create(
+    { channel: 'TvRemoteChannel', token: token },
+    {
+      connected: function() {
+        this.perform('set_state', { state: 'watch' });
+      },
+      received: function(data) {
+        if (data.type === 'navigate' && data.nav_type !== 'release') {
+          handleNav(data.direction);
+        }
+      }
+    }
+  );
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  if (!new URLSearchParams(location.search).get('t')) {
+    history.replaceState({}, '', '/watch?t=' + token);
+  }
+
+  updateDisplay();
+  loadSavedPosition();
+</script>
+
+</body>
+</html>

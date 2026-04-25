@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "/tv",        to: "tv#show"
   get "/tv/remote", to: "tv_remote#show", as: :tv_remote
   get "/learn",     to: "learn#show"
+  get "/watch",     to: "watch#show"
   get "/scan",      to: "scan#show"
 
   get  "/games/trivia",       to: "trivia#new",  as: :new_trivia
@@ -39,6 +40,8 @@ Rails.application.routes.draw do
       end
     end
     resources :errors,  only: [:create]
+    get "watch/position", to: "watch#position"
+    put "watch/position", to: "watch#update_position"
   end
 
   get "/errors", to: "errors_dashboard#index"

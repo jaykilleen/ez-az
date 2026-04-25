@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_25_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_25_000002) do
   create_table "counters", force: :cascade do |t|
     t.string "key", null: false
     t.integer "value", default: 0, null: false
@@ -42,6 +42,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_000001) do
     t.string "pin_digest"
     t.datetime "updated_at", null: false
     t.string "username", null: false
+    t.string "watch_track_slug"
+    t.integer "watch_video_index", default: 0, null: false
     t.index ["device_token"], name: "index_players_on_device_token", unique: true, where: "device_token IS NOT NULL"
     t.index ["username"], name: "index_players_on_username", unique: true
   end
