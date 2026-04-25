@@ -139,11 +139,10 @@
     .video-pos { color: #00ffc8; font-weight: 700; }
 
     .nav-hint {
-      flex-shrink: 0;
-      font-size: clamp(0.6rem, 0.9vw, 0.8rem);
-      color: #555;
-      text-align: right;
+      font-size: clamp(0.75rem, 1.1vw, 1rem);
+      color: #556;
       line-height: 1.8;
+      margin-top: 6px;
     }
 
     /* --- Channel guide bar --- */
@@ -235,10 +234,7 @@
       <span class="video-pos"  id="videoPos"></span>
       <span class="video-note" id="videoNote"></span>
     </div>
-  </div>
-  <div class="nav-hint">
-    ↑↓ Channel &nbsp; ←→ Video<br>
-    ⬤ Play/Pause &nbsp; ← Home
+    <div class="nav-hint">↑↓ Channel &nbsp;&nbsp; ←→ Video &nbsp;&nbsp; ⬤ Play/Pause &nbsp;&nbsp; ← Home</div>
   </div>
 </footer>
 
@@ -419,7 +415,8 @@
       events: {
         onReady: function(e) { e.target.playVideo(); },
         onStateChange: function(e) {
-          if (e.data === YT.PlayerState.ENDED) advanceVideo(1);
+          if (e.data === YT.PlayerState.PLAYING) savePosition();
+          if (e.data === YT.PlayerState.ENDED)   advanceVideo(1);
         }
       }
     });
