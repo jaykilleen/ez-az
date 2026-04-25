@@ -163,29 +163,48 @@
   .tq-option.is-correct .tq-option-letter { background: #2ed573; color: #0a0a12; }
   .tq-option.is-wrong { opacity: 0.3; }
 
-  /* ---- Buzz flash overlay ---- */
-  .tq-buzz-overlay {
-    position: fixed; inset: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 2vh;
-    background: color-mix(in srgb, var(--buzz-color, var(--teal)) 15%, #0a0a12);
-    border: 6px solid var(--buzz-color, var(--teal));
-    animation: buzz-in 0.25s ease-out;
-    pointer-events: none;
+  /* ---- Timer + answered count ---- */
+  .tq-question-meta {
+    display: flex; justify-content: space-between; align-items: center;
   }
-  @keyframes buzz-in {
-    from { opacity: 0; transform: scale(1.04); }
-    to   { opacity: 1; transform: scale(1); }
+  .tq-timer-wrap {
+    display: flex; align-items: center; gap: 1.2vw;
   }
-  .tq-buzz-name {
-    font-size: clamp(3rem, 8vw, 9rem); font-weight: 900; color: #fff;
-    text-shadow: 0 0 40px var(--buzz-color, var(--teal));
-    letter-spacing: -0.02em;
+  .tq-answered-count {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: #8ab4c8;
+    font-family: "Courier New", monospace;
   }
-  .tq-buzz-sub {
-    font-size: clamp(1.2rem, 2.5vw, 2.5rem); color: rgba(255,255,255,0.7);
-    font-weight: 600;
+  .tq-timer {
+    font-size: clamp(2rem, 3.5vw, 4rem); font-weight: 900;
+    font-family: "Courier New", monospace; color: var(--teal);
+    min-width: 2ch; text-align: right; transition: color 0.3s;
   }
+  .tq-timer.urgent { color: #ff4757; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .tq-timer.urgent { animation: pulse 0.6s ease-in-out infinite; }
+  .tq-reading-hint {
+    font-size: clamp(1.2rem, 2vw, 2.2rem); color: #445;
+    text-align: center; padding: 1.5vh 0;
+  }
+
+  /* ---- Results chips ---- */
+  .tq-results {
+    display: flex; gap: 0.8vw; flex-wrap: wrap; margin-top: 0.5vh;
+  }
+  .tq-result-chip {
+    display: flex; align-items: center; gap: 0.5vw;
+    padding: 0.4vh 0.9vw; border-radius: 0.5vw;
+    font-size: clamp(0.9rem, 1.2vw, 1.2rem); font-weight: 700;
+    border: 2px solid;
+  }
+  .tq-result-chip.correct {
+    color: #2ed573; border-color: rgba(46,213,115,0.4);
+    background: rgba(46,213,115,0.1);
+  }
+  .tq-result-chip.wrong {
+    color: #445; border-color: rgba(255,255,255,0.08); background: transparent;
+  }
+  .tq-no-answers { font-size: clamp(0.9rem, 1.2vw, 1.2rem); color: #445; }
 
   /* ---- Game Over ---- */
   .tq-gameover {
@@ -294,9 +313,16 @@
 
     <!-- QUESTION (hidden until game starts) -->
     <div class="tq-question-wrap" id="tq-question-wrap" hidden>
-      <div class="tq-category-badge" id="tq-category">Category</div>
+      <div class="tq-question-meta">
+        <div class="tq-category-badge" id="tq-category">Category</div>
+        <div class="tq-timer-wrap">
+          <div class="tq-answered-count" id="tq-answered" hidden></div>
+          <div class="tq-timer" id="tq-timer" hidden>10</div>
+        </div>
+      </div>
       <div class="tq-question-text" id="tq-question-text">Question goes here</div>
-      <div class="tq-options" id="tq-options">
+      <div class="tq-reading-hint" id="tq-reading-hint" hidden>Read the question — options coming up on your phone!</div>
+      <div class="tq-options" id="tq-options" hidden>
         <% %w[A B C D].each do |letter| %>
           <div class="tq-option" data-letter="<%= letter %>">
             <div class="tq-option-letter"><%= letter %></div>
@@ -304,6 +330,7 @@
           </div>
         <% end %>
       </div>
+      <div class="tq-results" id="tq-results" hidden></div>
     </div>
 
     <!-- GAME OVER (hidden until finished) -->
@@ -313,9 +340,6 @@
     </div>
 
   </main>
-
-  <!-- Buzz overlay (hidden) -->
-  <div class="tq-buzz-overlay" id="tq-buzz-overlay" hidden></div>
 
   <footer class="tq-footer">
     <div class="tq-progress" id="tq-progress">Waiting to start</div>
@@ -333,22 +357,25 @@
 
   // State
   var phase = 'lobby';
-  var currentAnswer = -1;
-  var knownMembers = [];  // accumulates all joined players
+  var knownMembers = [];
   var qIndex = 0, qTotal = 0;
+  var gameOver = false;
+  var timerInterval = null;
 
   // Elements
-  var scoresEl   = document.getElementById('tq-scores');
-  var lobbyEl    = document.getElementById('tq-lobby');
-  var questionEl = document.getElementById('tq-question-wrap');
-  var gameoverEl = document.getElementById('tq-gameover');
-  var buzzEl     = document.getElementById('tq-buzz-overlay');
-  var progressEl = document.getElementById('tq-progress');
-  var nextBtn    = document.getElementById('tq-next-btn');
-  var startBtn   = document.getElementById('tq-start-btn');
-
-  // Lobby player list
+  var scoresEl      = document.getElementById('tq-scores');
+  var lobbyEl       = document.getElementById('tq-lobby');
+  var questionEl    = document.getElementById('tq-question-wrap');
+  var gameoverEl    = document.getElementById('tq-gameover');
+  var progressEl    = document.getElementById('tq-progress');
+  var nextBtn       = document.getElementById('tq-next-btn');
+  var startBtn      = document.getElementById('tq-start-btn');
   var lobbyPlayersEl = document.getElementById('tq-lobby-players');
+  var timerEl       = document.getElementById('tq-timer');
+  var answeredEl    = document.getElementById('tq-answered');
+  var readingHintEl = document.getElementById('tq-reading-hint');
+  var optsEl        = document.getElementById('tq-options');
+  var resultsEl     = document.getElementById('tq-results');
 
   // Subscribe to RoomChannel for player joins
   consumer.subscriptions.create(
@@ -356,9 +383,7 @@
     {
       received: function(data) {
         if (!data) return;
-        if (data.type === 'member_joined') {
-          refreshLobbyPlayers(data.members);
-        }
+        if (data.type === 'member_joined') refreshLobbyPlayers(data.members);
       }
     }
   );
@@ -372,127 +397,144 @@
       received: function(data) {
         if (!data) return;
         switch (data.type) {
-          case 'question': onQuestion(data); break;
-          case 'buzzed':   onBuzzed(data);   break;
-          case 'answered': onAnswered(data); break;
-          case 'revealed': onRevealed(data); break;
-          case 'game_over': onGameOver(data); break;
+          case 'question':        onQuestion(data);       break;
+          case 'answering':       onAnswering(data);      break;
+          case 'player_answered': onPlayerAnswered(data); break;
+          case 'revealed':        onRevealed(data);       break;
+          case 'game_over':       onGameOver(data);       break;
         }
       }
     }
   );
 
-  // Start button
   startBtn.addEventListener('click', function() {
     trivia.perform('start_game', {});
     startBtn.disabled = true;
     startBtn.textContent = 'Starting…';
   });
 
-  // Next question button
   nextBtn.addEventListener('click', function() {
     if (gameOver) { window.location.href = '/tv'; return; }
     nextBtn.hidden = true;
     trivia.perform('next_question', {});
   });
 
-  var gameOver = false;
-
-  // Keyboard / TV-remote handler
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      window.location.href = '/tv';
-      return;
-    }
-    if (e.key === ' ' && phase === 'question') {
+    if (e.key === 'Escape') { window.location.href = '/tv'; return; }
+    if (e.key === ' ' && phase === 'answering') {
       e.preventDefault();
       trivia.perform('reveal', {});
     }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (phase === 'lobby' && !startBtn.disabled) {
-        startBtn.click();
-      } else if (!nextBtn.hidden) {
-        nextBtn.click();
-      }
+      if (phase === 'lobby' && !startBtn.disabled) startBtn.click();
+      else if (!nextBtn.hidden) nextBtn.click();
     }
   });
 
+  // ── Timer ──────────────────────────────────────────────────────────────
+  function startTimer(secs, onEnd) {
+    clearInterval(timerInterval);
+    timerEl.hidden = false;
+    timerEl.textContent = secs;
+    timerEl.classList.remove('urgent');
+    timerInterval = setInterval(function() {
+      secs--;
+      timerEl.textContent = secs;
+      if (secs <= 3) timerEl.classList.add('urgent');
+      if (secs <= 0) { clearInterval(timerInterval); onEnd(); }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerEl.hidden = true;
+    timerEl.classList.remove('urgent');
+  }
+
+  // ── Game events ─────────────────────────────────────────────────────────
   function onQuestion(data) {
-    currentAnswer = data.answer;
     qIndex = data.q_index + 1;
     qTotal = data.total;
-    phase = 'question';
+    phase = 'reading';
+
     if (data.q_index === 0 && tvRemoteSub) {
       tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Family Trivia' });
     }
 
-    hideBuzz();
     showPhase('question');
-    // Populate score bar from known members on first question
     if (qIndex === 1 && knownMembers.length) renderScoreBar(knownMembers);
     nextBtn.hidden = true;
 
     document.getElementById('tq-category').textContent = data.category;
     document.getElementById('tq-question-text').textContent = data.question;
 
-    var letters = ['A','B','C','D'];
-    var opts = questionEl.querySelectorAll('.tq-option');
+    optsEl.hidden = true;
+    readingHintEl.hidden = false;
+    answeredEl.hidden = true;
+    resultsEl.hidden = true;
+    optsEl.querySelectorAll('.tq-option').forEach(function(el) { el.className = 'tq-option'; });
+
+    progressEl.textContent = 'Question ' + qIndex + ' of ' + qTotal;
+    setStatus('Reading…');
+
+    startTimer(10, function() { trivia.perform('start_answering', {}); });
+  }
+
+  function onAnswering(data) {
+    phase = 'answering';
+    stopTimer();
+
+    readingHintEl.hidden = true;
+    answeredEl.hidden = false;
+    answeredEl.textContent = '0 answered';
+    optsEl.hidden = false;
+    resultsEl.hidden = true;
+
+    var opts = optsEl.querySelectorAll('.tq-option');
     opts.forEach(function(el, i) {
       el.className = 'tq-option';
       el.querySelector('.tq-option-text').textContent = data.options[i] || '';
     });
 
-    progressEl.textContent = 'Question ' + qIndex + ' of ' + qTotal;
-    setStatus('Buzzers open');
+    setStatus('Answering…');
+    startTimer(10, function() { trivia.perform('reveal', {}); });
   }
 
-  function onBuzzed(data) {
-    phase = 'buzzed';
-    setStatus(data.name + ' buzzed!');
-
-    buzzEl.removeAttribute('hidden');
-    buzzEl.style.setProperty('--buzz-color', data.color);
-    buzzEl.innerHTML =
-      '<div class="tq-buzz-name">' + esc(data.name) + '</div>' +
-      '<div class="tq-buzz-sub">is answering...</div>';
-
-    // Pulse the player's score entry
-    var slotEl = scoresEl.querySelector('[data-slot="' + data.slot + '"]');
-    if (slotEl) {
-      slotEl.style.setProperty('--buzz-color', data.color);
-      slotEl.classList.add('is-buzzing');
-      setTimeout(function() { slotEl.classList.remove('is-buzzing'); }, 2000);
-    }
-  }
-
-  function onAnswered(data) {
-    hideBuzz();
-
-    var opts = questionEl.querySelectorAll('.tq-option');
-    if (data.correct) {
-      phase = 'revealed';
-      opts.forEach(function(el, i) {
-        el.className = 'tq-option ' + (i === data.correct_index ? 'is-correct' : 'is-wrong');
-      });
-      updateScores(data.scores);
-      setStatus(data.name + ' got it right! +1 point');
-      nextBtn.hidden = false;
-      nextBtn.textContent = qIndex >= qTotal ? 'See Results' : 'Next Question →';
-    } else {
-      phase = 'question';
-      setStatus(data.name + ' got it wrong — buzzers open again');
+  function onPlayerAnswered(data) {
+    answeredEl.textContent = data.answered_count + ' / ' + data.total_players + ' answered';
+    if (data.answered_count >= data.total_players) {
+      stopTimer();
+      setStatus('All in!');
     }
   }
 
   function onRevealed(data) {
-    hideBuzz();
+    stopTimer();
     phase = 'revealed';
 
-    var opts = questionEl.querySelectorAll('.tq-option');
-    opts.forEach(function(el, i) {
+    optsEl.querySelectorAll('.tq-option').forEach(function(el, i) {
       el.className = 'tq-option ' + (i === data.correct_index ? 'is-correct' : 'is-wrong');
     });
+    optsEl.hidden = false;
+    readingHintEl.hidden = true;
+    answeredEl.hidden = true;
+    resultsEl.hidden = false;
+    resultsEl.innerHTML = '';
+
+    if (data.results && data.results.length) {
+      data.results.forEach(function(r) {
+        var chip = document.createElement('div');
+        chip.className = 'tq-result-chip ' + (r.correct ? 'correct' : 'wrong');
+        chip.innerHTML =
+          '<div class="tq-dot" style="background:' + r.color + '"></div>' +
+          esc(r.name) + (r.correct ? ' ✓' : ' ✗');
+        resultsEl.appendChild(chip);
+      });
+    } else {
+      resultsEl.innerHTML = '<span class="tq-no-answers">No one answered</span>';
+    }
+
     updateScores(data.scores);
     setStatus('Answer revealed');
     nextBtn.hidden = false;
@@ -500,6 +542,7 @@
   }
 
   function onGameOver(data) {
+    stopTimer();
     phase = 'game_over';
     gameOver = true;
     showPhase('gameover');
@@ -521,6 +564,7 @@
     });
   }
 
+  // ── Helpers ─────────────────────────────────────────────────────────────
   function updateScores(scores) {
     Object.entries(scores).forEach(function(entry) {
       var slot = parseInt(entry[0]);
@@ -532,9 +576,7 @@
 
   function refreshLobbyPlayers(members) {
     if (!members || !members.length) return;
-    // Keep knownMembers up to date (players only)
     knownMembers = members.filter(function(m) { return m.role !== 'host'; });
-
     lobbyPlayersEl.innerHTML = '';
     knownMembers.forEach(function(m) {
       var color = SLOT_COLORS[m.slot] || '#8ab4c8';
@@ -546,7 +588,6 @@
       lobbyPlayersEl.appendChild(div);
     });
     startBtn.disabled = false;
-
     if (phase !== 'lobby') renderScoreBar(knownMembers);
   }
 
@@ -576,21 +617,9 @@
     questionEl.hidden = name !== 'question';
     gameoverEl.hidden = name !== 'gameover';
     scoresEl.hidden   = name === 'lobby';
-    if (name !== 'lobby') {
-      // Build score bar from current players on first question
-      var currentMembers = Array.from(lobbyPlayersEl.querySelectorAll('.tq-joined-player')).map(function(el, i) {
-        return null; // Members come in via RoomChannel events
-      });
-    }
   }
 
-  function hideBuzz() {
-    buzzEl.setAttribute('hidden', '');
-  }
-
-  function setStatus(msg) {
-    document.getElementById('tq-status').textContent = msg;
-  }
+  function setStatus(msg) { document.getElementById('tq-status').textContent = msg; }
 
   function esc(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -598,12 +627,9 @@
 
   // Seed knownMembers from server-rendered list (players present at page load)
   var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
-  if (initMembers.length) {
-    knownMembers = initMembers;
-    renderScoreBar(initMembers);
-  }
+  if (initMembers.length) { knownMembers = initMembers; renderScoreBar(initMembers); }
 
-  // Phone remote — pick up the token the TV shelf stored before navigating here
+  // Phone remote token — stored by TV shelf page before navigating here
   var remoteToken = sessionStorage.getItem('tvRemoteToken');
   var tvRemoteSub = null;
   if (remoteToken) {
@@ -615,11 +641,7 @@
         },
         received: function(data) {
           if (data.type !== 'navigate') return;
-          var keyMap = {
-            left: 'ArrowLeft', right: 'ArrowRight',
-            up: 'ArrowUp',     down: 'ArrowDown',
-            select: 'Enter',   back: 'Escape'
-          };
+          var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };
           var key = keyMap[data.direction];
           if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
         }

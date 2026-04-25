@@ -102,20 +102,29 @@
   }
 
   /* buzzer */
-  .buzzer-content { gap: 12px; justify-content: flex-start; padding-top: 16px; }
+  .buzzer-content { gap: 10px; justify-content: flex-start; padding-top: 14px; }
   .buzzer-info { font-size: 13px; color: #8ab4c8; font-family: "Courier New", monospace; letter-spacing: 0.08em; }
-  .buzz-btn {
-    width: min(68vw, 52vh); height: min(68vw, 52vh);
-    border-radius: 50%; background: var(--buzz-color, #00ffc8);
-    border: none; display: flex; align-items: center; justify-content: center;
-    font-size: clamp(2.5rem, 11vw, 5rem); font-weight: 900; color: #fff;
-    cursor: pointer;
-    box-shadow: 0 0 50px color-mix(in srgb, var(--buzz-color, #00ffc8) 40%, transparent);
-    transition: transform 0.1s; touch-action: manipulation;
+
+  /* phone reading state */
+  .phone-reading { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+  .phone-category {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #00ffc8; background: rgba(0,255,200,0.12); border: 1px solid rgba(0,255,200,0.3);
+    padding: 0.3em 0.9em; border-radius: 2em;
   }
-  .buzz-btn:active { transform: scale(0.93); }
-  .buzz-btn:disabled { opacity: 0.3; filter: grayscale(0.6); }
-  .buzz-status { font-size: clamp(1rem, 4vw, 1.3rem); color: rgba(255,255,255,0.6); line-height: 1.4; }
+  .phone-question {
+    font-size: clamp(1rem, 4vw, 1.25rem); font-weight: 700; color: #fff;
+    line-height: 1.45; text-align: center;
+  }
+  .phone-reading-hint { font-size: 13px; color: #556; margin-top: 4px; }
+  .phone-timer {
+    font-size: clamp(2.5rem, 12vw, 4rem); font-weight: 900;
+    font-family: "Courier New", monospace; color: var(--buzz-color, #00ffc8);
+    line-height: 1;
+  }
+
+  /* phone answering state */
+  .phone-answering { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
   .buzz-answers {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: 10px; width: 100%; max-width: 460px;
@@ -125,13 +134,26 @@
     background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
     color: #fff; font-size: clamp(0.85rem, 3.5vw, 1.05rem); font-weight: 700;
     text-align: center; cursor: pointer; line-height: 1.3; touch-action: manipulation;
-    transition: background 0.08s;
+    transition: background 0.08s; font-family: inherit;
   }
   .answer-btn:active { background: rgba(255,255,255,0.2); }
+  .answer-btn:disabled { opacity: 0.35; }
   .answer-btn .aletter {
     display: block; font-size: 0.75em; color: rgba(255,255,255,0.45);
     margin-bottom: 4px; font-family: "Courier New", monospace;
   }
+  .phone-ans-timer { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+
+  /* phone locked state */
+  .phone-locked { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .phone-locked-icon { font-size: clamp(3rem, 14vw, 5rem); color: #00ffc8; line-height: 1; }
+  .phone-locked-msg { font-size: 15px; color: #8ab4c8; text-align: center; }
+
+  /* phone result state */
+  .phone-result { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .phone-result-icon { font-size: clamp(3rem, 16vw, 6rem); font-weight: 900; line-height: 1; }
+  .phone-result-msg { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 700; color: #fff; text-align: center; line-height: 1.4; }
+
   .back-to-store {
     display: block; padding: 14px 24px; border-radius: 12px;
     background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12);
@@ -235,9 +257,32 @@
     <!-- buzzer: trivia game in progress, joined -->
     <div class="zone-content buzzer-content" data-screen="buzzer" hidden>
       <div class="buzzer-info" id="buzzer-info">P1</div>
-      <button class="buzz-btn" id="buzz-btn">BUZZ!</button>
-      <div class="buzz-status" id="buzz-status"></div>
-      <div class="buzz-answers" id="buzz-answers" hidden></div>
+
+      <!-- reading: question shown, get ready -->
+      <div id="phone-reading" class="phone-reading">
+        <div class="phone-category" id="phone-category"></div>
+        <div class="phone-question" id="phone-question"></div>
+        <div class="phone-reading-hint">Get ready to answer!</div>
+        <div class="phone-timer" id="phone-read-timer"></div>
+      </div>
+
+      <!-- answering: pick your option -->
+      <div id="phone-answering" class="phone-answering" hidden>
+        <div class="buzz-answers" id="buzz-answers"></div>
+        <div class="phone-timer phone-ans-timer" id="phone-ans-timer"></div>
+      </div>
+
+      <!-- locked: answered, awaiting reveal -->
+      <div id="phone-locked" class="phone-locked" hidden>
+        <div class="phone-locked-icon">✓</div>
+        <div class="phone-locked-msg">Locked in!<br>Waiting for reveal…</div>
+      </div>
+
+      <!-- result: after reveal -->
+      <div id="phone-result" class="phone-result" hidden>
+        <div class="phone-result-icon" id="phone-result-icon"></div>
+        <div class="phone-result-msg" id="phone-result-msg"></div>
+      </div>
     </div>
 
     <!-- watching: game in progress, not joined -->
@@ -282,16 +327,17 @@
   var consumer = createConsumer();
 
   // ── State ──────────────────────────────────────────────────────────
-  var currentScreen = 'disconnected';
-  var mySlot        = null;
-  var myColor       = null;
-  var roomCode      = null;
-  var triviaChannel = null;
-  var roomChannel   = null;
-  var myTurn        = false;
-  var letters       = ['A', 'B', 'C', 'D'];
-  var DPAD_SCREENS  = new Set(['shelf', 'lobby', 'waiting', 'watching']);
-  var SLOT_COLORS   = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var currentScreen    = 'disconnected';
+  var mySlot           = null;
+  var myColor          = null;
+  var roomCode         = null;
+  var triviaChannel    = null;
+  var roomChannel      = null;
+  var myAnswerIndex    = null;
+  var phoneTimerInterval = null;
+  var letters          = ['A', 'B', 'C', 'D'];
+  var DPAD_SCREENS     = new Set(['shelf', 'lobby', 'waiting', 'watching']);
+  var SLOT_COLORS      = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
 
   // ── Elements ────────────────────────────────────────────────────────
   var zoneDot   = document.getElementById('zone-dot');
@@ -305,10 +351,7 @@
   var joinError     = document.getElementById('join-error');
   var waitingBadge   = document.getElementById('waiting-badge');
   var waitingPlayers = document.getElementById('waiting-players');
-  var buzzerInfo    = document.getElementById('buzzer-info');
-  var buzzBtn       = document.getElementById('buzz-btn');
-  var buzzStatus    = document.getElementById('buzz-status');
-  var buzzAnswers   = document.getElementById('buzz-answers');
+  var buzzerInfo     = document.getElementById('buzzer-info');
 
   // ── Screen switching ────────────────────────────────────────────────
   function showScreen(name) {
@@ -364,7 +407,7 @@
 
     waitingBadge.textContent = 'P' + mySlot;
     waitingBadge.style.background = myColor;
-    buzzBtn.style.setProperty('--buzz-color', myColor);
+    document.documentElement.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
 
     if (data.members) renderPlayers(data.members);
@@ -437,119 +480,114 @@
       {
         received: function(data) {
           switch (data.type) {
-            case 'question':  onQuestion(data);  break;
-            case 'buzzed':    onBuzzed(data);    break;
-            case 'answered':  onAnswered(data);  break;
-            case 'revealed':  onRevealed(data);  break;
-            case 'game_over': onGameOver(data);  break;
+            case 'question':        onQuestion(data);       break;
+            case 'answering':       onAnswering(data);      break;
+            case 'player_answered': onPlayerAnswered(data); break;
+            case 'revealed':        onRevealed(data);       break;
+            case 'game_over':       onGameOver(data);       break;
           }
         }
       }
     );
   }
 
+  // ── Phone timer ───────────────────────────────────────────────────────
+  function startPhoneTimer(elId, secs) {
+    clearInterval(phoneTimerInterval);
+    var el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = secs;
+    phoneTimerInterval = setInterval(function() {
+      secs--;
+      el.textContent = secs > 0 ? secs : '';
+      if (secs <= 0) clearInterval(phoneTimerInterval);
+    }, 1000);
+  }
+
+  function clearPhoneTimer() {
+    clearInterval(phoneTimerInterval);
+  }
+
+  function showBuzzerPhase(name) {
+    document.getElementById('phone-reading').hidden   = name !== 'reading';
+    document.getElementById('phone-answering').hidden = name !== 'answering';
+    document.getElementById('phone-locked').hidden    = name !== 'locked';
+    document.getElementById('phone-result').hidden    = name !== 'result';
+  }
+
   // ── Trivia event handlers ─────────────────────────────────────────────
   function onQuestion(data) {
-    myTurn = false;
-    showScreen('buzzer');
+    myAnswerIndex = null;
     buzzerInfo.textContent = 'P' + mySlot + '  ·  Q' + (data.q_index + 1) + ' / ' + data.total;
-    buzzBtn.style.display = '';
-    buzzBtn.disabled = false;
-    buzzBtn.textContent = 'BUZZ!';
-    buzzAnswers.hidden = true;
-    buzzAnswers.innerHTML = '';
-    buzzStatus.textContent = 'Tap to buzz in!';
+    document.getElementById('phone-category').textContent = data.category || '';
+    document.getElementById('phone-question').textContent = data.question || '';
+    showBuzzerPhase('reading');
+    showScreen('buzzer');
+    startPhoneTimer('phone-read-timer', 10);
   }
 
-  function onBuzzed(data) {
-    if (data.slot === mySlot) {
-      myTurn = true;
-      buzzBtn.style.display = 'none';
-      buzzStatus.textContent = 'You buzzed! Pick your answer:';
-      showAnswers(data.options);
-      if (navigator.vibrate) navigator.vibrate(80);
-    } else {
-      myTurn = false;
-      buzzBtn.disabled = true;
-      buzzBtn.textContent = '⏸';
-      buzzStatus.textContent = esc(data.name) + ' buzzed in…';
-    }
-  }
-
-  function onAnswered(data) {
-    buzzAnswers.innerHTML = '';
-    buzzAnswers.hidden = true;
-    buzzBtn.style.display = '';
-    buzzBtn.textContent = 'BUZZ!';
-    if (data.slot === mySlot) {
-      if (data.correct) {
-        buzzStatus.textContent = 'Correct! +1 point';
-        buzzBtn.disabled = true; buzzBtn.textContent = '✓';
-      } else {
-        buzzStatus.textContent = 'Wrong! Wait for next question.';
-        buzzBtn.disabled = true; buzzBtn.textContent = '✗';
-      }
-    } else {
-      if (data.correct) {
-        buzzStatus.textContent = esc(data.name) + ' got it right!';
-        buzzBtn.disabled = true;
-      } else {
-        buzzStatus.textContent = esc(data.name) + ' was wrong — buzz in!';
-        buzzBtn.disabled = false;
-      }
-    }
-  }
-
-  function onRevealed(data) {
-    buzzAnswers.innerHTML = '';
-    buzzAnswers.hidden = true;
-    buzzBtn.style.display = '';
-    buzzBtn.disabled = true; buzzBtn.textContent = '→';
-    buzzStatus.textContent = 'Next question coming up…';
-  }
-
-  function onGameOver(data) {
-    buzzBtn.style.display = 'none';
-    buzzAnswers.hidden = true;
-    buzzStatus.innerHTML = 'Game over! Check the TV for results.';
-    var link = document.createElement('a');
-    link.href = '/'; link.className = 'back-to-store';
-    link.textContent = '← Back to Store';
-    buzzStatus.insertAdjacentElement('afterend', link);
-  }
-
-  function showAnswers(options) {
-    buzzAnswers.innerHTML = '';
-    options.forEach(function(opt, i) {
+  function onAnswering(data) {
+    clearPhoneTimer();
+    showBuzzerPhase('answering');
+    startPhoneTimer('phone-ans-timer', 10);
+    var answersEl = document.getElementById('buzz-answers');
+    answersEl.innerHTML = '';
+    data.options.forEach(function(opt, i) {
       var btn = document.createElement('button');
       btn.className = 'answer-btn';
       btn.innerHTML = '<span class="aletter">' + letters[i] + '</span>' + esc(opt);
       btn.addEventListener('click', function() {
-        if (!myTurn || !triviaChannel) return;
-        myTurn = false;
+        if (myAnswerIndex !== null || !triviaChannel) return;
+        myAnswerIndex = i;
         triviaChannel.perform('answer', { index: i });
-        buzzAnswers.querySelectorAll('.answer-btn').forEach(function(b) { b.disabled = true; });
+        answersEl.querySelectorAll('.answer-btn').forEach(function(b) { b.disabled = true; });
         if (navigator.vibrate) navigator.vibrate(40);
       });
-      buzzAnswers.appendChild(btn);
+      answersEl.appendChild(btn);
     });
-    buzzAnswers.hidden = false;
   }
 
-  // ── Buzz button ───────────────────────────────────────────────────────
-  buzzBtn.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (buzzBtn.disabled || !triviaChannel) return;
-    triviaChannel.perform('buzz', {});
-    buzzBtn.disabled = true; buzzBtn.textContent = '…';
-    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-  }, { passive: false });
-  buzzBtn.addEventListener('click', function() {
-    if (buzzBtn.disabled || !triviaChannel) return;
-    triviaChannel.perform('buzz', {});
-    buzzBtn.disabled = true; buzzBtn.textContent = '…';
-    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-  });
+  function onPlayerAnswered(data) {
+    if (data.slot === mySlot) {
+      clearPhoneTimer();
+      showBuzzerPhase('locked');
+      if (navigator.vibrate) navigator.vibrate(60);
+    }
+  }
+
+  function onRevealed(data) {
+    clearPhoneTimer();
+    var myResult = data.results && data.results.find(function(r) { return r.slot === mySlot; });
+    var iconEl = document.getElementById('phone-result-icon');
+    var msgEl  = document.getElementById('phone-result-msg');
+    if (myResult) {
+      if (myResult.correct) {
+        iconEl.textContent = '✓'; iconEl.style.color = '#2ed573';
+        msgEl.textContent = 'Correct! +1 point';
+        if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+      } else {
+        iconEl.textContent = '✗'; iconEl.style.color = '#ff4757';
+        msgEl.textContent = 'Wrong! Answer: ' + esc(data.correct_answer || '');
+      }
+    } else {
+      iconEl.textContent = '→'; iconEl.style.color = '#8ab4c8';
+      msgEl.textContent = 'Next question coming up…';
+    }
+    showBuzzerPhase('result');
+  }
+
+  function onGameOver(data) {
+    clearPhoneTimer();
+    var iconEl = document.getElementById('phone-result-icon');
+    var msgEl  = document.getElementById('phone-result-msg');
+    iconEl.textContent = '🏆'; iconEl.style.color = '#ffd700';
+    msgEl.innerHTML = 'Game over!<br>Check the TV for results.';
+    var link = document.createElement('a');
+    link.href = '/'; link.className = 'back-to-store';
+    link.textContent = '← Back to Store';
+    msgEl.insertAdjacentElement('afterend', link);
+    showBuzzerPhase('result');
+  }
 
   // ── D-pad ─────────────────────────────────────────────────────────────
   function sendNav(dir) {
