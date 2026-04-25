@@ -1,4 +1,6 @@
 <style>
+  [hidden] { display: none !important; }
+
   .play {
     flex: 1;
     display: flex; flex-direction: column;
@@ -89,6 +91,58 @@
     color: rgba(255, 255, 255, 0.25); font-size: 14px; pointer-events: none;
     text-align: center; line-height: 1.6;
   }
+
+  /* ---- Trivia buzz pad ---- */
+  .trivia-pad {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px; gap: 20px; overflow: hidden;
+  }
+  .trivia-pad.is-hidden { display: none; }
+  .buzz-btn {
+    width: min(72vw, 72vh); height: min(72vw, 72vh);
+    border-radius: 50%;
+    background: var(--buzz-color, #00ffc8);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(2.5rem, 12vw, 6rem); font-weight: 900;
+    color: #fff; letter-spacing: -0.02em;
+    cursor: pointer;
+    box-shadow: 0 0 60px color-mix(in srgb, var(--buzz-color, #00ffc8) 40%, transparent);
+    transition: transform 0.1s, box-shadow 0.1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .buzz-btn:active { transform: scale(0.93); }
+  .buzz-btn:disabled { opacity: 0.3; filter: grayscale(0.6); }
+  .trivia-status {
+    font-size: clamp(1rem, 4vw, 1.4rem); color: rgba(255,255,255,0.6);
+    text-align: center; line-height: 1.4;
+  }
+  .trivia-answers {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; width: 100%; max-width: 480px;
+  }
+  .answer-btn {
+    padding: 16px 12px; border-radius: 14px;
+    background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+    color: #fff; font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 700;
+    text-align: center; cursor: pointer; line-height: 1.3;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .answer-btn:active { background: rgba(255,255,255,0.18); }
+  .answer-btn .aletter {
+    display: block; font-size: 0.75em; color: rgba(255,255,255,0.45);
+    margin-bottom: 4px; font-family: "Courier New", monospace;
+  }
+  .trivia-result {
+    font-size: clamp(3rem, 14vw, 6rem); font-weight: 900;
+    text-align: center;
+  }
+  .trivia-result.correct { color: #2ed573; }
+  .trivia-result.wrong   { color: #ff4757; }
 </style>
 
 <div class="play">
@@ -103,8 +157,19 @@
     <div><strong>Keep this tab open</strong><br>it's your controller</div>
   </section>
 
-  <!-- State B: active controller -->
-  <section class="controller <%= 'is-active' if @room.playing? %>" id="controller">
+  <!-- State B-trivia: buzz pad (trivia games only) -->
+  <% if @room.game_slug == "trivia" %>
+  <section class="trivia-pad<%= ' is-hidden' unless @room.playing? %>" id="trivia-pad">
+    <button class="buzz-btn" id="buzz-btn" style="--buzz-color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][@membership.slot - 1] %>">
+      BUZZ!
+    </button>
+    <div class="trivia-status" id="trivia-status">Get ready...</div>
+    <div class="trivia-answers" id="trivia-answers" style="display:none"></div>
+  </section>
+  <% end %>
+
+  <!-- State B: active controller (non-trivia games) -->
+  <section class="controller <%= 'is-active' if @room.playing? %>" id="controller" <%= 'style="display:none"'.html_safe if @room.game_slug == "trivia" %>>
     <div class="play-hint">Drag the joystick<br>Tap a button to act</div>
 
     <div class="joy-base" id="joy">
@@ -123,11 +188,13 @@
 <script type="module">
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
 
-  var consumer  = createConsumer();
-  var code      = <%= @room.code.to_json.html_safe %>;
-  var slot      = <%= @membership.slot %>;
-  var waitingEl = document.getElementById("waiting");
-  var ctrlEl    = document.getElementById("controller");
+  var consumer    = createConsumer();
+  var code        = <%= @room.code.to_json.html_safe %>;
+  var slot        = <%= @membership.slot %>;
+  var gameSlug    = <%= @room.game_slug.to_json.html_safe %>;
+  var waitingEl   = document.getElementById("waiting");
+  var ctrlEl      = document.getElementById("controller");
+  var triviaEl    = document.getElementById("trivia-pad");
 
   // Subscribe to RoomChannel for lobby-level broadcasts (game_starting)
   consumer.subscriptions.create(
@@ -137,11 +204,144 @@
         if (!data) return;
         if (data.type === "game_starting") {
           waitingEl.setAttribute("hidden", "");
-          ctrlEl.classList.add("is-active");
+          if (gameSlug === "trivia") {
+            triviaEl && triviaEl.classList.remove("is-hidden");
+          } else {
+            ctrlEl.classList.add("is-active");
+          }
         }
       }
     }
   );
+
+  // ---- TRIVIA MODE -------------------------------------------------------
+  if (gameSlug === "trivia") {
+    var buzzBtn     = document.getElementById("buzz-btn");
+    var triviaStatus = document.getElementById("trivia-status");
+    var triviaAnswers = document.getElementById("trivia-answers");
+    var buzzed = false;
+    var myTurn = false;
+    var letters = ["A", "B", "C", "D"];
+
+    var trivia = consumer.subscriptions.create(
+      { channel: "TriviaChannel", code: code, slot: slot },
+      {
+        received(data) {
+          if (!data) return;
+          switch (data.type) {
+            case "question":  onQuestion(data);  break;
+            case "buzzed":    onBuzzed(data);    break;
+            case "answered":  onAnswered(data);  break;
+            case "revealed":  onRevealed(data);  break;
+            case "game_over": onGameOver(data);  break;
+          }
+        }
+      }
+    );
+
+    buzzBtn.addEventListener("click", function() {
+      if (buzzBtn.disabled) return;
+      trivia.perform("buzz", {});
+      buzzBtn.disabled = true;
+      buzzBtn.textContent = "...";
+      if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+    });
+
+    function onQuestion(data) {
+      buzzed = false; myTurn = false;
+      triviaAnswers.style.display = "none";
+      triviaAnswers.innerHTML = "";
+      buzzBtn.disabled = false;
+      buzzBtn.textContent = "BUZZ!";
+      setStatus("Q" + (data.q_index + 1) + "/" + data.total + " — tap to buzz in!");
+    }
+
+    function onBuzzed(data) {
+      buzzed = true;
+      if (data.slot === slot) {
+        myTurn = true;
+        buzzBtn.style.display = "none";
+        setStatus("You buzzed! Pick your answer:");
+        showAnswers(data.options);
+        if (navigator.vibrate) navigator.vibrate(80);
+      } else {
+        myTurn = false;
+        buzzBtn.disabled = true;
+        buzzBtn.textContent = "⏸";
+        setStatus(esc(data.name) + " buzzed in...");
+      }
+    }
+
+    function onAnswered(data) {
+      triviaAnswers.innerHTML = "";
+      triviaAnswers.style.display = "none";
+      buzzBtn.style.display = "";
+      buzzBtn.textContent = "BUZZ!";
+
+      if (data.slot === slot) {
+        if (data.correct) {
+          setStatus("Correct! +1 point");
+          buzzBtn.disabled = true;
+          buzzBtn.textContent = "✓";
+        } else {
+          setStatus("Wrong! Wait for the next question.");
+          buzzBtn.disabled = true;
+          buzzBtn.textContent = "✗";
+        }
+      } else {
+        if (data.correct) {
+          setStatus(esc(data.name) + " got it right!");
+          buzzBtn.disabled = true;
+        } else {
+          buzzBtn.disabled = false;
+          setStatus(esc(data.name) + " was wrong — buzz in!");
+        }
+      }
+    }
+
+    function onRevealed(data) {
+      triviaAnswers.innerHTML = "";
+      triviaAnswers.style.display = "none";
+      buzzBtn.style.display = "";
+      buzzBtn.disabled = true;
+      buzzBtn.textContent = "→";
+      setStatus("Next question coming up...");
+    }
+
+    function onGameOver(data) {
+      buzzBtn.style.display = "none";
+      triviaAnswers.style.display = "none";
+      setStatus("Game over! Check the TV for results.");
+    }
+
+    function showAnswers(options) {
+      triviaAnswers.innerHTML = "";
+      options.forEach(function(opt, i) {
+        var btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.innerHTML = '<span class="aletter">' + letters[i] + '</span>' + esc(opt);
+        btn.addEventListener("click", function() {
+          if (!myTurn) return;
+          myTurn = false;
+          trivia.perform("answer", { index: i });
+          triviaAnswers.querySelectorAll(".answer-btn").forEach(function(b) { b.disabled = true; });
+          if (navigator.vibrate) navigator.vibrate(40);
+        });
+        triviaAnswers.appendChild(btn);
+      });
+      triviaAnswers.style.display = "grid";
+    }
+
+    function setStatus(msg) {
+      triviaStatus.innerHTML = msg;
+    }
+
+    function esc(str) {
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+  // ---- CONTROLLER MODE (non-trivia) -------------------------------------
+  } else {
 
   // Subscribe to ControllerChannel as a phone (with slot) to send inputs
   var input = consumer.subscriptions.create(
@@ -254,4 +454,6 @@
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) releaseJoy();
   });
+
+  } // end controller mode
 </script>

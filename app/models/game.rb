@@ -19,7 +19,7 @@ class Game
     {
       slug: "corrupted",
       title: "Corrupted",
-      creators: "Cooper",
+      creators: "Charlie & Cooper",
       tagline: "First-person raycaster zombie fighter, 6 themed worlds",
       path: "/games/corrupted.html",
       icon: "zombie"
@@ -47,6 +47,14 @@ class Game
       tagline: "Chill exploration, time-based scoring, no pressure",
       path: "/games/bloom.html",
       icon: "bloom"
+    },
+    {
+      slug: "trivia",
+      title: "Family Trivia",
+      creators: "Az",
+      tagline: "Scan the QR code — everyone plays on their phone. First to buzz wins!",
+      path: "/trivia",
+      icon: "trivia"
     }
   ].freeze
 

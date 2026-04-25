@@ -13,6 +13,8 @@ module ApplicationHelper
       cat_icon
     when "bloom"
       bloom_icon
+    when "trivia"
+      trivia_icon
     else
       placeholder_icon
     end
@@ -194,6 +196,32 @@ module ApplicationHelper
         <circle cx="20" cy="82" r="1" fill="#ffeb3b"/>
         <circle cx="80" cy="85" r="3" fill="#fff"/>
         <circle cx="80" cy="85" r="1" fill="#ffeb3b"/>
+      </svg>
+    SVG
+  end
+
+  def trivia_icon
+    <<~SVG.html_safe
+      <svg class="icon-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tq-bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0d1b2a"/>
+            <stop offset="100%" stop-color="#1a1a3e"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#tq-bg)" rx="8"/>
+        <!-- Question mark large -->
+        <text x="50" y="58" text-anchor="middle" fill="#00ffc8" font-size="54" font-family="Georgia,serif" font-weight="bold">?</text>
+        <!-- Small coloured dots (players) -->
+        <circle cx="22" cy="82" r="7" fill="#ff4757"/>
+        <circle cx="40" cy="82" r="7" fill="#3742fa"/>
+        <circle cx="60" cy="82" r="7" fill="#ffa502"/>
+        <circle cx="78" cy="82" r="7" fill="#2ed573"/>
+        <!-- Buzz lines -->
+        <line x1="10" y1="30" x2="20" y2="30" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="80" y1="30" x2="90" y2="30" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="15" y1="22" x2="21" y2="28" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="85" y1="22" x2="79" y2="28" stroke="#ffd700" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     SVG
   end

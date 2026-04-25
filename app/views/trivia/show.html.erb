@@ -1,0 +1,574 @@
+<style>
+  [hidden] { display: none !important; }
+
+  :root {
+    --c1: #ff4757; --c2: #3742fa; --c3: #ffa502; --c4: #2ed573;
+    --bg: #0a0a12; --surface: #13131f; --border: rgba(255,255,255,0.08);
+    --teal: #00ffc8;
+  }
+
+  .tq {
+    width: 100vw; height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(ellipse at top right, rgba(0,255,200,0.07), transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(255,0,170,0.05), transparent 50%),
+      var(--bg);
+    padding: 2vh 3vw;
+    gap: 1.5vh;
+    overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  .tq-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2vw; overflow: hidden;
+  }
+  .tq-logo {
+    font-size: clamp(1.8rem, 3.5vw, 3.5rem); font-weight: 900;
+    background: linear-gradient(135deg, #00ffc8, #00a3ff, #ff00aa);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    flex-shrink: 0;
+  }
+  .tq-title {
+    font-size: clamp(1.2rem, 2vw, 2rem); font-weight: 700; color: #fff;
+    flex: 1; text-align: center;
+  }
+  .tq-code {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: var(--teal);
+    font-family: "Courier New", monospace; font-weight: 700;
+    background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.3);
+    padding: 0.4em 0.8em; border-radius: 0.5em; flex-shrink: 0;
+  }
+
+  /* ---- Scores bar ---- */
+  .tq-scores {
+    display: flex; gap: 1vw;
+  }
+  .tq-player {
+    flex: 1; display: flex; align-items: center; gap: 0.7vw;
+    background: var(--surface); border-radius: 0.6vw;
+    padding: 0.6vh 1vw;
+    border: 2px solid var(--border);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 0;
+  }
+  .tq-player.is-buzzing {
+    border-color: var(--buzz-color, var(--teal));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--buzz-color, var(--teal)) 30%, transparent);
+  }
+  .tq-dot {
+    width: 0.8vw; height: 0.8vw; border-radius: 50%; flex-shrink: 0;
+    background: var(--slot-color);
+  }
+  .tq-pname {
+    font-size: clamp(0.8rem, 1.1vw, 1.1rem); font-weight: 700; color: #fff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .tq-pts {
+    margin-left: auto; font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    font-family: "Courier New", monospace;
+  }
+  .tq-empty {
+    flex: 1; background: var(--surface); border: 2px dashed var(--border);
+    border-radius: 0.6vw; display: flex; align-items: center; justify-content: center;
+    color: #334; font-size: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  /* ---- Main content area ---- */
+  .tq-main { display: flex; align-items: center; justify-content: center; min-height: 0; grid-row: 3; }
+  .tq-footer { grid-row: 4; }
+
+  /* ---- Lobby ---- */
+  .tq-lobby {
+    display: grid; grid-template-columns: 1fr auto; gap: 5vw;
+    align-items: center; width: 100%;
+  }
+  .tq-lobby-left { display: flex; flex-direction: column; gap: 2vh; }
+  .tq-lobby-heading {
+    font-size: clamp(2rem, 4vw, 4.5rem); font-weight: 900; color: #fff;
+    line-height: 1.1;
+  }
+  .tq-lobby-heading span { color: var(--teal); }
+  .tq-lobby-sub { font-size: clamp(1rem, 1.5vw, 1.5rem); color: #8ab4c8; }
+  .tq-lobby-players {
+    display: flex; flex-direction: column; gap: 1vh; margin-top: 1vh;
+  }
+  .tq-joined-player {
+    display: flex; align-items: center; gap: 1vw;
+    font-size: clamp(1rem, 1.5vw, 1.5rem); font-weight: 700; color: #fff;
+  }
+  .tq-joined-dot {
+    width: 1vw; height: 1vw; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .tq-no-players { color: #556; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
+  .tq-start-btn {
+    align-self: flex-start; margin-top: 2vh;
+    padding: 1.2vh 3vw; border-radius: 1vw;
+    background: var(--teal); color: #0a0a12;
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    border: none; cursor: pointer; letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .tq-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tq-start-btn:not(:disabled):hover { transform: scale(1.04); }
+  .tq-qr-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+    padding: 2vh 2vw; background: rgba(0,255,200,0.06);
+    border: 2px solid rgba(0,255,200,0.3); border-radius: 1.2vw;
+  }
+  .tq-qr-label { font-size: clamp(0.9rem, 1.2vw, 1.2rem); color: #cfe; text-align: center; line-height: 1.4; }
+  .tq-qr-label strong { display: block; color: var(--teal); font-size: clamp(1rem, 1.4vw, 1.4rem); margin-bottom: 0.4vh; }
+  .tq-qr-img { width: clamp(160px, 17vw, 260px); height: clamp(160px, 17vw, 260px); }
+  .tq-qr-img svg { width: 100%; height: 100%; display: block; }
+
+  /* ---- Question ---- */
+  .tq-question-wrap {
+    display: flex; flex-direction: column; gap: 2.5vh; width: 100%;
+  }
+  .tq-category-badge {
+    align-self: flex-start;
+    padding: 0.3em 0.9em; border-radius: 2em;
+    background: rgba(0,255,200,0.12); border: 1px solid rgba(0,255,200,0.3);
+    font-size: clamp(0.7rem, 1vw, 1rem); font-weight: 700; color: var(--teal);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .tq-question-text {
+    font-size: clamp(1.6rem, 3.2vw, 3.5rem); font-weight: 800; color: #fff;
+    line-height: 1.2;
+  }
+  .tq-options {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5vh 2vw;
+  }
+  .tq-option {
+    display: flex; align-items: center; gap: 1.2vw;
+    padding: 1.8vh 1.5vw; border-radius: 0.8vw;
+    background: var(--surface); border: 2px solid var(--border);
+    font-size: clamp(1rem, 1.6vw, 1.7rem); font-weight: 700; color: #fff;
+    transition: border-color 0.3s, background 0.3s, opacity 0.3s;
+  }
+  .tq-option-letter {
+    width: 1.8em; height: 1.8em; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Courier New", monospace; font-size: 0.85em; font-weight: 900;
+    color: #8ab4c8;
+  }
+  .tq-option.is-correct {
+    background: rgba(46,213,115,0.15); border-color: #2ed573;
+  }
+  .tq-option.is-correct .tq-option-letter { background: #2ed573; color: #0a0a12; }
+  .tq-option.is-wrong { opacity: 0.3; }
+
+  /* ---- Buzz flash overlay ---- */
+  .tq-buzz-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 2vh;
+    background: color-mix(in srgb, var(--buzz-color, var(--teal)) 15%, #0a0a12);
+    border: 6px solid var(--buzz-color, var(--teal));
+    animation: buzz-in 0.25s ease-out;
+    pointer-events: none;
+  }
+  @keyframes buzz-in {
+    from { opacity: 0; transform: scale(1.04); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .tq-buzz-name {
+    font-size: clamp(3rem, 8vw, 9rem); font-weight: 900; color: #fff;
+    text-shadow: 0 0 40px var(--buzz-color, var(--teal));
+    letter-spacing: -0.02em;
+  }
+  .tq-buzz-sub {
+    font-size: clamp(1.2rem, 2.5vw, 2.5rem); color: rgba(255,255,255,0.7);
+    font-weight: 600;
+  }
+
+  /* ---- Game Over ---- */
+  .tq-gameover {
+    display: flex; flex-direction: column; align-items: center; gap: 3vh; width: 100%;
+  }
+  .tq-gameover-title {
+    font-size: clamp(2.5rem, 6vw, 7rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tq-final-scores {
+    display: flex; gap: 3vw; align-items: flex-end; justify-content: center;
+  }
+  .tq-final-player {
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+    padding: 2vh 2.5vw; border-radius: 1vw;
+    background: var(--surface); border: 3px solid var(--slot-color, #334);
+    min-width: 12vw;
+  }
+  .tq-final-player.is-winner { border-width: 4px; }
+  .tq-final-name { font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 700; color: #fff; }
+  .tq-final-pts {
+    font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 900;
+    font-family: "Courier New", monospace;
+    color: var(--slot-color, var(--teal));
+  }
+  .tq-crown { font-size: clamp(1.5rem, 3vw, 3rem); }
+
+  /* ---- Footer ---- */
+  .tq-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1.5vh; border-top: 1px solid var(--border);
+  }
+  .tq-progress { font-size: clamp(0.85rem, 1.2vw, 1.2rem); color: #556; }
+  .tq-next-btn {
+    padding: 0.9vh 2.5vw; border-radius: 0.7vw;
+    background: rgba(0,255,200,0.1); border: 2px solid rgba(0,255,200,0.35);
+    color: var(--teal); font-size: clamp(0.9rem, 1.3vw, 1.3rem); font-weight: 700;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .tq-next-btn:hover { background: rgba(0,255,200,0.2); border-color: var(--teal); }
+  .tq-status { font-size: clamp(0.8rem, 1vw, 1rem); color: #445; }
+</style>
+
+<div class="tq" id="tq">
+  <header class="tq-header">
+    <div class="tq-logo">EZ-AZ</div>
+    <div class="tq-title">Family Trivia</div>
+    <div class="tq-code">Room <%= @room.code %></div>
+  </header>
+
+  <!-- Score bar (hidden in lobby) -->
+  <div class="tq-scores" id="tq-scores" hidden>
+    <% 4.times do |i| %>
+      <div class="tq-empty" id="tq-slot-<%= i+1 %>">P<%= i+1 %> empty</div>
+    <% end %>
+  </div>
+
+  <main class="tq-main" id="tq-main">
+
+    <!-- LOBBY -->
+    <div class="tq-lobby" id="tq-lobby">
+      <div class="tq-lobby-left">
+        <div class="tq-lobby-heading">Family<br><span>Trivia</span></div>
+        <div class="tq-lobby-sub">Scan the QR code on your phone to join</div>
+        <div class="tq-lobby-players" id="tq-lobby-players">
+          <% if @members.any? %>
+            <% @members.each do |m| %>
+              <div class="tq-joined-player">
+                <span class="tq-joined-dot" style="color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>; background: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>"></span>
+                <%= m.name %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="tq-no-players">No players yet — waiting for scans...</div>
+          <% end %>
+        </div>
+        <button class="tq-start-btn" id="tq-start-btn" <%= @members.empty? ? "disabled" : "" %>>
+          Start Game
+        </button>
+      </div>
+      <div class="tq-qr-box">
+        <div class="tq-qr-label">
+          <strong>Scan to join</strong>
+          ez-az.net
+        </div>
+        <div class="tq-qr-img"><%= @qr_code_svg %></div>
+      </div>
+    </div>
+
+    <!-- QUESTION (hidden until game starts) -->
+    <div class="tq-question-wrap" id="tq-question-wrap" hidden>
+      <div class="tq-category-badge" id="tq-category">Category</div>
+      <div class="tq-question-text" id="tq-question-text">Question goes here</div>
+      <div class="tq-options" id="tq-options">
+        <% %w[A B C D].each do |letter| %>
+          <div class="tq-option" data-letter="<%= letter %>">
+            <div class="tq-option-letter"><%= letter %></div>
+            <span class="tq-option-text">Option</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- GAME OVER (hidden until finished) -->
+    <div class="tq-gameover" id="tq-gameover" hidden>
+      <div class="tq-gameover-title">Game Over!</div>
+      <div class="tq-final-scores" id="tq-final-scores"></div>
+    </div>
+
+  </main>
+
+  <!-- Buzz overlay (hidden) -->
+  <div class="tq-buzz-overlay" id="tq-buzz-overlay" hidden></div>
+
+  <footer class="tq-footer">
+    <div class="tq-progress" id="tq-progress">Waiting to start</div>
+    <button class="tq-next-btn" id="tq-next-btn" hidden>Next Question &rarr;</button>
+    <div class="tq-status" id="tq-status">Ready</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var SLOT_COLORS = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var consumer = createConsumer();
+  var code = <%= @room.code.to_json.html_safe %>;
+
+  // State
+  var phase = 'lobby';
+  var currentAnswer = -1;
+  var knownMembers = [];  // accumulates all joined players
+  var qIndex = 0, qTotal = 0;
+
+  // Elements
+  var scoresEl   = document.getElementById('tq-scores');
+  var lobbyEl    = document.getElementById('tq-lobby');
+  var questionEl = document.getElementById('tq-question-wrap');
+  var gameoverEl = document.getElementById('tq-gameover');
+  var buzzEl     = document.getElementById('tq-buzz-overlay');
+  var progressEl = document.getElementById('tq-progress');
+  var nextBtn    = document.getElementById('tq-next-btn');
+  var startBtn   = document.getElementById('tq-start-btn');
+
+  // Lobby player list
+  var lobbyPlayersEl = document.getElementById('tq-lobby-players');
+
+  // Subscribe to RoomChannel for player joins
+  consumer.subscriptions.create(
+    { channel: 'RoomChannel', code: code },
+    {
+      received: function(data) {
+        if (!data) return;
+        if (data.type === 'member_joined') {
+          refreshLobbyPlayers(data.members);
+        }
+      }
+    }
+  );
+
+  // Subscribe to TriviaChannel as TV
+  var trivia = consumer.subscriptions.create(
+    { channel: 'TriviaChannel', code: code, role: 'tv' },
+    {
+      connected: function() { setStatus('Connected'); },
+      disconnected: function() { setStatus('Disconnected'); },
+      received: function(data) {
+        if (!data) return;
+        switch (data.type) {
+          case 'question': onQuestion(data); break;
+          case 'buzzed':   onBuzzed(data);   break;
+          case 'answered': onAnswered(data); break;
+          case 'revealed': onRevealed(data); break;
+          case 'game_over': onGameOver(data); break;
+        }
+      }
+    }
+  );
+
+  // Start button
+  startBtn.addEventListener('click', function() {
+    trivia.perform('start_game', {});
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+  });
+
+  // Next question button
+  nextBtn.addEventListener('click', function() {
+    nextBtn.hidden = true;
+    trivia.perform('next_question', {});
+  });
+
+  // Reveal button (keyboard shortcut: Space on TV)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === ' ' && phase === 'question') {
+      e.preventDefault();
+      trivia.perform('reveal', {});
+    }
+    if (e.key === 'Enter' && !nextBtn.hidden) {
+      e.preventDefault();
+      nextBtn.click();
+    }
+  });
+
+  function onQuestion(data) {
+    currentAnswer = data.answer;
+    qIndex = data.q_index + 1;
+    qTotal = data.total;
+    phase = 'question';
+
+    hideBuzz();
+    showPhase('question');
+    // Populate score bar from known members on first question
+    if (qIndex === 1 && knownMembers.length) renderScoreBar(knownMembers);
+    nextBtn.hidden = true;
+
+    document.getElementById('tq-category').textContent = data.category;
+    document.getElementById('tq-question-text').textContent = data.question;
+
+    var letters = ['A','B','C','D'];
+    var opts = questionEl.querySelectorAll('.tq-option');
+    opts.forEach(function(el, i) {
+      el.className = 'tq-option';
+      el.querySelector('.tq-option-text').textContent = data.options[i] || '';
+    });
+
+    progressEl.textContent = 'Question ' + qIndex + ' of ' + qTotal;
+    setStatus('Buzzers open');
+  }
+
+  function onBuzzed(data) {
+    phase = 'buzzed';
+    setStatus(data.name + ' buzzed!');
+
+    buzzEl.removeAttribute('hidden');
+    buzzEl.style.setProperty('--buzz-color', data.color);
+    buzzEl.innerHTML =
+      '<div class="tq-buzz-name">' + esc(data.name) + '</div>' +
+      '<div class="tq-buzz-sub">is answering...</div>';
+
+    // Pulse the player's score entry
+    var slotEl = scoresEl.querySelector('[data-slot="' + data.slot + '"]');
+    if (slotEl) {
+      slotEl.style.setProperty('--buzz-color', data.color);
+      slotEl.classList.add('is-buzzing');
+      setTimeout(function() { slotEl.classList.remove('is-buzzing'); }, 2000);
+    }
+  }
+
+  function onAnswered(data) {
+    hideBuzz();
+
+    var opts = questionEl.querySelectorAll('.tq-option');
+    if (data.correct) {
+      phase = 'revealed';
+      opts.forEach(function(el, i) {
+        el.className = 'tq-option ' + (i === data.correct_index ? 'is-correct' : 'is-wrong');
+      });
+      updateScores(data.scores);
+      setStatus(data.name + ' got it right! +1 point');
+      nextBtn.hidden = false;
+      nextBtn.textContent = qIndex >= qTotal ? 'See Results' : 'Next Question →';
+    } else {
+      phase = 'question';
+      setStatus(data.name + ' got it wrong — buzzers open again');
+    }
+  }
+
+  function onRevealed(data) {
+    hideBuzz();
+    phase = 'revealed';
+
+    var opts = questionEl.querySelectorAll('.tq-option');
+    opts.forEach(function(el, i) {
+      el.className = 'tq-option ' + (i === data.correct_index ? 'is-correct' : 'is-wrong');
+    });
+    updateScores(data.scores);
+    setStatus('Answer revealed');
+    nextBtn.hidden = false;
+    nextBtn.textContent = qIndex >= qTotal ? 'See Results' : 'Next Question →';
+  }
+
+  function onGameOver(data) {
+    phase = 'game_over';
+    showPhase('gameover');
+    nextBtn.hidden = true;
+    progressEl.textContent = 'Game over!';
+
+    var finalEl = document.getElementById('tq-final-scores');
+    finalEl.innerHTML = '';
+    data.scores.forEach(function(p, idx) {
+      var div = document.createElement('div');
+      div.className = 'tq-final-player' + (idx === 0 ? ' is-winner' : '');
+      div.style.setProperty('--slot-color', p.color);
+      div.innerHTML =
+        (idx === 0 ? '<div class="tq-crown">👑</div>' : '') +
+        '<div class="tq-final-name">' + esc(p.name) + '</div>' +
+        '<div class="tq-final-pts">' + p.points + '</div>';
+      finalEl.appendChild(div);
+    });
+  }
+
+  function updateScores(scores) {
+    Object.entries(scores).forEach(function(entry) {
+      var slot = parseInt(entry[0]);
+      var pts  = entry[1];
+      var el = scoresEl.querySelector('[data-slot="' + slot + '"]');
+      if (el) el.querySelector('.tq-pts').textContent = pts;
+    });
+  }
+
+  function refreshLobbyPlayers(members) {
+    if (!members || !members.length) return;
+    // Keep knownMembers up to date (players only)
+    knownMembers = members.filter(function(m) { return m.role !== 'host'; });
+
+    lobbyPlayersEl.innerHTML = '';
+    knownMembers.forEach(function(m) {
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var div = document.createElement('div');
+      div.className = 'tq-joined-player';
+      div.innerHTML =
+        '<span class="tq-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
+        esc(m.name || ('Player ' + m.slot));
+      lobbyPlayersEl.appendChild(div);
+    });
+    startBtn.disabled = false;
+
+    if (phase !== 'lobby') renderScoreBar(knownMembers);
+  }
+
+  function renderScoreBar(members) {
+    members.forEach(function(m) {
+      if (m.role === 'host') return;
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var existing = scoresEl.querySelector('[data-slot="' + m.slot + '"]');
+      if (existing) {
+        existing.querySelector('.tq-pname').textContent = m.name;
+      } else {
+        var el = document.getElementById('tq-slot-' + m.slot);
+        if (!el) return;
+        el.className = 'tq-player';
+        el.setAttribute('data-slot', m.slot);
+        el.style.setProperty('--slot-color', color);
+        el.innerHTML =
+          '<div class="tq-dot" style="background:' + color + '"></div>' +
+          '<div class="tq-pname">' + esc(m.name) + '</div>' +
+          '<div class="tq-pts" style="color:' + color + '">0</div>';
+      }
+    });
+  }
+
+  function showPhase(name) {
+    lobbyEl.hidden    = name !== 'lobby';
+    questionEl.hidden = name !== 'question';
+    gameoverEl.hidden = name !== 'gameover';
+    scoresEl.hidden   = name === 'lobby';
+    if (name !== 'lobby') {
+      // Build score bar from current players on first question
+      var currentMembers = Array.from(lobbyPlayersEl.querySelectorAll('.tq-joined-player')).map(function(el, i) {
+        return null; // Members come in via RoomChannel events
+      });
+    }
+  }
+
+  function hideBuzz() {
+    buzzEl.setAttribute('hidden', '');
+  }
+
+  function setStatus(msg) {
+    document.getElementById('tq-status').textContent = msg;
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Seed knownMembers from server-rendered list (players present at page load)
+  var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
+  if (initMembers.length) {
+    knownMembers = initMembers;
+    renderScoreBar(initMembers);
+  }
+</script>

@@ -7,7 +7,8 @@ class Score < ApplicationRecord
     "dodgeball" => :desc,
     "descent" => :asc,
     "corrupted" => :desc,
-    "az-cipher" => :desc
+    "az-cipher" => :desc,
+    "trivia" => :desc
   }.freeze
 
   DEFAULT_NAMES = {

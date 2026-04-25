@@ -1,0 +1,139 @@
+- question: "What is the fastest land animal?"
+  options: ["Cheetah", "Lion", "Greyhound", "Leopard"]
+  answer: 0
+  category: "Animals"
+
+- question: "How many legs does a spider have?"
+  options: ["Six", "Eight", "Ten", "Four"]
+  answer: 1
+  category: "Animals"
+
+- question: "What do you call a baby kangaroo?"
+  options: ["Cub", "Pup", "Joey", "Kit"]
+  answer: 2
+  category: "Animals"
+
+- question: "What is the largest animal on Earth?"
+  options: ["Elephant", "Blue Whale", "Giraffe", "Giant Squid"]
+  answer: 1
+  category: "Animals"
+
+- question: "What animal has the longest neck?"
+  options: ["Ostrich", "Flamingo", "Giraffe", "Camel"]
+  answer: 2
+  category: "Animals"
+
+- question: "What is Australia's capital city?"
+  options: ["Sydney", "Melbourne", "Brisbane", "Canberra"]
+  answer: 3
+  category: "Australia"
+
+- question: "What is the name of the large red rock in the middle of Australia?"
+  options: ["Kata Tjuta", "Uluru", "Kings Canyon", "Mt Kosciuszko"]
+  answer: 1
+  category: "Australia"
+
+- question: "Which Australian animal carries its babies in a pouch?"
+  options: ["Platypus", "Wombat", "Koala", "Dingo"]
+  answer: 2
+  category: "Australia"
+
+- question: "What planet is closest to the Sun?"
+  options: ["Venus", "Earth", "Mars", "Mercury"]
+  answer: 3
+  category: "Science"
+
+- question: "What do plants need from the air to make food?"
+  options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"]
+  answer: 2
+  category: "Science"
+
+- question: "What is the boiling point of water in Celsius?"
+  options: ["80°C", "90°C", "100°C", "110°C"]
+  answer: 2
+  category: "Science"
+
+- question: "How many bones are in the adult human body?"
+  options: ["106", "206", "306", "406"]
+  answer: 1
+  category: "Science"
+
+- question: "Which planet has a famous ring around it?"
+  options: ["Jupiter", "Uranus", "Neptune", "Saturn"]
+  answer: 3
+  category: "Science"
+
+- question: "What is the chemical symbol for gold?"
+  options: ["Go", "Gd", "Au", "Ag"]
+  answer: 2
+  category: "Science"
+
+- question: "What is the name of Elsa's sister in Frozen?"
+  options: ["Olaf", "Anna", "Kristoff", "Sven"]
+  answer: 1
+  category: "Movies & TV"
+
+- question: "In Minecraft, what does a Creeper drop when you kill it?"
+  options: ["Coal", "String", "Gunpowder", "Bones"]
+  answer: 2
+  category: "Games"
+
+- question: "What colour is Luigi's hat in Super Mario?"
+  options: ["Red", "Yellow", "Blue", "Green"]
+  answer: 3
+  category: "Games"
+
+- question: "In Pokemon, what type is Pikachu?"
+  options: ["Fire", "Water", "Electric", "Grass"]
+  answer: 2
+  category: "Games"
+
+- question: "What vegetable makes you cry when you cut it?"
+  options: ["Carrot", "Garlic", "Onion", "Capsicum"]
+  answer: 2
+  category: "Food"
+
+- question: "What fruit is used to make chocolate?"
+  options: ["Mango", "Cacao", "Avocado", "Coconut"]
+  answer: 1
+  category: "Food"
+
+- question: "How many players are on a cricket team?"
+  options: ["9", "10", "11", "12"]
+  answer: 2
+  category: "Sport"
+
+- question: "How many points is a try worth in rugby union?"
+  options: ["3", "4", "5", "6"]
+  answer: 2
+  category: "Sport"
+
+- question: "How many sides does a hexagon have?"
+  options: ["5", "6", "7", "8"]
+  answer: 1
+  category: "Maths"
+
+- question: "What is 7 multiplied by 8?"
+  options: ["48", "54", "56", "64"]
+  answer: 2
+  category: "Maths"
+
+- question: "What is the smallest country in the world?"
+  options: ["Monaco", "San Marino", "Vatican City", "Liechtenstein"]
+  answer: 2
+  category: "World"
+
+- question: "How many stripes are on the American flag?"
+  options: ["11", "12", "13", "14"]
+  answer: 2
+  category: "World"
+
+- question: "What language is spoken in Brazil?"
+  options: ["Spanish", "English", "French", "Portuguese"]
+  answer: 3
+  category: "World"
+
+- question: "What colour is a ruby?"
+  options: ["Blue", "Green", "Red", "Purple"]
+  answer: 2
+  category: "World"
