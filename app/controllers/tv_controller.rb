@@ -9,7 +9,7 @@ class TvController < ApplicationController
     @version = EzAz::Version::STRING
     @remote_token = SecureRandom.alphanumeric(6).upcase
 
-    remote_url = tv_remote_url(token: @remote_token)
+    remote_url = tv_remote_url(token: @remote_token, v: @version)
     svg = RQRCode::QRCode.new(remote_url).as_svg(
       color: "00ffc8",
       shape_rendering: "crispEdges",
