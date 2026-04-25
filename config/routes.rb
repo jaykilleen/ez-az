@@ -6,8 +6,8 @@ Rails.application.routes.draw do
   get "/tv",    to: "tv#show"
   get "/learn", to: "learn#show"
 
-  get  "/trivia",      to: "trivia#new",  as: :new_trivia
-  get  "/trivia/:code", to: "trivia#show", as: :trivia
+  get  "/games/trivia",       to: "trivia#new",  as: :new_trivia
+  get  "/games/trivia/:code", to: "trivia#show", as: :trivia
 
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do

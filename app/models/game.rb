@@ -53,7 +53,7 @@ class Game
       title: "Family Trivia",
       creators: "Az",
       tagline: "Scan the QR code — everyone plays on their phone. First to buzz wins!",
-      path: "/trivia",
+      path: "/games/trivia",
       icon: "trivia"
     }
   ].freeze
