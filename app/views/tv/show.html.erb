@@ -452,6 +452,11 @@
   var token = <%= @room.tv_token.to_json.html_safe %>;
   sessionStorage.setItem('tvRemoteToken', token);
   sessionStorage.setItem('tvAcPath', '<%= asset_path("actioncable.esm.js") %>');
+
+  // Pin the room token in the URL so reloading this tab reuses the same room
+  if (!new URLSearchParams(location.search).get('t')) {
+    history.replaceState({}, '', '/tv?t=' + token);
+  }
   var consumer = createConsumer();
 
   consumer.subscriptions.create(

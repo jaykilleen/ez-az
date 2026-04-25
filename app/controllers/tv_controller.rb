@@ -10,7 +10,9 @@ class TvController < ApplicationController
     @tv_cols      = [[all_count, 1].max, 5].min
     @version      = EzAz::Version::STRING
 
-    @room = Room.create_tv_session!
+    token = params[:t].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 8]
+    @room = Room.active.find_by(tv_token: token) if token.present?
+    @room ||= Room.create_tv_session!
 
     remote_url = tv_remote_url(token: @room.tv_token, code: @room.code, v: @version)
     svg = RQRCode::QRCode.new(remote_url).as_svg(
