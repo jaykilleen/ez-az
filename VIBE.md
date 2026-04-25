@@ -65,6 +65,32 @@ Things we're building toward:
 
 ---
 
+### v20260425.2 — 26 April 2026
+
+**The store works on a wall now.**
+
+Jay put it plainly: if EZ-AZ is on a TV mounted to a wall and there's no keyboard, you're stuck. You can look at the shelf but you can't pick anything up. That's not a store. That's a poster.
+
+So we fixed it. The main store front now creates a TV session on load — same system the party mode uses, same ActionCable channel, same phone pairing. A small QR code appears in the bottom-right corner of the screen. Scan it on your phone, and your phone becomes the remote. D-pad to browse the shelf, select to open a game. The QR is always there, no button to press, no menu to find. Point your phone at the screen and you're in. That's the whole interaction.
+
+We tried a "click to reveal" button first, with a little phone emoji. Threw it out immediately. A toggle is the wrong pattern for a wall screen. Nobody's going to click anything. The QR just lives in the corner, quiet, always ready. When your phone connects, a small green dot lights up. That's it. No ceremony.
+
+One thing worth saying clearly: this is the same session token the whole site now uses. Navigate from the store to a game to the watch page and back again, and the phone follows you. It doesn't reconnect, it doesn't forget you. The token lives in sessionStorage and every page reads it. This was the real gap before — the store and the party system were two separate worlds, and your phone dropped out whenever you crossed between them. Now there's one world.
+
+**Watch — learning on the big screen.**
+
+`/watch` is the learning channel for the TV. Pick a topic, pick a video, it plays fullscreen. The same curated channels from the Learning Center, but laid out for a couch — big thumbnails, keyboard navigation, position saved so you can pick up where you left off. It went up in this version cycle along with everything else. The idea is that EZ-AZ isn't just a game shelf. It's a place you go with your family. Games one minute, learning the next, and the phone works for both.
+
+**Descent now works with a phone controller.**
+
+The maze runner was the only game on the shelf that didn't wire up to the TV Zone properly. Now it does. Scan the QR, connect, and your phone drives Descent the same way it drives any other game — D-pad to move, action button for the sprint. It uses the same `tv-engine.js` as the other games, so once the pattern existed it was a short job to add it. This matters because Descent is the kind of game you want to play from the couch, slowly, with someone watching.
+
+**Housekeeping that sets up the next thing.**
+
+We renamed `docs/adr/` to `docs/decisions/` to match the cross-project standard — minor, but tidy. We also expanded `CLAUDE.md` with the full technical picture: Ruby version, Rails version, app structure, all the things an AI assistant needs to pick up the project cold without asking. The gap between "here's what the store is" and "here's how the store is built" was getting in the way of fast sessions. Now it's documented where it belongs.
+
+---
+
 ### v20260425.1 — 25 April 2026
 
 **Family Trivia. The living room game show.**
