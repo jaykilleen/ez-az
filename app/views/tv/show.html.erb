@@ -492,6 +492,7 @@
   import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
 
   var token = <%= @remote_token.to_json.html_safe %>;
+  sessionStorage.setItem('tvRemoteToken', token);
   var consumer = createConsumer();
 
   consumer.subscriptions.create(

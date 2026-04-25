@@ -229,12 +229,27 @@
   }
   .tq-next-btn:hover { background: rgba(0,255,200,0.2); border-color: var(--teal); }
   .tq-status { font-size: clamp(0.8rem, 1vw, 1rem); color: #445; }
+
+  .tq-exit-btn {
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    color: #556;
+    text-decoration: none;
+    padding: 0.3em 0.9em;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0.5em;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer; background: none;
+    font-family: inherit;
+  }
+  .tq-exit-btn:hover { color: #ff4757; border-color: rgba(255,69,87,0.4); }
 </style>
 
 <div class="tq" id="tq">
   <header class="tq-header">
     <div class="tq-logo">EZ-AZ</div>
     <div class="tq-title">Family Trivia</div>
+    <button class="tq-exit-btn" id="tq-exit-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
     <div class="tq-code">Room <%= @room.code %></div>
   </header>
 
@@ -376,19 +391,30 @@
 
   // Next question button
   nextBtn.addEventListener('click', function() {
+    if (gameOver) { window.location.href = '/tv'; return; }
     nextBtn.hidden = true;
     trivia.perform('next_question', {});
   });
 
-  // Reveal button (keyboard shortcut: Space on TV)
+  var gameOver = false;
+
+  // Keyboard / TV-remote handler
   document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.location.href = '/tv';
+      return;
+    }
     if (e.key === ' ' && phase === 'question') {
       e.preventDefault();
       trivia.perform('reveal', {});
     }
-    if (e.key === 'Enter' && !nextBtn.hidden) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      nextBtn.click();
+      if (phase === 'lobby' && !startBtn.disabled) {
+        startBtn.click();
+      } else if (!nextBtn.hidden) {
+        nextBtn.click();
+      }
     }
   });
 
@@ -472,8 +498,10 @@
 
   function onGameOver(data) {
     phase = 'game_over';
+    gameOver = true;
     showPhase('gameover');
-    nextBtn.hidden = true;
+    nextBtn.hidden = false;
+    nextBtn.textContent = '← Back to Store';
     progressEl.textContent = 'Game over!';
 
     var finalEl = document.getElementById('tq-final-scores');
@@ -570,5 +598,25 @@
   if (initMembers.length) {
     knownMembers = initMembers;
     renderScoreBar(initMembers);
+  }
+
+  // Phone remote — pick up the token the TV shelf stored before navigating here
+  var remoteToken = sessionStorage.getItem('tvRemoteToken');
+  if (remoteToken) {
+    consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: remoteToken },
+      {
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          var keyMap = {
+            left: 'ArrowLeft', right: 'ArrowRight',
+            up: 'ArrowUp',     down: 'ArrowDown',
+            select: 'Enter',   back: 'Escape'
+          };
+          var key = keyMap[data.direction];
+          if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+        }
+      }
+    );
   }
 </script>
