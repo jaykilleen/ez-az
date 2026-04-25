@@ -96,6 +96,36 @@
     display: block;
   }
 
+  .tv-cast-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6vw;
+    padding: 0.8vh 1.2vw;
+    background: rgba(0, 255, 200, 0.06);
+    border: 2px solid rgba(0, 255, 200, 0.25);
+    border-radius: 0.8vw;
+    color: #8ab4c8;
+    font-size: clamp(0.8rem, 1vw, 1.1rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .tv-cast-btn:hover, .tv-cast-btn:focus {
+    background: rgba(0, 255, 200, 0.14);
+    border-color: #00ffc8;
+    color: #00ffc8;
+    outline: none;
+  }
+
+  .tv-cast-btn svg {
+    width: 1.4em;
+    height: 1.4em;
+    fill: currentColor;
+  }
+
   .tv-greeting {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -307,6 +337,12 @@
       <div class="tv-logo">EZ-AZ</div>
       <div class="tv-tagline">The Family Video Game Store</div>
     </div>
+    <button class="tv-cast-btn" id="tv-cast-btn" hidden title="Cast to TV">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M1 18v3h3a3 3 0 0 0-3-3zm0-4v2a7 7 0 0 1 7 7h2a9 9 0 0 0-9-9zm0-4v2a13 13 0 0 1 13 13h2A15 15 0 0 0 1 10zm20-6H3C1.9 4 1 4.9 1 6v3h2V6h18v12h-7v2h7c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+      </svg>
+      Cast
+    </button>
     <div class="tv-qr">
       <div class="tv-qr-label">
         <strong>Scan to control &amp; play</strong>
@@ -473,4 +509,25 @@
       }
     }
   );
+</script>
+
+<script>
+  (function() {
+    var castBtn = document.getElementById('tv-cast-btn');
+    if (!('presentation' in navigator)) return;
+
+    var request = new PresentationRequest([window.location.origin + '/tv']);
+
+    request.getAvailability().then(function(a) {
+      castBtn.hidden = !a.value;
+      a.onchange = function() { castBtn.hidden = !a.value; };
+    }).catch(function() {
+      // Some browsers don't support getAvailability — show the button anyway
+      castBtn.hidden = false;
+    });
+
+    castBtn.addEventListener('click', function() {
+      request.start().catch(function() {});
+    });
+  })();
 </script>
