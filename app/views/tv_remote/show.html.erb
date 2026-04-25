@@ -168,6 +168,45 @@
   .disconnected-title { font-size: 20px; color: #fff; font-weight: 700; }
   .disconnected-msg   { font-size: 14px; color: #556; line-height: 1.6; }
 
+  /* ── Party tab bar ── */
+  .zone-tabs {
+    flex-shrink: 0; display: flex;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.3);
+  }
+  .zone-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 10px 6px max(env(safe-area-inset-bottom, 0px), 10px);
+    background: none; border: none; color: #445;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  .zone-tab .tab-icon { font-size: 22px; line-height: 1; }
+  .zone-tab.active { color: #00ffc8; background: rgba(0,255,200,0.06); }
+  .zone-tab:active { background: rgba(255,255,255,0.05); }
+  .zone-tab-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ff4757; position: absolute; top: 8px; right: calc(50% - 18px);
+  }
+
+  /* ── Options panel (replaces main when Options tab active) ── */
+  .zone-options-panel {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 24px 20px;
+  }
+  .options-exit-btn {
+    display: block; width: 100%; max-width: 280px;
+    padding: 16px; border-radius: 12px; text-align: center;
+    background: rgba(255,71,87,0.12); border: 2px solid rgba(255,71,87,0.35);
+    color: #ff4757; font-size: 15px; font-weight: 700;
+    text-decoration: none; transition: background 0.15s;
+  }
+  .options-exit-btn:active { background: rgba(255,71,87,0.25); }
+  .options-hint { font-size: 12px; color: #334; text-align: center; line-height: 1.6; }
+
   /* ── D-pad ── */
   .zone-dpad {
     flex-shrink: 0; display: flex; flex-direction: column;
@@ -300,7 +339,27 @@
 
   </div>
 
-  <!-- D-pad — hidden when not browsing -->
+  <!-- Party tab bar — shown during game sessions -->
+  <div class="zone-tabs" id="zone-tabs" hidden>
+    <button class="zone-tab active" data-tab="game">
+      <span class="tab-icon">🎮</span>Game
+    </button>
+    <button class="zone-tab" data-tab="remote" style="position:relative">
+      <span class="tab-icon">🕹️</span>Remote
+      <span class="zone-tab-dot" id="remote-dot" hidden></span>
+    </button>
+    <button class="zone-tab" data-tab="options">
+      <span class="tab-icon">⚙️</span>Options
+    </button>
+  </div>
+
+  <!-- Options panel content -->
+  <div class="zone-options-panel" id="zone-options-panel" hidden>
+    <a href="/" class="options-exit-btn">← Exit to Store</a>
+    <div class="options-hint">You can also use the Remote tab<br>to control the TV D-pad.</div>
+  </div>
+
+  <!-- D-pad — shown when browsing non-game screens, or Remote tab active -->
   <div class="zone-dpad" id="zone-dpad" hidden>
     <div class="dpad">
       <div class="dpad-empty"></div>
@@ -335,6 +394,7 @@
   var roomChannel      = null;
   var myAnswerIndex    = null;
   var phoneTimerInterval = null;
+  var activeTab        = 'game';
   var letters          = ['A', 'B', 'C', 'D'];
   var DPAD_SCREENS     = new Set(['shelf', 'lobby', 'waiting', 'watching']);
   var SLOT_COLORS      = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
@@ -349,18 +409,49 @@
   var nameInput     = document.getElementById('name-input');
   var joinBtn       = document.getElementById('join-btn');
   var joinError     = document.getElementById('join-error');
-  var waitingBadge   = document.getElementById('waiting-badge');
-  var waitingPlayers = document.getElementById('waiting-players');
-  var buzzerInfo     = document.getElementById('buzzer-info');
+  var waitingBadge    = document.getElementById('waiting-badge');
+  var waitingPlayers  = document.getElementById('waiting-players');
+  var buzzerInfo      = document.getElementById('buzzer-info');
+  var zoneTabs        = document.getElementById('zone-tabs');
+  var zoneOptionsPanel = document.getElementById('zone-options-panel');
+  var remoteDot       = document.getElementById('remote-dot');
 
   // ── Screen switching ────────────────────────────────────────────────
+  var PARTY_SCREENS = new Set(['buzzer']);
+
   function showScreen(name) {
     currentScreen = name;
+    var isParty = PARTY_SCREENS.has(name);
+
     document.querySelectorAll('.zone-content').forEach(function(el) {
       el.hidden = el.dataset.screen !== name;
     });
-    zoneDpad.hidden = !DPAD_SCREENS.has(name);
+
+    zoneTabs.hidden = !isParty;
+
+    if (isParty) {
+      applyTab(activeTab);
+    } else {
+      zoneDpad.hidden = !DPAD_SCREENS.has(name);
+      zoneOptionsPanel.hidden = true;
+    }
   }
+
+  function applyTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.zone-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    var buzzerEl = document.querySelector('[data-screen="buzzer"]');
+    buzzerEl.hidden   = tab === 'options';
+    zoneDpad.hidden   = tab !== 'remote';
+    zoneOptionsPanel.hidden = tab !== 'options';
+    if (tab === 'game') remoteDot.hidden = true;
+  }
+
+  document.querySelectorAll('.zone-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyTab(btn.dataset.tab); });
+  });
 
   // ── TV Remote channel ────────────────────────────────────────────────
   var remote = consumer.subscriptions.create(
@@ -524,12 +615,19 @@
     showBuzzerPhase('reading');
     showScreen('buzzer');
     startPhoneTimer('phone-read-timer', 10);
+    // Pull player back to game tab for each new question; if on remote, show dot instead
+    if (activeTab === 'remote') {
+      remoteDot.hidden = false;
+    } else {
+      applyTab('game');
+    }
   }
 
   function onAnswering(data) {
     clearPhoneTimer();
     showBuzzerPhase('answering');
     startPhoneTimer('phone-ans-timer', 10);
+    if (activeTab !== 'options') applyTab('game');
     var answersEl = document.getElementById('buzz-answers');
     answersEl.innerHTML = '';
     data.options.forEach(function(opt, i) {
