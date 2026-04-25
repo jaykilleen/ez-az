@@ -16,7 +16,7 @@ class CodeController < ApplicationController
       blurb: "Lachie's top-down 2v2 tournament with a wandering ref and ball boys",
       category: "Games" },
     { path: "public/games/corrupted.html",    label: "Corrupted",
-      blurb: "Cooper's first-person zombie fighter — raycasting in plain JS",
+      blurb: "Charlie & Cooper's first-person zombie fighter — raycasting in plain JS",
       category: "Games" },
     { path: "public/games/descent.html",      label: "Descent",
       blurb: "Jaykill's maze runner with flashlight vision and fog of war",
