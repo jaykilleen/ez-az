@@ -1925,5 +1925,76 @@ gameLoop();
 </script>
 <script src="/controls.js" data-buttons="sprint"></script>
 <script src="/room-input.js"></script>
+<script type="module">
+(function() {
+  var token  = sessionStorage.getItem('tvRemoteToken');
+  var acPath = sessionStorage.getItem('tvAcPath');
+  if (!token || !acPath) return;
+
+  var KEYS = {
+    up:     { key: 'ArrowUp',    code: 'ArrowUp',    keyCode: 38 },
+    down:   { key: 'ArrowDown',  code: 'ArrowDown',  keyCode: 40 },
+    left:   { key: 'ArrowLeft',  code: 'ArrowLeft',  keyCode: 37 },
+    right:  { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+    action: { key: 'Shift',      code: 'ShiftLeft',  keyCode: 16 },
+    back:   { key: 'Escape',     code: 'Escape',     keyCode: 27 },
+    select: { key: 'Enter',      code: 'Enter',      keyCode: 13 }
+  };
+
+  function fire(type, entry) {
+    document.dispatchEvent(new KeyboardEvent(type, {
+      key: entry.key, code: entry.code, keyCode: entry.keyCode,
+      shiftKey: entry.key === 'Shift', bubbles: true, cancelable: true
+    }));
+  }
+
+  function handleNav(dir, navType) {
+    var gs = window.state;
+
+    if (navType === 'press') {
+      if (gs === 'title' && dir === 'select') {
+        window.showCharSelect(); return;
+      }
+      if (gs === 'charSelect') {
+        if (dir === 'left') {
+          var cur = Math.max(0, window.selectedChar);
+          window.selectChar((cur - 1 + window.CHARACTERS.length) % window.CHARACTERS.length);
+          return;
+        }
+        if (dir === 'right') {
+          var cur = window.selectedChar < 0 ? -1 : window.selectedChar;
+          window.selectChar((cur + 1) % window.CHARACTERS.length);
+          return;
+        }
+        if (dir === 'select') {
+          if (window.selectedChar < 0) window.selectChar(0);
+          window.startGame(); return;
+        }
+      }
+      if ((gs === 'end' || gs === 'discovery') && dir === 'select') {
+        location.reload(); return;
+      }
+    }
+
+    var entry = KEYS[dir];
+    if (entry) fire(navType === 'release' ? 'keyup' : 'keydown', entry);
+  }
+
+  import(acPath).then(function(m) {
+    var consumer = m.createConsumer();
+    consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: token },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'game', game_title: 'Descent' });
+        },
+        received: function(data) {
+          if (data.type === 'navigate') handleNav(data.direction, data.nav_type);
+        }
+      }
+    );
+  });
+})();
+</script>
 </body>
 </html>
