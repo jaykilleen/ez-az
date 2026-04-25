@@ -516,60 +516,37 @@
       outline: none;
     }
 
-    /* Phone companion button + QR overlay */
-    .phone-companion-btn {
+    /* Phone companion QR badge — always visible, no interaction required */
+    .phone-qr-badge {
       position: fixed;
       bottom: 24px;
       right: 24px;
       z-index: 900;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(10,10,18,0.85);
-      border: 2px solid rgba(0,255,200,0.35);
-      color: #00ffc8;
-      cursor: pointer;
+      background: rgba(10,10,18,0.88);
+      border: 1px solid rgba(0,255,200,0.2);
+      border-radius: 12px;
+      padding: 10px 10px 8px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      backdrop-filter: blur(8px);
-    }
-    .phone-companion-btn:hover { border-color: #00ffc8; box-shadow: 0 0 12px rgba(0,255,200,0.3); }
-    .phone-companion-btn.connected { border-color: #00ffc8; box-shadow: 0 0 8px rgba(0,255,200,0.4); }
-    .phone-companion-btn .conn-dot {
-      position: absolute;
-      top: 3px; right: 3px;
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      background: #223;
-      border: 2px solid #0a0a12;
-      transition: background 0.3s;
-    }
-    .phone-companion-btn.connected .conn-dot { background: #00ffc8; }
-
-    .phone-qr-overlay {
-      position: fixed;
-      bottom: 84px;
-      right: 24px;
-      z-index: 901;
-      background: #0a0a12;
-      border: 2px solid rgba(0,255,200,0.3);
-      border-radius: 16px;
-      padding: 20px;
-      width: 200px;
-      text-align: center;
-      display: none;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
     }
-    .phone-qr-overlay.open { display: flex; }
-    .phone-qr-label { font-size: 11px; color: #556; letter-spacing: 0.1em; text-transform: uppercase; }
-    .phone-qr-svg { width: 140px; height: 140px; }
-    .phone-qr-hint { font-size: 12px; color: #445; line-height: 1.5; }
+    .phone-qr-badge.ready { opacity: 1; }
+    .phone-qr-badge .qr-img { width: 88px; height: 88px; display: block; }
+    .phone-qr-badge .qr-label {
+      font-size: 9px; color: #445; letter-spacing: 0.12em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .phone-qr-badge .conn-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #223; transition: background 0.3s;
+      position: absolute; top: 7px; right: 7px;
+    }
+    .phone-qr-badge.connected .conn-dot { background: #00ffc8; box-shadow: 0 0 4px #00ffc8; }
 
     .game-box-art {
       width: 100%;
@@ -2669,25 +2646,19 @@
     }
   </script>
 
-  <!-- Phone companion button + QR overlay -->
-  <button class="phone-companion-btn" id="phoneCompanionBtn" title="Connect phone" aria-label="Connect phone as controller">
-    📱
+  <!-- Phone companion QR badge — always visible once session loads -->
+  <div class="phone-qr-badge" id="phoneQrBadge" aria-hidden="true">
     <span class="conn-dot"></span>
-  </button>
-  <div class="phone-qr-overlay" id="phoneQrOverlay">
-    <div class="phone-qr-label">Scan to control</div>
-    <div class="phone-qr-svg" id="phoneQrSvg"></div>
-    <div class="phone-qr-hint">Open on your phone to browse the shelf</div>
+    <div class="qr-img" id="phoneQrImg"></div>
+    <div class="qr-label">Scan to control</div>
   </div>
 
   <script type="module">
     (function () {
-      var btn        = document.getElementById('phoneCompanionBtn');
-      var overlay    = document.getElementById('phoneQrOverlay');
-      var qrContainer = document.getElementById('phoneQrSvg');
+      var badge      = document.getElementById('phoneQrBadge');
+      var qrImg      = document.getElementById('phoneQrImg');
       var games      = Array.from(document.querySelectorAll('.game-box:not(.coming-soon)'));
       var focusIdx   = -1;
-      var channel    = null;
 
       function setFocus(idx) {
         games.forEach(function (g) { g.classList.remove('remote-focus'); });
@@ -2710,17 +2681,14 @@
       }
 
       function handleNavigate(dir) {
-        var cols = columnsInRow();
         if (focusIdx < 0) { setFocus(0); return; }
+        var cols = columnsInRow();
         var next = focusIdx;
         if (dir === 'right') next = Math.min(focusIdx + 1, games.length - 1);
         if (dir === 'left')  next = Math.max(focusIdx - 1, 0);
         if (dir === 'down')  next = Math.min(focusIdx + cols, games.length - 1);
         if (dir === 'up')    next = Math.max(focusIdx - cols, 0);
-        if (dir === 'select' && focusIdx >= 0) {
-          window.location.href = games[focusIdx].href;
-          return;
-        }
+        if (dir === 'select') { window.location.href = games[focusIdx].href; return; }
         setFocus(next);
       }
 
@@ -2729,17 +2697,14 @@
         sessionStorage.setItem('tvAcPath', acPath);
 
         import(acPath).then(function (mod) {
-          var consumer = mod.createConsumer();
-          channel = consumer.subscriptions.create(
+          mod.createConsumer().subscriptions.create(
             { channel: 'TvRemoteChannel', token: token },
             {
               connected: function () {
-                btn.classList.add('connected');
+                badge.classList.add('connected');
                 this.perform('set_state', { state: 'shelf' });
               },
-              disconnected: function () {
-                btn.classList.remove('connected');
-              },
+              disconnected: function () { badge.classList.remove('connected'); },
               received: function (data) {
                 if (data.type === 'navigate') handleNavigate(data.direction);
               }
@@ -2748,38 +2713,16 @@
         });
       }
 
-      function init() {
-        var existingToken = sessionStorage.getItem('tvRemoteToken');
-        var existingAcPath = sessionStorage.getItem('tvAcPath');
-
-        if (existingToken && existingAcPath) {
-          connect(existingToken, existingAcPath);
-          fetch('/api/tv_session').then(function (r) { return r.json(); }).then(function (d) {
-            if (d.qr_svg) qrContainer.innerHTML = d.qr_svg;
-          }).catch(function () {});
-          return;
-        }
-
-        fetch('/api/tv_session')
-          .then(function (r) { return r.json(); })
-          .then(function (d) {
-            if (d.qr_svg) qrContainer.innerHTML = d.qr_svg;
-            connect(d.token, d.ac_path);
-          })
-          .catch(function (e) { console.warn('[phone companion] session fetch failed', e); });
-      }
-
-      btn.addEventListener('click', function () {
-        overlay.classList.toggle('open');
-      });
-
-      document.addEventListener('click', function (e) {
-        if (!btn.contains(e.target) && !overlay.contains(e.target)) {
-          overlay.classList.remove('open');
-        }
-      });
-
-      init();
+      fetch('/api/tv_session')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.qr_svg) { qrImg.innerHTML = d.qr_svg; badge.classList.add('ready'); }
+          var token   = sessionStorage.getItem('tvRemoteToken') || d.token;
+          var acPath  = sessionStorage.getItem('tvAcPath')      || d.ac_path;
+          connect(token, d.ac_path);
+          if (token !== d.token) sessionStorage.setItem('tvRemoteToken', d.token);
+        })
+        .catch(function (e) { console.warn('[phone companion] session fetch failed', e); });
     })();
   </script>
 
