@@ -320,6 +320,7 @@
       <div class="waiting-host-note">
         The person holding the D-pad controls<br>when the game starts.
       </div>
+      <button id="leave-game-btn" class="options-exit-btn" style="margin-top: 12px;">← Leave Game</button>
     </div>
 
     <!-- buzzer: trivia game in progress, joined -->
@@ -450,6 +451,7 @@
   var joinError     = document.getElementById('join-error');
   var waitingBadge    = document.getElementById('waiting-badge');
   var waitingPlayers  = document.getElementById('waiting-players');
+  var leaveGameBtn    = document.getElementById('leave-game-btn');
   var buzzerInfo      = document.getElementById('buzzer-info');
   var zoneTabs        = document.getElementById('zone-tabs');
   var zoneOptionsPanel = document.getElementById('zone-options-panel');
@@ -515,6 +517,7 @@
           if (data.type === 'join_error') handleJoinError(data);
           if (data.type === 'rejoined')   handleRejoined(data);
           if (data.type === 'slot_assigned') handleSlotAssigned(data);
+          if (data.type === 'left')       handleLeft();
           // 'navigate' events are ignored on the phone
         }
       }
@@ -651,6 +654,19 @@
     joinError.hidden = false;
     joinBtn.disabled = false;
     joinBtn.textContent = 'Join Game →';
+  }
+
+  // ── Leave game ────────────────────────────────────────────────────────
+  leaveGameBtn.addEventListener('click', function() {
+    remote.perform('leave_room', {});
+  });
+
+  function handleLeft() {
+    mySlot  = null;
+    myColor = null;
+    if (roomChannel) { roomChannel.unsubscribe(); roomChannel = null; }
+    if (triviaChannel) { triviaChannel.unsubscribe(); triviaChannel = null; }
+    showScreen('lobby');
   }
 
   // ── Join form ─────────────────────────────────────────────────────────
