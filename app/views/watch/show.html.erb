@@ -57,15 +57,27 @@
     }
 
     .store-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: rgba(0,255,200,0.1);
+      border: 2px solid rgba(0,255,200,0.35);
       font-family: 'Press Start 2P', monospace;
-      font-size: clamp(0.7rem, 1.2vw, 1rem);
+      font-size: clamp(0.6rem, 1vw, 0.85rem);
       font-weight: 900;
-      background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      color: #00ffc8;
       text-decoration: none;
       line-height: 1;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .store-link:hover, .store-link:focus {
+      background: rgba(0,255,200,0.2);
+      border-color: #00ffc8;
+      outline: none;
     }
 
     .ch-divider {
@@ -121,11 +133,6 @@
 
     .watch-footer.hud-visible { opacity: 1; }
 
-    /* --- Header also fades --- */
-    .watch-header {
-      transition: opacity 0.5s ease;
-    }
-    .watch-header.hud-hidden { opacity: 0; }
 
     .video-meta { flex: 1; min-width: 0; }
 
@@ -260,7 +267,7 @@
 
 <header class="watch-header">
   <div class="channel-bar">
-    <a href="/" class="store-link">EZ-AZ</a>
+    <a href="/" class="store-link">← Store</a>
     <div class="ch-divider"></div>
     <span class="ch-num"  id="chNum">CH 01</span>
     <span class="ch-emoji" id="chEmoji"></span>
@@ -320,18 +327,11 @@
   var guideTimer   = null;
   var hudTimer     = null;
   var footer       = document.querySelector('.watch-footer');
-  var header       = document.querySelector('.watch-header');
 
   function showHud() {
     footer.classList.add('hud-visible');
-    header.classList.remove('hud-hidden');
     clearTimeout(hudTimer);
-    hudTimer = setTimeout(hideHud, 4000);
-  }
-
-  function hideHud() {
-    footer.classList.remove('hud-visible');
-    header.classList.add('hud-hidden');
+    hudTimer = setTimeout(function() { footer.classList.remove('hud-visible'); }, 4000);
   }
 
   // ── Display ──────────────────────────────────────────────────────────────
