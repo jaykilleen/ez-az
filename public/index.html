@@ -845,6 +845,27 @@
       letter-spacing: 1px;
     }
 
+    /* Scan button — top left, mirrors login button */
+    .scan-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #00ffc8;
+      background: transparent;
+      border: 1px solid #00ffc8;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .scan-btn:hover { background: #00ffc8; color: #0a0a12; }
+    @media (pointer: coarse) { .scan-btn { display: none; } }
+
     /* Player login button */
     .player-btn {
       position: absolute;
@@ -1010,6 +1031,7 @@
   </div>
 
   <header class="store-header">
+    <a href="/scan" class="scan-btn">Scan</a>
     <button class="player-btn" id="playerBtn">Login</button>
     <h1 class="store-name">EZ-AZ</h1>
     <p class="store-tagline">The Family Video Game Store</p>
