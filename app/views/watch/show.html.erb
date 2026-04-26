@@ -108,8 +108,8 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       z-index: 10;
-      padding: 60px 24px 20px;
-      background: linear-gradient(to top, rgba(10,10,18,0.92) 0%, transparent 100%);
+      padding: 80px 24px 24px;
+      background: linear-gradient(to top, rgba(10,10,18,0.95) 0%, rgba(10,10,18,0.5) 60%, transparent 100%);
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
@@ -139,11 +139,43 @@
     .video-pos { color: #00ffc8; font-weight: 700; }
 
     .nav-hint {
-      font-size: clamp(0.75rem, 1.1vw, 1rem);
-      color: #556;
-      line-height: 1.8;
-      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
     }
+
+    .nav-key {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      font-size: clamp(0.8rem, 1.3vw, 1.1rem);
+      font-weight: 700;
+      color: #ccc;
+      white-space: nowrap;
+    }
+
+    .nav-key .k {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.12);
+      font-size: 1em;
+      color: #fff;
+      padding: 0 4px;
+    }
+
+    .nav-key.k-channel .k { color: #00ffc8; background: rgba(0,255,200,0.15); }
+    .nav-key.k-video   .k { color: #ffe44d; background: rgba(255,228,77,0.15); }
+    .nav-key.k-play    .k { color: #ff6ec7; background: rgba(255,110,199,0.15); }
+    .nav-key.k-home    .k { color: #aaa;    background: rgba(255,255,255,0.1); }
 
     /* --- Channel guide bar --- */
     .guide {
@@ -234,7 +266,12 @@
       <span class="video-pos"  id="videoPos"></span>
       <span class="video-note" id="videoNote"></span>
     </div>
-    <div class="nav-hint">↑↓ Channel &nbsp;&nbsp; ←→ Video &nbsp;&nbsp; ⬤ Play/Pause &nbsp;&nbsp; ← Home</div>
+    <div class="nav-hint">
+      <span class="nav-key k-channel"><span class="k">▲▼</span> Change Channel</span>
+      <span class="nav-key k-video"><span class="k">◀▶</span> Next Video</span>
+      <span class="nav-key k-play"><span class="k">●</span> Play / Pause</span>
+      <span class="nav-key k-home"><span class="k">⌫</span> Go Home</span>
+    </div>
   </div>
 </footer>
 
