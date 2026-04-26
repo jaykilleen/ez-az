@@ -115,7 +115,17 @@
       justify-content: space-between;
       gap: 16px;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
+
+    .watch-footer.hud-visible { opacity: 1; }
+
+    /* --- Header also fades --- */
+    .watch-header {
+      transition: opacity 0.5s ease;
+    }
+    .watch-header.hud-hidden { opacity: 0; }
 
     .video-meta { flex: 1; min-width: 0; }
 
@@ -308,6 +318,21 @@
   var player       = null;
   var syncTimer    = null;
   var guideTimer   = null;
+  var hudTimer     = null;
+  var footer       = document.querySelector('.watch-footer');
+  var header       = document.querySelector('.watch-header');
+
+  function showHud() {
+    footer.classList.add('hud-visible');
+    header.classList.remove('hud-hidden');
+    clearTimeout(hudTimer);
+    hudTimer = setTimeout(hideHud, 4000);
+  }
+
+  function hideHud() {
+    footer.classList.remove('hud-visible');
+    header.classList.add('hud-hidden');
+  }
 
   // ── Display ──────────────────────────────────────────────────────────────
 
@@ -371,6 +396,7 @@
   }
 
   function handleNav(dir) {
+    showHud();
     switch (dir) {
       case 'up':     changeChannel(-1);    break;
       case 'down':   changeChannel(1);     break;
@@ -382,6 +408,7 @@
   }
 
   document.addEventListener('keydown', function(e) {
+    showHud();
     switch (e.key) {
       case 'ArrowUp':                      e.preventDefault(); changeChannel(-1); break;
       case 'ArrowDown':                    e.preventDefault(); changeChannel(1);  break;
@@ -454,6 +481,9 @@
         onStateChange: function(e) {
           if (e.data === YT.PlayerState.PLAYING) savePosition();
           if (e.data === YT.PlayerState.ENDED)   advanceVideo(1);
+        },
+        onError: function() {
+          setTimeout(function() { advanceVideo(1); }, 1500);
         }
       }
     });
@@ -488,8 +518,11 @@
     history.replaceState({}, '', '/watch?t=' + token);
   }
 
+  document.addEventListener('touchstart', showHud, { passive: true });
+
   updateDisplay();
   loadSavedPosition();
+  showHud();
 </script>
 
 </body>
