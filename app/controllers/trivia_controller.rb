@@ -15,7 +15,7 @@ class TriviaController < ApplicationController
     @room.update!(tv_token: SecureRandom.alphanumeric(8).upcase) unless @room.tv_token.present?
     @members = @room.memberships.where(role: :player).order(:slot)
 
-    svg = RQRCode::QRCode.new(tv_remote_url(token: @room.tv_token, code: @room.code)).as_svg(
+    svg = RQRCode::QRCode.new(tv_remote_url(token: @room.tv_token, code: @room.code, v: EzAz::Version::STRING)).as_svg(
       color: "00ffc8",
       module_size: 6,
       standalone: true,
