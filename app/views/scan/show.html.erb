@@ -156,6 +156,49 @@
       transition: opacity 0.15s;
     }
     .start-btn:active { opacity: 0.75; }
+
+    /* URL confirm panel */
+    .url-confirm {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,10,18,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 16px;
+      z-index: 10;
+    }
+    .url-confirm-title { font-size: 13px; color: #556; letter-spacing: 0.1em; text-transform: uppercase; }
+    .url-confirm-domain {
+      font-size: clamp(1.1rem, 5vw, 1.5rem);
+      font-weight: 900;
+      color: #fff;
+      word-break: break-all;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .url-confirm-warn {
+      font-size: 13px;
+      color: #ffaa00;
+      background: rgba(255,170,0,0.1);
+      border: 1px solid rgba(255,170,0,0.3);
+      border-radius: 8px;
+      padding: 8px 14px;
+    }
+    .url-confirm-btns { display: flex; gap: 12px; width: 100%; max-width: 280px; }
+    .url-confirm-open {
+      flex: 1; padding: 14px; border-radius: 12px;
+      background: #00ffc8; color: #0a0a12;
+      font-size: 16px; font-weight: 900; border: none; cursor: pointer;
+    }
+    .url-confirm-cancel {
+      padding: 14px 20px; border-radius: 12px;
+      background: transparent; color: #556;
+      border: 2px solid rgba(255,255,255,0.1);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -175,6 +218,17 @@
       <div class="reticle-corner bl"></div>
       <div class="reticle-corner br"></div>
       <div class="reticle-line"></div>
+    </div>
+
+    <!-- URL confirm overlay -->
+    <div class="url-confirm" id="urlConfirm" hidden>
+      <div class="url-confirm-title">This QR code links to</div>
+      <div class="url-confirm-domain" id="urlConfirmDomain"></div>
+      <div class="url-confirm-warn" id="urlConfirmWarn" hidden>Not secure — this site doesn't use HTTPS</div>
+      <div class="url-confirm-btns">
+        <button class="url-confirm-open" id="urlConfirmOpen">Open</button>
+        <button class="url-confirm-cancel" id="urlConfirmCancel">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -211,9 +265,14 @@
   var statusEl  = document.getElementById('statusText');
   var startBtn  = document.getElementById('startBtn');
   var rejoinBtn = document.getElementById('rejoinBtn');
-  var codeInput   = document.getElementById('codeInput');
-  var codeJoinBtn = document.getElementById('codeJoinBtn');
-  var codeError   = document.getElementById('codeError');
+  var codeInput      = document.getElementById('codeInput');
+  var codeJoinBtn    = document.getElementById('codeJoinBtn');
+  var codeError      = document.getElementById('codeError');
+  var urlConfirm     = document.getElementById('urlConfirm');
+  var urlConfirmDomain = document.getElementById('urlConfirmDomain');
+  var urlConfirmWarn = document.getElementById('urlConfirmWarn');
+  var urlConfirmOpen = document.getElementById('urlConfirmOpen');
+  var urlConfirmCancel = document.getElementById('urlConfirmCancel');
 
   var scanning  = false;
   var stream    = null;
@@ -371,9 +430,29 @@
       }
     } catch (e) { /* not a URL */ }
 
-    // Invalid QR — show error and resume
+    // Valid URL but not EZ-AZ — show confirm panel
+    try {
+      var url = new URL(raw);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        stopCamera();
+        setReticle('found');
+        urlConfirmDomain.textContent = url.hostname + (url.pathname !== '/' ? url.pathname : '');
+        urlConfirmWarn.hidden = url.protocol !== 'http:';
+        urlConfirmOpen.onclick = function () { window.location.href = raw; };
+        urlConfirmCancel.onclick = function () {
+          urlConfirm.hidden = true;
+          setReticle('');
+          setStatus('Point at the QR code on the TV');
+          startScanner();
+        };
+        urlConfirm.hidden = false;
+        return;
+      }
+    } catch (e) { /* not a URL */ }
+
+    // Not a URL at all — show error and resume
     setReticle('error');
-    setStatus("That's not an EZ-AZ QR code. Point at the code on the TV.", 'error');
+    setStatus("Can't read that QR code. Try again.", 'error');
     setTimeout(function () {
       setReticle('');
       setStatus('Point at the QR code on the TV');
