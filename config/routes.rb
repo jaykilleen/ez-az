@@ -37,6 +37,8 @@ Rails.application.routes.draw do
       collection do
         get  :check
         post :claim
+        post :login
+        post :pin, action: :set_pin
       end
     end
     resources :errors,  only: [:create]

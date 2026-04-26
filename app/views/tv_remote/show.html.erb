@@ -62,6 +62,12 @@
     letter-spacing: 0.04em; transition: opacity 0.15s;
   }
   .zone-join-btn:disabled { opacity: 0.5; }
+  .zone-btn-ghost {
+    background: transparent;
+    color: #556;
+    border: 2px solid rgba(255,255,255,0.08);
+  }
+  .zone-pin-input { letter-spacing: 0.3em; font-size: 24px; text-align: center; }
   .zone-join-error { color: #ff4757; font-size: 13px; }
   .lobby-divider {
     font-size: 11px; color: #334; letter-spacing: 0.1em; text-transform: uppercase;
@@ -275,15 +281,48 @@
 
     <!-- claim: first visit, pick a name -->
     <div class="zone-content" data-screen="claim" hidden>
-      <div class="claim-title">What's your name?</div>
-      <div class="claim-hint">We'll save your spot if you disconnect.</div>
-      <div class="lobby-join-form">
-        <input class="zone-name-input" id="claim-input" type="text"
-               placeholder="YOUR NAME" maxlength="12"
-               autocapitalize="characters" autocomplete="off" spellcheck="false">
-        <button class="zone-join-btn" id="claim-btn">Let's Go &rarr;</button>
-        <div class="zone-join-error" id="claim-error" hidden></div>
+
+      <!-- Step 1: name entry -->
+      <div id="claim-name-step">
+        <div class="claim-title">What's your name?</div>
+        <div class="claim-hint">We'll save your spot if you disconnect.</div>
+        <div class="lobby-join-form">
+          <input class="zone-name-input" id="claim-input" type="text"
+                 placeholder="YOUR NAME" maxlength="12"
+                 autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <button class="zone-join-btn" id="claim-btn">Let's Go &rarr;</button>
+          <div class="zone-join-error" id="claim-error" hidden></div>
+        </div>
       </div>
+
+      <!-- Step 2a: set a PIN after claiming a new name -->
+      <div id="claim-pin-setup-step" hidden>
+        <div class="claim-title">Set a PIN</div>
+        <div class="claim-hint">4 digits — lets you log in from any device.</div>
+        <div class="lobby-join-form">
+          <input class="zone-name-input zone-pin-input" id="pin-setup-input"
+                 type="tel" maxlength="4" pattern="\d{4}" placeholder="••••"
+                 autocomplete="new-password">
+          <button class="zone-join-btn" id="pin-setup-btn">Save PIN &rarr;</button>
+          <button class="zone-join-btn zone-btn-ghost" id="pin-setup-skip-btn">Skip for now</button>
+          <div class="zone-join-error" id="pin-setup-error" hidden></div>
+        </div>
+      </div>
+
+      <!-- Step 2b: PIN login when name is already taken -->
+      <div id="claim-pin-login-step" hidden>
+        <div class="claim-title" id="pin-login-title">Welcome back!</div>
+        <div class="claim-hint">Enter your 4-digit PIN to log in.</div>
+        <div class="lobby-join-form">
+          <input class="zone-name-input zone-pin-input" id="pin-login-input"
+                 type="tel" maxlength="4" pattern="\d{4}" placeholder="••••"
+                 autocomplete="current-password">
+          <button class="zone-join-btn" id="pin-login-btn">Log In &rarr;</button>
+          <button class="zone-join-btn zone-btn-ghost" id="pin-back-btn">&larr; Different name</button>
+          <div class="zone-join-error" id="pin-login-error" hidden></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- shelf: browsing the game shelf -->
@@ -440,9 +479,21 @@
   var zoneDpad  = document.getElementById('zone-dpad');
   var fireBtn   = document.getElementById('fire-btn');
 
-  var claimInput = document.getElementById('claim-input');
-  var claimBtn   = document.getElementById('claim-btn');
-  var claimError = document.getElementById('claim-error');
+  var claimInput      = document.getElementById('claim-input');
+  var claimBtn        = document.getElementById('claim-btn');
+  var claimError      = document.getElementById('claim-error');
+  var claimNameStep   = document.getElementById('claim-name-step');
+  var pinSetupStep    = document.getElementById('claim-pin-setup-step');
+  var pinLoginStep    = document.getElementById('claim-pin-login-step');
+  var pinSetupInput   = document.getElementById('pin-setup-input');
+  var pinSetupBtn     = document.getElementById('pin-setup-btn');
+  var pinSetupSkipBtn = document.getElementById('pin-setup-skip-btn');
+  var pinSetupError   = document.getElementById('pin-setup-error');
+  var pinLoginInput   = document.getElementById('pin-login-input');
+  var pinLoginBtn     = document.getElementById('pin-login-btn');
+  var pinLoginTitle   = document.getElementById('pin-login-title');
+  var pinLoginError   = document.getElementById('pin-login-error');
+  var pinBackBtn      = document.getElementById('pin-back-btn');
 
   var lobbyGameName = document.getElementById('lobby-game-name');
   var lobbyRoomCode = document.getElementById('lobby-room-code');
@@ -545,27 +596,50 @@
     showScreen('claim');
   }
 
-  // ── Claim form ───────────────────────────────────────────────────────
+  // ── Claim helpers ────────────────────────────────────────────────────
+  function showClaimStep(step) {
+    claimNameStep.hidden   = step !== 'name';
+    pinSetupStep.hidden    = step !== 'pin-setup';
+    pinLoginStep.hidden    = step !== 'pin-login';
+  }
+
+  function storeAndConnect(data) {
+    localStorage.setItem('ezaz_device_token', data.device_token);
+    localStorage.setItem('ezaz_username', data.username);
+    deviceToken = data.device_token;
+    myUsername  = data.username;
+    connectToTv();
+    showScreen('shelf');
+  }
+
+  // Step 1: name entry
   claimBtn.addEventListener('click', function() {
     var name = claimInput.value.trim();
     if (!name) { claimError.textContent = 'Enter a name first'; claimError.hidden = false; return; }
     claimBtn.disabled = true;
-    claimBtn.textContent = 'Saving…';
+    claimBtn.textContent = 'Checking…';
     claimError.hidden = true;
     fetch('/api/players/claim', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: name })
     })
-    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
     .then(function(res) {
-      if (res.ok) {
+      if (res.status === 201) {
         localStorage.setItem('ezaz_device_token', res.data.device_token);
         localStorage.setItem('ezaz_username', res.data.username);
         deviceToken = res.data.device_token;
         myUsername  = res.data.username;
         connectToTv();
-        showScreen('shelf');
+        showClaimStep('pin-setup');
+        setTimeout(function() { pinSetupInput.focus(); }, 50);
+      } else if (res.status === 409) {
+        pinLoginTitle.textContent = 'Welcome back, ' + name.toUpperCase() + '!';
+        pinLoginInput.value = '';
+        pinLoginError.hidden = true;
+        showClaimStep('pin-login');
+        setTimeout(function() { pinLoginInput.focus(); }, 50);
       } else {
         claimError.textContent = res.data.error || 'Could not save name';
         claimError.hidden = false;
@@ -581,8 +655,89 @@
     });
   });
 
-  claimInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') claimBtn.click();
+  claimInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') claimBtn.click(); });
+
+  // Step 2a: PIN setup (after successful claim)
+  pinSetupBtn.addEventListener('click', function() {
+    var pin = pinSetupInput.value.trim();
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      pinSetupError.textContent = 'Enter exactly 4 digits';
+      pinSetupError.hidden = false;
+      return;
+    }
+    pinSetupBtn.disabled = true;
+    pinSetupBtn.textContent = 'Saving…';
+    pinSetupError.hidden = true;
+    fetch('/api/players/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_token: deviceToken, pin: pin })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      if (res.ok) {
+        showScreen('shelf');
+      } else {
+        pinSetupError.textContent = res.data.error || 'Could not save PIN';
+        pinSetupError.hidden = false;
+        pinSetupBtn.disabled = false;
+        pinSetupBtn.textContent = 'Save PIN →';
+      }
+    })
+    .catch(function() {
+      pinSetupError.textContent = 'Connection error — try again';
+      pinSetupError.hidden = false;
+      pinSetupBtn.disabled = false;
+      pinSetupBtn.textContent = 'Save PIN →';
+    });
+  });
+
+  pinSetupSkipBtn.addEventListener('click', function() { showScreen('shelf'); });
+  pinSetupInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') pinSetupBtn.click(); });
+
+  // Step 2b: PIN login (name already taken)
+  pinLoginBtn.addEventListener('click', function() {
+    var name = claimInput.value.trim().toUpperCase();
+    var pin  = pinLoginInput.value.trim();
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      pinLoginError.textContent = 'Enter your 4-digit PIN';
+      pinLoginError.hidden = false;
+      return;
+    }
+    pinLoginBtn.disabled = true;
+    pinLoginBtn.textContent = 'Checking…';
+    pinLoginError.hidden = true;
+    fetch('/api/players/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name, pin: pin })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      if (res.ok) {
+        storeAndConnect(res.data);
+      } else {
+        pinLoginError.textContent = res.data.error || 'Login failed';
+        pinLoginError.hidden = false;
+        pinLoginBtn.disabled = false;
+        pinLoginBtn.textContent = 'Log In →';
+      }
+    })
+    .catch(function() {
+      pinLoginError.textContent = 'Connection error — try again';
+      pinLoginError.hidden = false;
+      pinLoginBtn.disabled = false;
+      pinLoginBtn.textContent = 'Log In →';
+    });
+  });
+
+  pinLoginInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') pinLoginBtn.click(); });
+  pinBackBtn.addEventListener('click', function() {
+    claimBtn.disabled = false;
+    claimBtn.textContent = 'Let\'s Go →';
+    claimError.hidden = true;
+    showClaimStep('name');
+    setTimeout(function() { claimInput.focus(); }, 50);
   });
 
   function handleTvState(data) {
