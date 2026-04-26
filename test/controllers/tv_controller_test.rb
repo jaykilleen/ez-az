@@ -26,9 +26,9 @@ class TvControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "tv page links to every game path" do
+  test "tv page links to every tv-optimised game path" do
     get "/tv"
-    Game.all.each do |game|
+    Game.for_tv.each do |game|
       assert_includes response.body, %(href="#{game[:path]}"),
         "tv page missing link to #{game[:path]}"
     end

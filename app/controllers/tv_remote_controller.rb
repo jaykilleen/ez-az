@@ -7,13 +7,15 @@ class TvRemoteController < ApplicationController
       code  = params[:code].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 4]
       @room = Room.active.find_by(code: code)
       return redirect_to("/", status: :see_other) unless @room
-      @token     = @room.tv_token
+      @token = @room.tv_token
+      return redirect_to("/", status: :see_other) unless @token.present?
       @room_code = @room.code
     else
       @token = params[:token].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 8]
       return redirect_to tv_path if @token.blank?
-      @room      = Room.active.find_by(tv_token: @token)
-      @room_code = @room&.code
+      @room = Room.active.find_by(tv_token: @token)
+      return redirect_to tv_path unless @room
+      @room_code = @room.code
     end
   end
 end

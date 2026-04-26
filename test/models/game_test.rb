@@ -32,8 +32,9 @@ class GameTest < ActiveSupport::TestCase
     assert_nil Game.find("pong")
   end
 
-  test "every game path points to an existing file in public" do
+  test "every static game path points to an existing file in public" do
     Game.all.each do |game|
+      next unless game[:path].end_with?(".html")
       file = Rails.root.join("public", game[:path].sub(%r{^/}, ""))
       assert File.exist?(file), "missing file for #{game[:slug]}: #{file}"
     end

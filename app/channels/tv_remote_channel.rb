@@ -10,11 +10,13 @@ class TvRemoteChannel < ApplicationCable::Channel
   def subscribed
     token = clean_token
     return reject if token.blank?
-    stream_from "tv_remote:#{token}"
 
-    @current_room  = Room.active.find_by(tv_token: token)
-    @device_token  = clean_device_token
-    @slot_claimed  = false
+    @current_room = Room.active.find_by(tv_token: token)
+    return reject unless @current_room
+
+    stream_from "tv_remote:#{token}"
+    @device_token = clean_device_token
+    @slot_claimed = false
 
     if @current_room && @device_token.present?
       membership = @current_room.memberships.find_by(device_token: @device_token)

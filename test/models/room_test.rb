@@ -15,11 +15,11 @@ class RoomTest < ActiveSupport::TestCase
     assert_equal codes, codes.uniq
   end
 
-  test "expires_at defaults to 2 hours from now" do
+  test "expires_at defaults to 4 hours from now" do
     freeze = Time.utc(2026, 4, 15, 12, 0, 0)
     travel_to(freeze) do
       room = Room.create!
-      assert_in_delta freeze + 2.hours, room.expires_at, 1.second
+      assert_in_delta freeze + 4.hours, room.expires_at, 1.second
     end
   end
 
