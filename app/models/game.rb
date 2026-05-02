@@ -62,6 +62,15 @@ class Game
       path: "/games/trivia",
       icon: "trivia",
       tv_optimised: true
+    },
+    {
+      slug: "spotlight",
+      title: "Spotlight",
+      creators: "Az",
+      tagline: "One round, one star. The Spotlight answers — everyone else guesses what they'd say.",
+      path: "/games/spotlight",
+      icon: "spotlight",
+      tv_optimised: true
     }
   ].freeze
 

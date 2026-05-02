@@ -988,3 +988,126 @@
   ctx.lineWidth = 1.5;
   ctx.strokeRect(6, 12, 20, 20);
 })();
+
+// Draw the Spotlight cover art on the canvas
+(function () {
+  var canvas = document.getElementById('spotlightCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Stage backdrop — deep curtain
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0a0610');
+  bg.addColorStop(0.5, '#1a0820');
+  bg.addColorStop(1, '#0a0610');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Spotlight cone from top centre
+  var coneTopX = W / 2;
+  var coneTopY = -10;
+  var coneBaseY = H * 0.72;
+  var coneHalfWidth = W * 0.46;
+  var cone = ctx.createLinearGradient(coneTopX, coneTopY, coneTopX, coneBaseY);
+  cone.addColorStop(0, 'rgba(255, 220, 80, 0.55)');
+  cone.addColorStop(0.5, 'rgba(255, 200, 60, 0.18)');
+  cone.addColorStop(1, 'rgba(255, 200, 60, 0)');
+  ctx.fillStyle = cone;
+  ctx.beginPath();
+  ctx.moveTo(coneTopX - 14, coneTopY);
+  ctx.lineTo(coneTopX + 14, coneTopY);
+  ctx.lineTo(coneTopX + coneHalfWidth, coneBaseY);
+  ctx.lineTo(coneTopX - coneHalfWidth, coneBaseY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lamp at top
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 22;
+  var lampGrad = ctx.createRadialGradient(coneTopX, 8, 2, coneTopX, 8, 16);
+  lampGrad.addColorStop(0, '#fff6b0');
+  lampGrad.addColorStop(0.6, '#ffd84d');
+  lampGrad.addColorStop(1, '#cc8a00');
+  ctx.fillStyle = lampGrad;
+  ctx.beginPath();
+  ctx.arc(coneTopX, 8, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Floor glow where the spotlight lands
+  var floor = ctx.createRadialGradient(W / 2, coneBaseY + 6, 6, W / 2, coneBaseY + 6, coneHalfWidth);
+  floor.addColorStop(0, 'rgba(255, 220, 80, 0.4)');
+  floor.addColorStop(1, 'rgba(255, 220, 80, 0)');
+  ctx.fillStyle = floor;
+  ctx.beginPath();
+  ctx.ellipse(W / 2, coneBaseY + 6, coneHalfWidth, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Star at centre stage
+  function drawStar(cx, cy, outer, inner, points, fill, glow) {
+    ctx.save();
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 24; }
+    ctx.beginPath();
+    var rot = -Math.PI / 2;
+    var step = Math.PI / points;
+    ctx.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+    for (var i = 0; i < points; i++) {
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  var starX = W / 2;
+  var starY = H * 0.46;
+  drawStar(starX, starY, 56, 24, 5, '#ffd84d', '#ffd84d');
+  drawStar(starX, starY, 38, 15, 5, '#fff6b0');
+
+  // Audience silhouettes
+  var audience = [
+    { x: W * 0.18, y: H - 56, scale: 1.0 },
+    { x: W * 0.82, y: H - 56, scale: 1.0 },
+    { x: W * 0.5,  y: H - 50, scale: 1.15 }
+  ];
+  audience.forEach(function (a) {
+    ctx.save();
+    ctx.fillStyle = '#000814';
+    ctx.shadowColor = 'rgba(255, 220, 80, 0.4)';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(a.x, a.y - 18 * a.scale, 9 * a.scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(a.x - 20 * a.scale, H - 28);
+    ctx.quadraticCurveTo(a.x, a.y - 8 * a.scale, a.x + 20 * a.scale, H - 28);
+    ctx.lineTo(a.x - 20 * a.scale, H - 28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = '#fff6b0';
+  ctx.font = 'bold 18px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPOTLIGHT', W / 2, H - 22);
+  ctx.restore();
+
+  // Tagline
+  ctx.fillStyle = '#cc9933';
+  ctx.font = '8px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('YOUR TURN TO SHINE', W / 2, H - 8);
+})();
