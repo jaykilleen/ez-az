@@ -431,6 +431,24 @@
   var pickingHint = document.getElementById('sp-picking-hint');
   var submissionsEl = document.getElementById('sp-submissions');
 
+  // ── Resume tracking ─────────────────────────────────────────────────────
+  // Saved on load so the TV can offer "Resume" from the store front if the
+  // game tab is closed mid-session. Cleared on game_over.
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'spotlight',
+        game_title: 'Spotlight',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
   // ── RoomChannel: lobby joins
   consumer.subscriptions.create(
     { channel: 'RoomChannel', code: code },
@@ -614,6 +632,7 @@
     stopTimer();
     phase = 'game_over';
     gameOver = true;
+    clearActiveGame();
     showPhase('gameover');
     nextBtn.hidden = false;
     nextBtn.textContent = '← Back to Store';

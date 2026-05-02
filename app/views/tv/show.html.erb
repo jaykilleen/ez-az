@@ -6,7 +6,7 @@
     height: 100vh;
     overflow: hidden;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto;
     grid-template-columns: minmax(0, 1fr);
     padding: 3vh 4vw;
     gap: 2vh;
@@ -302,6 +302,64 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
+
+  /* Resume banner */
+  .tv-resume {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1.4vw;
+    padding: 1.2vh 1.6vw;
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.18), rgba(255, 215, 0, 0.05) 70%);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 0.8vw;
+    color: #fff;
+  }
+  .tv-resume[hidden] { display: none; }
+  .tv-resume-icon { font-size: clamp(1.4rem, 2.4vw, 2.4rem); }
+  .tv-resume-text {
+    flex: 1;
+    font-size: clamp(0.95rem, 1.4vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .tv-resume-text .tv-resume-room {
+    color: #ffd700;
+    font-family: "Courier New", monospace;
+    margin-left: 0.5em;
+    font-size: 0.85em;
+    letter-spacing: 0.06em;
+  }
+  .tv-resume-btn {
+    padding: 0.9vh 1.6vw;
+    border-radius: 0.6vw;
+    background: #ffd700;
+    color: #0a0a12;
+    border: none;
+    font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+    transition: transform 0.12s;
+  }
+  .tv-resume-btn:hover, .tv-resume-btn:focus {
+    transform: scale(1.04);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.35);
+  }
+  .tv-resume-dismiss {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #888;
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    padding: 0.5vh 1vw;
+    border-radius: 0.4vw;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .tv-resume-dismiss:hover { color: #fff; border-color: rgba(255, 255, 255, 0.4); }
 </style>
 
 <% cover_ids = {
@@ -327,6 +385,15 @@
       <div class="tv-qr-code"><%= @qr_code_svg %></div>
     </div>
   </header>
+
+  <div class="tv-resume" id="tv-resume" hidden role="region" aria-label="Resume in-progress game">
+    <div class="tv-resume-icon">▶</div>
+    <div class="tv-resume-text">
+      Game in progress: <span id="tv-resume-title">…</span><span class="tv-resume-room" id="tv-resume-room"></span>
+    </div>
+    <a class="tv-resume-btn" id="tv-resume-btn" href="#">Resume →</a>
+    <button class="tv-resume-dismiss" id="tv-resume-dismiss" type="button" aria-label="Dismiss">✕</button>
+  </div>
 
   <section class="tv-main" aria-label="Game shelf">
     <div class="tv-shelf" id="tv-shelf" role="list" style="--tv-cols: <%= @tv_cols %>">
@@ -443,6 +510,38 @@
     // Initialize focus
     learnBtn.tabIndex = -1;
     focusGame(0);
+  })();
+
+  // ── Resume in-progress game ────────────────────────────────────────────
+  (function() {
+    var KEY = 'ezaz_active_tv_game';
+    var MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours, matches Room::DEFAULT_TTL
+    var GAME_PATH = { spotlight: '/games/spotlight/', trivia: '/games/trivia/' };
+
+    var raw;
+    try { raw = localStorage.getItem(KEY); } catch (_) { return; }
+    if (!raw) return;
+
+    var game;
+    try { game = JSON.parse(raw); } catch (_) { localStorage.removeItem(KEY); return; }
+    if (!game || !game.code || !game.game_slug) return;
+    if (Date.now() - (game.started_at || 0) > MAX_AGE_MS) {
+      localStorage.removeItem(KEY);
+      return;
+    }
+    var path = GAME_PATH[game.game_slug];
+    if (!path) return;
+
+    var banner = document.getElementById('tv-resume');
+    document.getElementById('tv-resume-title').textContent = game.game_title || game.game_slug;
+    document.getElementById('tv-resume-room').textContent = 'Room ' + game.code;
+    var btn = document.getElementById('tv-resume-btn');
+    btn.href = path + game.code;
+    document.getElementById('tv-resume-dismiss').addEventListener('click', function() {
+      try { localStorage.removeItem(KEY); } catch (_) {}
+      banner.hidden = true;
+    });
+    banner.hidden = false;
   })();
 </script>
 

@@ -355,6 +355,23 @@
   var consumer = createConsumer();
   var code = <%= @room.code.to_json.html_safe %>;
 
+  // Resume tracking — saved on load so the TV can offer "Resume" from the
+  // store front if the game tab is closed mid-session. Cleared on game_over.
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'trivia',
+        game_title: 'Family Trivia',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
   // State
   var phase = 'lobby';
   var knownMembers = [];
@@ -545,6 +562,7 @@
     stopTimer();
     phase = 'game_over';
     gameOver = true;
+    clearActiveGame();
     showPhase('gameover');
     nextBtn.hidden = false;
     nextBtn.textContent = '← Back to Store';
