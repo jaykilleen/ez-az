@@ -1162,6 +1162,13 @@
           spotlightChannel.perform('pick', { picked_slot: sub.slot });
           listEl.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
           if (navigator.vibrate) navigator.vibrate(40);
+          // Safety: if no reveal arrives in 5s, re-enable buttons so the
+          // spotlight can tap again (covers connection hiccups / lost packets).
+          setTimeout(function() {
+            if (spotState.phase === 'picking') {
+              listEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+            }
+          }, 5000);
         });
         listEl.appendChild(btn);
       });

@@ -388,6 +388,7 @@
 
   <footer class="sp-footer">
     <div class="sp-progress" id="sp-progress">Waiting to start</div>
+    <button class="sp-next-btn" id="sp-skip-pick-btn" hidden>Skip Pick</button>
     <button class="sp-next-btn" id="sp-next-btn" hidden>Next →</button>
     <div class="sp-status" id="sp-status">Ready</div>
   </footer>
@@ -415,6 +416,7 @@
   var gameoverEl = document.getElementById('sp-gameover');
   var progressEl = document.getElementById('sp-progress');
   var nextBtn    = document.getElementById('sp-next-btn');
+  var skipPickBtn = document.getElementById('sp-skip-pick-btn');
   var startBtn   = document.getElementById('sp-start-btn');
   var lobbyPlayersEl = document.getElementById('sp-lobby-players');
   var timerEl    = document.getElementById('sp-timer');
@@ -471,6 +473,11 @@
     if (gameOver) { window.location.href = '/tv'; return; }
     nextBtn.hidden = true;
     spotlight.perform('next_question', {});
+  });
+
+  skipPickBtn.addEventListener('click', function() {
+    skipPickBtn.hidden = true;
+    spotlight.perform('skip_pick', {});
   });
 
   document.addEventListener('keydown', function(e) {
@@ -582,6 +589,7 @@
     renderSubmissions(data.submissions, { reveal: false });
     setStatus('Picking…');
     nextBtn.hidden = true;
+    skipPickBtn.hidden = false;
   }
 
   function onRevealed(data) {
@@ -592,6 +600,7 @@
     answeringHint.hidden = true;
     answeringMeta.hidden = true;
     submissionsEl.hidden = false;
+    skipPickBtn.hidden = true;
 
     renderSubmissions(data.submissions, { reveal: true });
     updateScores(data.scores);
