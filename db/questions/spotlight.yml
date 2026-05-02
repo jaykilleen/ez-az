@@ -1,0 +1,200 @@
+# Spotlight question deck
+#
+# Each round, one player is the Spotlight. The {spotlight} token is replaced
+# with their name when the question is shown.
+#
+# Questions are open-ended on purpose. The Spotlight types their real answer
+# privately on their phone. Everyone else guesses what they think the Spotlight
+# would say. Matches score 2pt. The Spotlight then picks their favourite
+# non-matching guess for a 3pt bonus.
+#
+# Keep it: family friendly, kid-readable, evergreen (no dates / pop refs that age).
+# Categories are short tags shown as a badge on the TV.
+
+# ── Favourites ─────────────────────────────────────────────────────────────
+- category: Favourites
+  question: "What's {spotlight}'s favourite thing to eat for breakfast?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite animal?"
+- category: Favourites
+  question: "What's the best ice cream flavour, according to {spotlight}?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite colour right now?"
+- category: Favourites
+  question: "What movie could {spotlight} watch ten times in a row?"
+- category: Favourites
+  question: "What song does {spotlight} secretly love?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite snack from the pantry?"
+- category: Favourites
+  question: "Which room in the house does {spotlight} like the most?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite thing to do on a rainy day?"
+- category: Favourites
+  question: "What's the best season of the year, according to {spotlight}?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite video game?"
+- category: Favourites
+  question: "What's {spotlight}'s favourite thing about weekends?"
+
+# ── Memories ───────────────────────────────────────────────────────────────
+- category: Memories
+  question: "What's the funniest thing {spotlight} has ever seen?"
+- category: Memories
+  question: "What's something {spotlight} did as a little kid that everyone still talks about?"
+- category: Memories
+  question: "What's the best holiday {spotlight} has ever been on?"
+- category: Memories
+  question: "What's a meal {spotlight} will never forget?"
+- category: Memories
+  question: "What's the scariest thing {spotlight} has ever done?"
+- category: Memories
+  question: "What's a present {spotlight} got that they really loved?"
+- category: Memories
+  question: "What's the silliest thing {spotlight} has ever worn?"
+- category: Memories
+  question: "What's a song {spotlight} used to sing all the time?"
+- category: Memories
+  question: "What's the best birthday {spotlight} has ever had?"
+
+# ── Hypotheticals ──────────────────────────────────────────────────────────
+- category: Hypotheticals
+  question: "If {spotlight} could have any superpower, what would they pick?"
+- category: Hypotheticals
+  question: "If {spotlight} won a million dollars, what's the first thing they'd buy?"
+- category: Hypotheticals
+  question: "If {spotlight} could be any animal for a day, what would they be?"
+- category: Hypotheticals
+  question: "If {spotlight} could only eat one food forever, what would it be?"
+- category: Hypotheticals
+  question: "If {spotlight} ran the country for a day, what's one rule they'd make?"
+- category: Hypotheticals
+  question: "If {spotlight} could live anywhere in the world, where?"
+- category: Hypotheticals
+  question: "If {spotlight} had a pet dragon, what would they name it?"
+- category: Hypotheticals
+  question: "If {spotlight} could swap lives with anyone for a day, who?"
+- category: Hypotheticals
+  question: "If {spotlight} opened a shop, what would it sell?"
+- category: Hypotheticals
+  question: "If {spotlight} could build any room onto the house, what would it be?"
+- category: Hypotheticals
+  question: "If {spotlight} could time travel, what year would they visit?"
+- category: Hypotheticals
+  question: "If {spotlight} could make any food magically appear right now, what?"
+
+# ── Quirks ─────────────────────────────────────────────────────────────────
+- category: Quirks
+  question: "What's something {spotlight} does that nobody else in the family does?"
+- category: Quirks
+  question: "What weird food combo does {spotlight} actually like?"
+- category: Quirks
+  question: "What's {spotlight}'s most-used phrase?"
+- category: Quirks
+  question: "What's something {spotlight} is surprisingly good at?"
+- category: Quirks
+  question: "What sound does {spotlight} make when they're concentrating?"
+- category: Quirks
+  question: "What's a habit {spotlight} has that drives someone in the family bonkers?"
+- category: Quirks
+  question: "What's the first thing {spotlight} does when they wake up?"
+- category: Quirks
+  question: "What's something {spotlight} is scared of that they probably shouldn't be?"
+- category: Quirks
+  question: "What's {spotlight}'s catchphrase?"
+- category: Quirks
+  question: "What's a hidden talent {spotlight} has?"
+
+# ── Hot Takes ──────────────────────────────────────────────────────────────
+- category: Hot Takes
+  question: "What's something {spotlight} thinks is overrated?"
+- category: Hot Takes
+  question: "What's the worst flavour of lolly, according to {spotlight}?"
+- category: Hot Takes
+  question: "What's a chore {spotlight} secretly enjoys?"
+- category: Hot Takes
+  question: "What food does {spotlight} pretend to like but actually doesn't?"
+- category: Hot Takes
+  question: "What's the most boring thing in the world, according to {spotlight}?"
+- category: Hot Takes
+  question: "What's a movie {spotlight} thinks is way better than people say?"
+- category: Hot Takes
+  question: "What's the worst part of going to school?"
+- category: Hot Takes
+  question: "What's something the family does that {spotlight} would change?"
+
+# ── This or That ───────────────────────────────────────────────────────────
+- category: This or That
+  question: "Pizza or pasta — what does {spotlight} pick?"
+- category: This or That
+  question: "Beach or mountains — where would {spotlight} rather be?"
+- category: This or That
+  question: "Cats or dogs — which side is {spotlight} on?"
+- category: This or That
+  question: "Sweet or salty — what's {spotlight}'s craving?"
+- category: This or That
+  question: "Morning or night — when is {spotlight} happiest?"
+- category: This or That
+  question: "Big party or small hangout — what does {spotlight} prefer?"
+- category: This or That
+  question: "Books or movies — which wins for {spotlight}?"
+- category: This or That
+  question: "Hot food or cold food — what's {spotlight}'s pick?"
+
+# ── About You ─────────────────────────────────────────────────────────────
+- category: About You
+  question: "What does {spotlight} want to be when they grow up?"
+- category: About You
+  question: "What's {spotlight} most proud of right now?"
+- category: About You
+  question: "What's something {spotlight} is really looking forward to?"
+- category: About You
+  question: "What makes {spotlight} laugh the most?"
+- category: About You
+  question: "What's {spotlight}'s favourite thing about themselves?"
+- category: About You
+  question: "What's {spotlight} working on getting better at?"
+- category: About You
+  question: "What's something {spotlight} loves doing alone?"
+- category: About You
+  question: "What's a word that describes {spotlight} perfectly?"
+- category: About You
+  question: "What does {spotlight} do when they're feeling grumpy?"
+- category: About You
+  question: "What makes {spotlight} feel really happy?"
+
+# ── Family ────────────────────────────────────────────────────────────────
+- category: Family
+  question: "What's the best thing about being in this family, according to {spotlight}?"
+- category: Family
+  question: "What's the funniest thing someone in the family has ever said?"
+- category: Family
+  question: "What's a tradition {spotlight} hopes never stops?"
+- category: Family
+  question: "Who in the family makes {spotlight} laugh the most?"
+- category: Family
+  question: "What's the best meal someone in the family makes?"
+- category: Family
+  question: "What's a family trip {spotlight} would do again tomorrow?"
+- category: Family
+  question: "What's something the family does together that {spotlight} loves?"
+- category: Family
+  question: "What's the best game to play together, according to {spotlight}?"
+
+# ── Imagination ───────────────────────────────────────────────────────────
+- category: Imagination
+  question: "If {spotlight} was a sandwich, what would be in it?"
+- category: Imagination
+  question: "If {spotlight} had their own theme song, how would it sound?"
+- category: Imagination
+  question: "What would {spotlight}'s autobiography be called?"
+- category: Imagination
+  question: "If {spotlight} was a season, which one would they be?"
+- category: Imagination
+  question: "What's {spotlight}'s spirit animal?"
+- category: Imagination
+  question: "If {spotlight} was a colour, which one?"
+- category: Imagination
+  question: "If the family was a band, what instrument would {spotlight} play?"
+- category: Imagination
+  question: "If {spotlight} ran for prime minister, what would their slogan be?"

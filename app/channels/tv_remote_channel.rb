@@ -23,11 +23,13 @@ class TvRemoteChannel < ApplicationCable::Channel
       if membership
         membership.update_column(:connected, true)
         transmit({
-          type:     "rejoined",
-          slot:     membership.slot,
-          name:     membership.name,
-          color:    SLOT_COLORS[membership.slot],
-          phone_id: @device_token
+          type:       "rejoined",
+          slot:       membership.slot,
+          name:       membership.name,
+          color:      SLOT_COLORS[membership.slot],
+          phone_id:   @device_token,
+          code:       @current_room.code,
+          game_slug:  @current_room.game_slug
         })
         @slot_claimed = true
       end
@@ -111,7 +113,10 @@ class TvRemoteChannel < ApplicationCable::Channel
     RoomChannel.member_joined(room, membership)
 
     members = room.memberships.reload.map(&:display)
-    transmit({ type: "joined", slot: slot, name: name, color: SLOT_COLORS[slot], code: code, members: members })
+    transmit({
+      type: "joined", slot: slot, name: name, color: SLOT_COLORS[slot],
+      code: code, game_slug: room.game_slug, members: members
+    })
   end
 
   private

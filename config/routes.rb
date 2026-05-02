@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   get  "/games/trivia",       to: "trivia#new",  as: :new_trivia
   get  "/games/trivia/:code", to: "trivia#show", as: :trivia
 
+  get  "/games/spotlight",       to: "spotlight#new",  as: :new_spotlight
+  get  "/games/spotlight/:code", to: "spotlight#show", as: :spotlight
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

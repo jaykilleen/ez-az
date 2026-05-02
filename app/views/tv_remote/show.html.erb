@@ -164,6 +164,86 @@
   .phone-result-icon { font-size: clamp(3rem, 16vw, 6rem); font-weight: 900; line-height: 1; }
   .phone-result-msg { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 700; color: #fff; text-align: center; line-height: 1.4; }
 
+  /* ── Spotlight phone states ── */
+  .spot-banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; border-radius: 10px;
+    background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);
+    font-size: 13px; color: #ffd700; font-weight: 700;
+    width: 100%; max-width: 340px; box-sizing: border-box;
+  }
+  .spot-banner.is-me {
+    background: rgba(255,215,0,0.18); border-color: #ffd700;
+    color: #fff;
+  }
+  .spot-banner-icon { font-size: 18px; line-height: 1; }
+  .spot-banner-text { flex: 1; line-height: 1.3; }
+  .spot-banner-text b { color: #ffd700; }
+  .spot-banner.is-me .spot-banner-text b { color: #fff; }
+
+  .spot-question {
+    font-size: clamp(1rem, 4vw, 1.2rem); font-weight: 700; color: #fff;
+    line-height: 1.45; text-align: center;
+    width: 100%; max-width: 360px;
+  }
+  .spot-prompt {
+    font-size: 14px; color: #8ab4c8; line-height: 1.5; text-align: center;
+    width: 100%; max-width: 340px;
+  }
+  .spot-prompt b { color: #fff; }
+
+  .spot-input-wrap {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 360px;
+  }
+  .spot-input {
+    width: 100%; padding: 14px 16px; box-sizing: border-box;
+    border-radius: 12px; background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,215,0,0.35); color: #fff;
+    font-size: 17px; font-weight: 600; outline: none;
+    font-family: inherit;
+  }
+  .spot-input:focus { border-color: #ffd700; }
+  .spot-input.is-spotlight { border-color: #ffd700; background: rgba(255,215,0,0.08); }
+
+  .spot-submit-btn {
+    padding: 14px; border-radius: 12px;
+    background: #ffd700; color: #0a0a12;
+    font-size: 16px; font-weight: 900; border: none; cursor: pointer;
+    letter-spacing: 0.04em; transition: opacity 0.15s;
+  }
+  .spot-submit-btn:disabled { opacity: 0.4; }
+
+  .spot-pick-list {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 360px;
+  }
+  .spot-pick-btn {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px; border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid var(--pick-color, rgba(255,255,255,0.15));
+    color: #fff; font-size: 15px; font-weight: 600;
+    text-align: left; cursor: pointer; line-height: 1.4;
+    font-family: inherit; transition: background 0.1s, transform 0.1s;
+    width: 100%; box-sizing: border-box;
+  }
+  .spot-pick-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.12); }
+  .spot-pick-btn:disabled { opacity: 0.4; }
+  .spot-pick-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .spot-pick-name {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.06em;
+    margin-bottom: 4px; opacity: 0.7;
+  }
+
+  .spot-status-line {
+    font-size: 13px; color: #8ab4c8; text-align: center; line-height: 1.5;
+  }
+  .spot-status-line b { color: #ffd700; }
+
   .back-to-store {
     display: block; padding: 14px 24px; border-radius: 12px;
     background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12);
@@ -393,6 +473,54 @@
       </div>
     </div>
 
+    <!-- spotlight: spotlight game in progress, joined -->
+    <div class="zone-content buzzer-content" data-screen="spotlight" hidden>
+      <div class="buzzer-info" id="spot-info">P1</div>
+
+      <!-- spotlight banner: shows who's in the spotlight this round -->
+      <div class="spot-banner" id="spot-banner">
+        <div class="spot-banner-icon">🌟</div>
+        <div class="spot-banner-text">
+          <b id="spot-banner-name">—</b> is in the spotlight
+        </div>
+      </div>
+
+      <!-- reading: question shown, get ready -->
+      <div id="spot-reading-state">
+        <div class="spot-question" id="spot-question"></div>
+        <div class="spot-prompt" id="spot-reading-prompt">Get ready to type!</div>
+      </div>
+
+      <!-- typing: text input phase -->
+      <div id="spot-typing-state" hidden>
+        <div class="spot-question" id="spot-question-2"></div>
+        <div class="spot-prompt" id="spot-typing-prompt"></div>
+        <div class="spot-input-wrap">
+          <input class="spot-input" id="spot-input" type="text"
+                 maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false">
+          <button class="spot-submit-btn" id="spot-submit-btn">Lock it in →</button>
+        </div>
+      </div>
+
+      <!-- locked: waiting for others or for picking -->
+      <div id="spot-locked-state" class="phone-locked" hidden>
+        <div class="phone-locked-icon">&#10003;</div>
+        <div class="phone-locked-msg" id="spot-locked-msg">Locked in!<br>Waiting for others…</div>
+      </div>
+
+      <!-- picking: spotlight picks favourite -->
+      <div id="spot-picking-state" hidden>
+        <div class="spot-status-line" id="spot-picking-msg"></div>
+        <div class="spot-pick-list" id="spot-pick-list"></div>
+      </div>
+
+      <!-- result: after reveal -->
+      <div id="spot-result-state" class="phone-result" hidden>
+        <div class="phone-result-icon" id="spot-result-icon"></div>
+        <div class="phone-result-msg" id="spot-result-msg"></div>
+      </div>
+    </div>
+
     <!-- watching: game in progress, not joined -->
     <div class="zone-content" data-screen="watching" hidden>
       <div class="zone-hint watching-hint">
@@ -464,12 +592,15 @@
   var mySlot           = null;
   var myColor          = null;
   var triviaChannel    = null;
+  var spotlightChannel = null;
   var roomChannel      = null;
   var remote           = null;
   var myAnswerIndex    = null;
   var phoneTimerInterval = null;
   var activeTab        = 'game';
   var letters          = ['A', 'B', 'C', 'D'];
+  var gameSlug         = null;
+  var spotState        = { phase: null, spotlightSlot: null };
   var DPAD_SCREENS     = new Set(['shelf', 'lobby', 'waiting', 'watching']);
   var SLOT_COLORS      = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
 
@@ -509,8 +640,8 @@
   var remoteDot       = document.getElementById('remote-dot');
 
   // ── Screen switching ────────────────────────────────────────────────
-  var PARTY_SCREENS  = new Set(['buzzer']);
-  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer']);
+  var PARTY_SCREENS  = new Set(['buzzer', 'spotlight']);
+  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer', 'spotlight']);
 
   function showScreen(name) {
     currentScreen = name;
@@ -542,8 +673,9 @@
     });
 
     if (PARTY_SCREENS.has(currentScreen)) {
-      var buzzerEl = document.querySelector('[data-screen="buzzer"]');
-      buzzerEl.hidden         = tab === 'options';
+      document.querySelectorAll('.zone-content').forEach(function(el) {
+        el.hidden = el.dataset.screen !== currentScreen || tab === 'options';
+      });
       zoneDpad.hidden         = tab !== 'remote';
       zoneOptionsPanel.hidden = tab !== 'options';
     } else {
@@ -762,25 +894,39 @@
     mySlot   = data.slot;
     myColor  = data.color;
     roomCode = data.code;
+    gameSlug = data.game_slug || gameSlug;
 
     waitingBadge.textContent = 'P' + mySlot;
     waitingBadge.style.background = myColor;
     document.documentElement.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
+    document.getElementById('spot-info').textContent = 'P' + mySlot;
 
     if (data.members) renderPlayers(data.members);
     showScreen('waiting');
-    subscribeToTrivia(data.code, data.slot);
+    subscribeToGameChannel(data.code, data.slot);
     subscribeToRoom(data.code);
   }
 
   function handleRejoined(data) {
     mySlot  = data.slot;
     myColor = data.color;
+    gameSlug = data.game_slug || gameSlug;
+    if (data.code) roomCode = data.code;
     waitingBadge.textContent = 'P' + mySlot;
     waitingBadge.style.background = myColor;
     document.documentElement.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
+    document.getElementById('spot-info').textContent = 'P' + mySlot;
+    if (roomCode && mySlot) {
+      subscribeToGameChannel(roomCode, mySlot);
+      subscribeToRoom(roomCode);
+    }
+  }
+
+  function subscribeToGameChannel(code, slot) {
+    if (gameSlug === 'spotlight') subscribeToSpotlight(code, slot);
+    else subscribeToTrivia(code, slot);
   }
 
   function handleSlotAssigned(data) {
@@ -835,6 +981,7 @@
     myColor = null;
     if (roomChannel) { roomChannel.unsubscribe(); roomChannel = null; }
     if (triviaChannel) { triviaChannel.unsubscribe(); triviaChannel = null; }
+    if (spotlightChannel) { spotlightChannel.unsubscribe(); spotlightChannel = null; }
     showScreen('lobby');
   }
 
@@ -875,6 +1022,200 @@
         }
       }
     );
+  }
+
+  // ── Spotlight subscription ────────────────────────────────────────────
+  function subscribeToSpotlight(code, slot) {
+    if (spotlightChannel) return;
+    spotlightChannel = consumer.subscriptions.create(
+      { channel: 'SpotlightChannel', code: code, slot: slot },
+      {
+        received: function(data) {
+          switch (data.type) {
+            case 'question':         onSpotQuestion(data);    break;
+            case 'answering':        onSpotAnswering(data);   break;
+            case 'player_submitted': onSpotSubmitted(data);   break;
+            case 'picking':          onSpotPicking(data);     break;
+            case 'revealed':         onSpotRevealed(data);    break;
+            case 'game_over':        onSpotGameOver(data);    break;
+          }
+        }
+      }
+    );
+  }
+
+  function showSpotPhase(name) {
+    document.getElementById('spot-reading-state').hidden = name !== 'reading';
+    document.getElementById('spot-typing-state').hidden  = name !== 'typing';
+    document.getElementById('spot-locked-state').hidden  = name !== 'locked';
+    document.getElementById('spot-picking-state').hidden = name !== 'picking';
+    document.getElementById('spot-result-state').hidden  = name !== 'result';
+  }
+
+  function setSpotBanner(spotlightSlot, spotlightName) {
+    var banner = document.getElementById('spot-banner');
+    var nameEl = document.getElementById('spot-banner-name');
+    var iAm = (spotlightSlot === mySlot);
+    banner.classList.toggle('is-me', iAm);
+    nameEl.textContent = iAm ? 'YOU' : spotlightName;
+  }
+
+  function onSpotQuestion(data) {
+    spotState.phase = 'reading';
+    spotState.spotlightSlot = data.spotlight_slot;
+    document.getElementById('spot-info').textContent = 'P' + mySlot + '  ·  Q' + (data.q_index + 1) + ' / ' + data.total;
+    document.getElementById('spot-question').textContent = data.question;
+    document.getElementById('spot-question-2').textContent = data.question;
+    setSpotBanner(data.spotlight_slot, data.spotlight_name);
+
+    var promptEl = document.getElementById('spot-reading-prompt');
+    promptEl.innerHTML = (data.spotlight_slot === mySlot)
+      ? "You're up! Get ready to type your real answer."
+      : "Get ready to guess what <b>" + esc(data.spotlight_name) + "</b> would say.";
+
+    showSpotPhase('reading');
+    showScreen('spotlight');
+    if (activeTab === 'remote') { remoteDot.hidden = false; } else { applyTab('game'); }
+  }
+
+  function onSpotAnswering(data) {
+    spotState.phase = 'answering';
+    var input = document.getElementById('spot-input');
+    var promptEl = document.getElementById('spot-typing-prompt');
+    var submitBtn = document.getElementById('spot-submit-btn');
+    var iAm = (spotState.spotlightSlot === mySlot);
+
+    if (iAm) {
+      input.classList.add('is-spotlight');
+      input.placeholder = 'Your real answer';
+      promptEl.innerHTML = "You're in the spotlight! Type your <b>real</b> answer — others guess what you'll say.";
+    } else {
+      input.classList.remove('is-spotlight');
+      input.placeholder = 'Your guess';
+      promptEl.innerHTML = "What do you think <b>" + esc(data.spotlight_name) + "</b> will say?";
+    }
+    input.value = '';
+    input.disabled = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Lock it in →';
+
+    showSpotPhase('typing');
+    if (activeTab !== 'options') applyTab('game');
+    setTimeout(function() { input.focus(); }, 80);
+  }
+
+  function submitSpotAnswer() {
+    if (!spotlightChannel) return;
+    var input = document.getElementById('spot-input');
+    var submitBtn = document.getElementById('spot-submit-btn');
+    var text = input.value.trim();
+    if (!text) return;
+    spotlightChannel.perform('submit', { text: text });
+    input.disabled = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Locked';
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+
+  document.getElementById('spot-submit-btn').addEventListener('click', submitSpotAnswer);
+  document.getElementById('spot-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitSpotAnswer(); }
+  });
+
+  function onSpotSubmitted(data) {
+    if (data.slot === mySlot) {
+      var msg = document.getElementById('spot-locked-msg');
+      msg.innerHTML = 'Locked in!<br>' + data.submitted_count + ' / ' + data.expected_count + ' in';
+      showSpotPhase('locked');
+      if (navigator.vibrate) navigator.vibrate(60);
+    } else {
+      // update count if I'm currently locked
+      if (!document.getElementById('spot-locked-state').hidden) {
+        document.getElementById('spot-locked-msg').innerHTML =
+          'Locked in!<br>' + data.submitted_count + ' / ' + data.expected_count + ' in';
+      }
+    }
+  }
+
+  function onSpotPicking(data) {
+    spotState.phase = 'picking';
+    var iAm = (data.spotlight_slot === mySlot);
+    var msgEl = document.getElementById('spot-picking-msg');
+    var listEl = document.getElementById('spot-pick-list');
+
+    if (iAm) {
+      msgEl.innerHTML = '<b>You\'re picking!</b><br>Choose your favourite answer.';
+      listEl.innerHTML = '';
+      data.submissions.forEach(function(sub) {
+        if (sub.is_spotlight) return;
+        var btn = document.createElement('button');
+        btn.className = 'spot-pick-btn';
+        btn.style.setProperty('--pick-color', sub.color);
+        btn.innerHTML =
+          '<div class="spot-pick-dot" style="background:' + sub.color + '"></div>' +
+          '<div>' +
+            '<div class="spot-pick-name" style="color:' + sub.color + '">' + esc(sub.name) + '</div>' +
+            esc(sub.text) +
+          '</div>';
+        btn.addEventListener('click', function() {
+          if (!spotlightChannel) return;
+          spotlightChannel.perform('pick', { picked_slot: sub.slot });
+          listEl.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+          if (navigator.vibrate) navigator.vibrate(40);
+        });
+        listEl.appendChild(btn);
+      });
+      showSpotPhase('picking');
+    } else {
+      msgEl.innerHTML = '<b>' + esc(data.spotlight_name) + '</b> is picking their favourite…<br>Watch the TV!';
+      listEl.innerHTML = '';
+      showSpotPhase('picking');
+    }
+  }
+
+  function onSpotRevealed(data) {
+    spotState.phase = 'revealed';
+    var iconEl = document.getElementById('spot-result-icon');
+    var msgEl  = document.getElementById('spot-result-msg');
+    var iAmSpot = (data.spotlight_slot === mySlot);
+    var myResult = data.submissions.find(function(s) { return s.slot === mySlot; });
+
+    if (iAmSpot) {
+      iconEl.textContent = '🌟'; iconEl.style.color = '#ffd700';
+      msgEl.innerHTML = 'Your answer:<br><b>' + esc(data.spotlight_answer) + '</b><br><br>Check the TV for results!';
+    } else if (!myResult) {
+      iconEl.textContent = '→'; iconEl.style.color = '#8ab4c8';
+      msgEl.textContent = 'Next round coming up…';
+    } else {
+      var bits = [];
+      if (myResult.matched) bits.push('<span style="color:#2ed573">✓ Matched +2</span>');
+      if (myResult.picked)  bits.push('<span style="color:#ffd700">👑 Favourite +3</span>');
+      if (bits.length) {
+        iconEl.textContent = myResult.picked ? '👑' : '✓';
+        iconEl.style.color = myResult.picked ? '#ffd700' : '#2ed573';
+        msgEl.innerHTML = bits.join('<br>') + '<br><br>The answer was:<br><b>' + esc(data.spotlight_answer) + '</b>';
+        if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
+      } else {
+        iconEl.textContent = '✗'; iconEl.style.color = '#ff4757';
+        msgEl.innerHTML = 'No luck this round.<br>The answer was:<br><b>' + esc(data.spotlight_answer) + '</b>';
+      }
+    }
+    showSpotPhase('result');
+  }
+
+  function onSpotGameOver(data) {
+    var iconEl = document.getElementById('spot-result-icon');
+    var msgEl  = document.getElementById('spot-result-msg');
+    iconEl.textContent = '🏆'; iconEl.style.color = '#ffd700';
+    msgEl.innerHTML = 'Game over!<br>Check the TV for results.';
+    var existingLink = msgEl.parentElement.querySelector('.back-to-store');
+    if (!existingLink) {
+      var link = document.createElement('a');
+      link.href = '/'; link.className = 'back-to-store';
+      link.textContent = '← Back to Store';
+      msgEl.insertAdjacentElement('afterend', link);
+    }
+    showSpotPhase('result');
   }
 
   // ── Phone timer ───────────────────────────────────────────────────────
