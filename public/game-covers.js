@@ -1249,3 +1249,89 @@
     ctx.closePath();
   }
 })();
+
+// ── Hacker Pro cover ──────────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('hackerCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // CRT-black background with green tint
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#020806');
+  bg.addColorStop(0.5, '#062012');
+  bg.addColorStop(1, '#020806');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Faint scanlines
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#00ff66';
+  for (var y = 0; y < H; y += 4) {
+    ctx.fillRect(0, y, W, 1);
+  }
+  ctx.restore();
+
+  // Glow halo behind slots
+  var glow = ctx.createRadialGradient(W / 2, H * 0.5, 8, W / 2, H * 0.5, W * 0.6);
+  glow.addColorStop(0, 'rgba(0, 255, 102, 0.28)');
+  glow.addColorStop(1, 'rgba(0, 255, 102, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Code slots: █ █ ✓ █  (one cracked)
+  ctx.font = 'bold 38px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  var slotW = 36;
+  var slotH = 50;
+  var gap = 10;
+  var totalW = 4 * slotW + 3 * gap;
+  var startX = (W - totalW) / 2 + slotW / 2;
+  var slotY = H * 0.46;
+  var values = ['█', '7', '█', '█'];
+  var locked = [false, true, false, false];
+
+  for (var i = 0; i < 4; i++) {
+    var cx = startX + i * (slotW + gap);
+    ctx.save();
+    ctx.shadowColor = locked[i] ? '#00ff66' : 'transparent';
+    ctx.shadowBlur = locked[i] ? 14 : 0;
+    ctx.strokeStyle = locked[i] ? '#00ff66' : '#008833';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = locked[i] ? 'rgba(0, 255, 102, 0.18)' : 'rgba(0, 255, 102, 0.04)';
+    ctx.beginPath();
+    ctx.rect(cx - slotW / 2, slotY - slotH / 2, slotW, slotH);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = locked[i] ? '#aaffcc' : '#00ff66';
+    ctx.fillText(values[i], cx, slotY + 2);
+    ctx.restore();
+  }
+
+  // Top status line
+  ctx.fillStyle = '#ffb300';
+  ctx.font = 'bold 11px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('> ATTEMPTS: 042', 14, 28);
+
+  // Bottom title
+  ctx.save();
+  ctx.shadowColor = '#00ff66';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#aaffcc';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('HACKER', W / 2, H - 30);
+  ctx.fillText('PRO', W / 2, H - 10);
+  ctx.restore();
+
+  // Blinking cursor accent in the corner
+  ctx.fillStyle = '#00ff66';
+  ctx.fillRect(W - 22, H - 24, 8, 12);
+})();

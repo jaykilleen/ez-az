@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   get  "/games/treasure-hunt",       to: "treasure#new",  as: :new_treasure
   get  "/games/treasure-hunt/:code", to: "treasure#show", as: :treasure
 
+  get  "/games/hacker-pro",       to: "hacker#new",  as: :new_hacker
+  get  "/games/hacker-pro/:code", to: "hacker#show", as: :hacker
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

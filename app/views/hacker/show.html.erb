@@ -1,0 +1,835 @@
+<style>
+  [hidden] { display: none !important; }
+
+  :root {
+    --hk-green: #00ff66;
+    --hk-green-dim: #008833;
+    --hk-amber: #ffb300;
+    --hk-red: #ff2d55;
+    --hk-bg: #020806;
+    --hk-surface: #061008;
+    --hk-border: rgba(0, 255, 102, 0.18);
+  }
+
+  .hk {
+    width: 100vw; height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 102, 0.04) 0px,
+        rgba(0, 255, 102, 0.04) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      radial-gradient(ellipse at center, rgba(0, 80, 40, 0.18), transparent 70%),
+      var(--hk-bg);
+    color: var(--hk-green);
+    font-family: "Courier New", "Consolas", monospace;
+    padding: 2vh 3vw;
+    gap: 1.5vh;
+    overflow: hidden;
+    text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+  }
+
+  /* ── Header ── */
+  .hk-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2vw; overflow: hidden;
+    border-bottom: 1px solid var(--hk-border);
+    padding-bottom: 1vh;
+  }
+  .hk-logo {
+    font-size: clamp(1.6rem, 3vw, 3rem); font-weight: 900;
+    color: var(--hk-green);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .hk-logo::before { content: '> '; color: var(--hk-green-dim); }
+  .hk-title {
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 700;
+    color: var(--hk-amber);
+    flex: 1; text-align: center;
+    letter-spacing: 0.1em;
+  }
+  .hk-code {
+    font-size: clamp(0.85rem, 1.2vw, 1.2rem);
+    color: var(--hk-green);
+    background: rgba(0, 255, 102, 0.06);
+    border: 1px solid var(--hk-border);
+    padding: 0.4em 0.8em;
+    flex-shrink: 0;
+    letter-spacing: 0.1em;
+  }
+  .hk-btn {
+    font-size: clamp(0.75rem, 1vw, 1rem);
+    color: var(--hk-green-dim);
+    background: transparent;
+    border: 1px solid var(--hk-border);
+    padding: 0.4em 0.9em;
+    flex-shrink: 0;
+    cursor: pointer; font-family: inherit;
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .hk-btn:hover { color: var(--hk-red); border-color: var(--hk-red); }
+
+  /* ── Status strip ── */
+  .hk-status-bar {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5vw;
+    padding: 1vh 0;
+    border-bottom: 1px dashed var(--hk-border);
+  }
+  .hk-stat {
+    display: flex; flex-direction: column; gap: 0.3vh;
+    padding: 0.6vh 1vw;
+    background: rgba(0, 255, 102, 0.03);
+    border: 1px solid var(--hk-border);
+  }
+  .hk-stat-label {
+    font-size: clamp(0.65rem, 0.85vw, 0.85rem);
+    color: var(--hk-green-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .hk-stat-value {
+    font-size: clamp(1.1rem, 1.6vw, 1.6rem);
+    font-weight: 900;
+    color: var(--hk-green);
+    letter-spacing: 0.06em;
+  }
+  .hk-stat-value.is-amber { color: var(--hk-amber); }
+  .hk-stat-value.is-red   { color: var(--hk-red); }
+
+  .hk-main { display: flex; align-items: center; justify-content: center; min-height: 0; grid-row: 3; }
+
+  /* ── Lobby ── */
+  .hk-lobby {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4vw; align-items: center; width: 100%;
+    max-width: 90vw;
+  }
+  .hk-lobby-left { display: flex; flex-direction: column; gap: 2vh; }
+  .hk-lobby-heading {
+    font-size: clamp(2.2rem, 5vw, 5rem); font-weight: 900;
+    color: var(--hk-green);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 18px rgba(0, 255, 102, 0.5);
+    line-height: 1;
+  }
+  .hk-lobby-heading::before {
+    content: '> '; color: var(--hk-amber);
+    animation: hk-blink 1s steps(1) infinite;
+  }
+  @keyframes hk-blink { 50% { opacity: 0; } }
+  .hk-lobby-sub {
+    font-size: clamp(0.95rem, 1.4vw, 1.4rem);
+    color: var(--hk-green-dim);
+    line-height: 1.6;
+    max-width: 50vw;
+  }
+  .hk-lobby-rules {
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    color: var(--hk-green);
+    line-height: 1.6;
+    background: rgba(0, 255, 102, 0.04);
+    border-left: 3px solid var(--hk-green);
+    padding: 1vh 1.4vw;
+    max-width: 50vw;
+  }
+  .hk-lobby-rules strong { color: var(--hk-amber); }
+
+  .hk-difficulty {
+    display: flex; flex-direction: column; gap: 0.8vh;
+    margin-top: 1vh;
+  }
+  .hk-difficulty-label {
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    color: var(--hk-green-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .hk-difficulty-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1vh 1vw;
+    max-width: 44vw;
+  }
+  .hk-diff-btn {
+    text-align: left;
+    padding: 1.4vh 1.6vw;
+    background: rgba(0, 255, 102, 0.04);
+    border: 2px solid var(--hk-border);
+    color: var(--hk-green);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    display: flex; flex-direction: column; gap: 0.4vh;
+  }
+  .hk-diff-btn:hover, .hk-diff-btn.is-focused {
+    background: rgba(0, 255, 102, 0.12);
+    border-color: var(--hk-green);
+    transform: translateY(-2px);
+  }
+  .hk-diff-btn.is-focused {
+    box-shadow: 0 0 0 3px rgba(0, 255, 102, 0.25);
+  }
+  .hk-diff-name {
+    font-size: clamp(1rem, 1.4vw, 1.4rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+  }
+  .hk-diff-name.lvl-easy       { color: var(--hk-green); }
+  .hk-diff-name.lvl-medium     { color: var(--hk-amber); }
+  .hk-diff-name.lvl-hard       { color: #ff8c00; }
+  .hk-diff-name.lvl-impossible { color: var(--hk-red); }
+  .hk-diff-meta {
+    font-size: clamp(0.75rem, 0.95vw, 0.95rem);
+    color: var(--hk-green-dim);
+  }
+  .hk-diff-real {
+    font-size: clamp(0.75rem, 0.95vw, 0.95rem);
+    color: #c8b48a;
+  }
+
+  .hk-lobby-players {
+    display: flex; flex-direction: column; gap: 0.8vh;
+    margin-top: 1vh;
+  }
+  .hk-lobby-players-title {
+    font-size: clamp(0.7rem, 0.95vw, 0.95rem);
+    color: var(--hk-green-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .hk-joined-player {
+    display: flex; align-items: center; gap: 0.8vw;
+    font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+    color: var(--hk-green);
+  }
+  .hk-joined-dot {
+    width: 0.8vw; height: 0.8vw; border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .hk-no-players { color: var(--hk-green-dim); font-size: clamp(0.85rem, 1.1vw, 1.1rem); }
+
+  .hk-qr-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+    padding: 2vh 2vw; background: rgba(0, 255, 102, 0.05);
+    border: 2px solid var(--hk-border);
+  }
+  .hk-qr-label {
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    color: var(--hk-green); text-align: center; line-height: 1.4;
+  }
+  .hk-qr-label strong {
+    display: block; color: var(--hk-amber);
+    font-size: clamp(1rem, 1.3vw, 1.3rem);
+    margin-bottom: 0.4vh;
+    letter-spacing: 0.1em;
+  }
+  .hk-qr-img { width: clamp(160px, 17vw, 260px); height: clamp(160px, 17vw, 260px); }
+  .hk-qr-img svg { width: 100%; height: 100%; display: block; }
+
+  /* ── Stage (playing) ── */
+  .hk-stage {
+    display: flex; flex-direction: column; gap: 3vh;
+    width: 100%; align-items: center; justify-content: center;
+  }
+  .hk-stage-banner {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem);
+    color: var(--hk-amber);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .hk-stage-banner::before { content: '[ '; color: var(--hk-green-dim); }
+  .hk-stage-banner::after  { content: ' ]'; color: var(--hk-green-dim); }
+
+  .hk-slots {
+    display: flex; gap: clamp(0.4vw, 0.8vw, 1vw);
+    flex-wrap: wrap; justify-content: center;
+    padding: 2vh 1vw;
+  }
+  .hk-slot {
+    width: clamp(54px, 6vw, 100px);
+    height: clamp(78px, 9vw, 140px);
+    border: 3px solid var(--hk-green-dim);
+    background: rgba(0, 255, 102, 0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(2rem, 4vw, 4rem);
+    font-weight: 900;
+    color: var(--hk-green);
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .hk-slot.is-locked {
+    border-color: var(--hk-green);
+    background: rgba(0, 255, 102, 0.16);
+    box-shadow: 0 0 14px rgba(0, 255, 102, 0.4),
+                inset 0 0 14px rgba(0, 255, 102, 0.18);
+    animation: hk-slot-pop 0.4s ease-out;
+  }
+  @keyframes hk-slot-pop {
+    0%   { transform: scale(0.8); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .hk-slot.is-miss {
+    border-color: var(--hk-red);
+    box-shadow: 0 0 12px rgba(255, 45, 85, 0.5);
+    animation: hk-shake 0.35s;
+  }
+  @keyframes hk-shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
+  }
+
+  .hk-target {
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+    color: var(--hk-green-dim);
+    letter-spacing: 0.1em;
+    margin-top: 1vh;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .hk-target strong { color: var(--hk-amber); font-size: 1.1em; }
+
+  /* ── Won ── */
+  .hk-won {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2.5vh; width: 100%;
+  }
+  .hk-won-title {
+    font-size: clamp(2.5rem, 6vw, 7rem);
+    font-weight: 900;
+    color: var(--hk-green);
+    text-shadow: 0 0 24px rgba(0, 255, 102, 0.6);
+    letter-spacing: 0.1em;
+    animation: hk-glitch 1.6s ease-in-out infinite;
+  }
+  @keyframes hk-glitch {
+    0%, 100% { transform: translate(0,0); }
+    25%      { transform: translate(-1px, 1px); }
+    50%      { transform: translate(1px, -1px); }
+    75%      { transform: translate(-1px, -1px); }
+  }
+  .hk-won-code {
+    font-size: clamp(1.6rem, 3vw, 3rem);
+    font-weight: 900;
+    color: var(--hk-amber);
+    letter-spacing: 0.2em;
+    background: rgba(0, 255, 102, 0.06);
+    border: 2px solid var(--hk-amber);
+    padding: 1vh 2vw;
+  }
+  .hk-won-stats {
+    display: flex; gap: 3vw; align-items: center;
+    font-size: clamp(0.95rem, 1.3vw, 1.3rem);
+    color: var(--hk-green);
+  }
+  .hk-won-stat-num {
+    color: var(--hk-amber);
+    font-size: 1.2em;
+    font-weight: 900;
+  }
+  .hk-won-lesson {
+    max-width: 60vw; text-align: center;
+    font-size: clamp(0.95rem, 1.3vw, 1.3rem);
+    color: var(--hk-green-dim);
+    line-height: 1.6;
+    border-top: 1px dashed var(--hk-border);
+    padding-top: 1.5vh;
+  }
+  .hk-won-lesson strong { color: var(--hk-amber); }
+
+  .hk-actions { display: flex; gap: 1vw; }
+  .hk-action-btn {
+    padding: 1vh 2vw;
+    background: rgba(0, 255, 102, 0.1);
+    border: 2px solid var(--hk-green);
+    color: var(--hk-green);
+    font-family: inherit;
+    font-size: clamp(0.95rem, 1.3vw, 1.3rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .hk-action-btn:hover { background: rgba(0, 255, 102, 0.25); }
+
+  /* ── Footer ── */
+  .hk-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1vh;
+    border-top: 1px solid var(--hk-border);
+    font-size: clamp(0.7rem, 0.9vw, 0.9rem);
+    color: var(--hk-green-dim);
+    letter-spacing: 0.1em;
+  }
+  .hk-footer-status::before { content: '> '; }
+</style>
+
+<div class="hk" id="hk">
+  <header class="hk-header">
+    <div class="hk-logo">EZ-AZ</div>
+    <div class="hk-title">// HACKER PRO //</div>
+    <button class="hk-btn" id="hk-mute-btn" type="button" aria-pressed="false">🔊</button>
+    <button class="hk-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
+    <div class="hk-code">Room <%= @room.code %></div>
+  </header>
+
+  <div class="hk-status-bar" id="hk-status-bar" hidden>
+    <div class="hk-stat">
+      <div class="hk-stat-label">Attempts</div>
+      <div class="hk-stat-value is-amber" id="hk-attempts">0</div>
+    </div>
+    <div class="hk-stat">
+      <div class="hk-stat-label">Team Time</div>
+      <div class="hk-stat-value" id="hk-time">00:00</div>
+    </div>
+    <div class="hk-stat">
+      <div class="hk-stat-label">Real-World Crack</div>
+      <div class="hk-stat-value is-red" id="hk-real">—</div>
+    </div>
+  </div>
+
+  <main class="hk-main" id="hk-main">
+
+    <!-- LOBBY -->
+    <div class="hk-lobby" id="hk-lobby">
+      <div class="hk-lobby-left">
+        <div class="hk-lobby-heading">HACKER PRO</div>
+        <div class="hk-lobby-sub">
+          The team brute-forces a hidden code. Every wrong guess counts.<br>
+          Easy cracks fast. Impossible never cracks. That's the point.
+        </div>
+        <div class="hk-lobby-rules">
+          Each player taps their phone to <strong>cycle a character</strong> and <strong>attack a slot</strong>.
+          Lock the right char and the slot turns green for everyone. Bust the whole code as fast as you can.
+        </div>
+
+        <div class="hk-difficulty">
+          <div class="hk-difficulty-label">SELECT DIFFICULTY</div>
+          <div class="hk-difficulty-grid" id="hk-diff-grid">
+            <% [
+              ["easy",       "EASY",       "4 digits",         "Cracks: 1 second"],
+              ["medium",     "MEDIUM",     "6 digits",         "Cracks: 17 minutes"],
+              ["hard",       "HARD",       "8 chars · A-Z 0-9", "Cracks: 9 days"],
+              ["impossible", "IMPOSSIBLE", "12 chars + symbols", "Cracks: 200 years"]
+            ].each do |slug, name, meta, real| %>
+              <button class="hk-diff-btn" data-difficulty="<%= slug %>" type="button">
+                <div class="hk-diff-name lvl-<%= slug %>"><%= name %></div>
+                <div class="hk-diff-meta"><%= meta %></div>
+                <div class="hk-diff-real"><%= real %></div>
+              </button>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="hk-lobby-players">
+          <div class="hk-lobby-players-title">CONNECTED HACKERS</div>
+          <div id="hk-lobby-players">
+            <% if @members.any? %>
+              <% @members.each do |m| %>
+                <div class="hk-joined-player">
+                  <span class="hk-joined-dot" style="color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>; background: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>"></span>
+                  <%= m.name %>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="hk-no-players">No hackers yet. Scan to join.</div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="hk-qr-box">
+        <div class="hk-qr-label">
+          <strong>SCAN TO HACK</strong>
+          ez-az.net
+        </div>
+        <div class="hk-qr-img"><%= @qr_code_svg %></div>
+      </div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="hk-stage" id="hk-stage" hidden>
+      <div class="hk-stage-banner" id="hk-stage-banner">BRUTE FORCE IN PROGRESS</div>
+      <div class="hk-slots" id="hk-slots"></div>
+      <div class="hk-target" id="hk-target">
+        TARGET: <strong id="hk-difficulty-name">—</strong>
+        <span style="color:var(--hk-green-dim)">·</span>
+        <span id="hk-hint">—</span>
+      </div>
+    </div>
+
+    <!-- WON -->
+    <div class="hk-won" id="hk-won" hidden>
+      <div class="hk-won-title">ACCESS GRANTED</div>
+      <div class="hk-won-code" id="hk-won-code">— — — —</div>
+      <div class="hk-won-stats">
+        <div>Time: <span class="hk-won-stat-num" id="hk-won-time">0s</span></div>
+        <div>Attempts: <span class="hk-won-stat-num" id="hk-won-attempts">0</span></div>
+      </div>
+      <div class="hk-won-lesson" id="hk-won-lesson">—</div>
+      <div class="hk-actions">
+        <button class="hk-action-btn" id="hk-again-btn" type="button">// PLAY AGAIN</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="hk-footer">
+    <div class="hk-footer-status" id="hk-status">SYS_READY · awaiting input</div>
+    <div>STRONG PASSWORDS = LONG &amp; MIXED</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var SLOT_COLORS = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var consumer = createConsumer();
+  var code = <%= @room.code.to_json.html_safe %>;
+
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'hacker-pro',
+        game_title: 'Hacker Pro',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
+  if (window.Music) Music.attachMuteButton(document.getElementById('hk-mute-btn'));
+
+  // ── State
+  var phase = 'lobby';
+  var knownMembers = [];
+  var startedAtMs = null;
+  var timerInterval = null;
+  var lastDifficulty = null;
+  var diffFocusIndex = 0;
+
+  // ── Elements
+  var statusBar  = document.getElementById('hk-status-bar');
+  var lobbyEl    = document.getElementById('hk-lobby');
+  var stageEl    = document.getElementById('hk-stage');
+  var wonEl      = document.getElementById('hk-won');
+  var slotsEl    = document.getElementById('hk-slots');
+  var attemptsEl = document.getElementById('hk-attempts');
+  var timeEl     = document.getElementById('hk-time');
+  var realEl     = document.getElementById('hk-real');
+  var lobbyPlayersEl = document.getElementById('hk-lobby-players');
+  var diffGrid   = document.getElementById('hk-diff-grid');
+  var diffButtons = Array.prototype.slice.call(diffGrid.querySelectorAll('.hk-diff-btn'));
+  var statusEl   = document.getElementById('hk-status');
+
+  // ── Subscriptions
+  consumer.subscriptions.create(
+    { channel: 'RoomChannel', code: code },
+    {
+      received: function(data) {
+        if (data && data.type === 'member_joined') refreshLobbyPlayers(data.members);
+      }
+    }
+  );
+
+  var hacker = consumer.subscriptions.create(
+    { channel: 'HackerChannel', code: code, role: 'tv' },
+    {
+      connected:    function() { setStatus('Online · awaiting input'); },
+      disconnected: function() { setStatus('OFFLINE'); },
+      received: function(data) {
+        if (!data) return;
+        switch (data.type) {
+          case 'playing':     onPlaying(data); break;
+          case 'slot_solved': onSlotSolved(data); break;
+          case 'miss':        onMiss(data); break;
+          case 'won':         onWon(data); break;
+          case 'reset':       onReset(); break;
+          case 'error':       setStatus(data.message); break;
+        }
+      }
+    }
+  );
+
+  // ── Difficulty selection (focus + click)
+  function focusDiff(i) {
+    diffFocusIndex = Math.max(0, Math.min(diffButtons.length - 1, i));
+    diffButtons.forEach(function(btn, idx) {
+      btn.classList.toggle('is-focused', idx === diffFocusIndex);
+    });
+  }
+  diffButtons.forEach(function(btn, idx) {
+    btn.addEventListener('click', function() { startGame(btn.dataset.difficulty); });
+    btn.addEventListener('mouseenter', function() { focusDiff(idx); });
+  });
+  focusDiff(0);
+
+  function startGame(difficulty) {
+    if (knownMembers.length < 1) {
+      setStatus('No hackers connected. Scan the QR.');
+      return;
+    }
+    lastDifficulty = difficulty;
+    hacker.perform('start_game', { difficulty: difficulty });
+    setStatus('Compiling target...');
+    if (window.Music) Music.start('hacker');
+  }
+
+  document.getElementById('hk-again-btn').addEventListener('click', function() {
+    hacker.perform('reset', {});
+  });
+
+  // ── Keyboard / TV remote
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (phase === 'won' || phase === 'playing') {
+        if (confirm('Exit to store?')) window.location.href = '/tv';
+      } else {
+        window.location.href = '/tv';
+      }
+      return;
+    }
+    if (phase === 'lobby') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault(); focusDiff(diffFocusIndex - 1);
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault(); focusDiff(diffFocusIndex + 1);
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        diffButtons[diffFocusIndex].click();
+      }
+    } else if (phase === 'won' && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      document.getElementById('hk-again-btn').click();
+    }
+  });
+
+  // ── Game events
+  function onPlaying(data) {
+    phase = 'playing';
+    startedAtMs = data.started_at_ms || Date.now();
+    if (tvRemoteSub) {
+      tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Hacker Pro' });
+    }
+    showPhase('stage');
+    statusBar.hidden = false;
+    document.getElementById('hk-difficulty-name').textContent = data.label;
+    document.getElementById('hk-hint').textContent = data.hint || '';
+    realEl.textContent = data.real_world_crack;
+    attemptsEl.textContent = data.attempts || 0;
+    renderSlots(data.revealed || [], data.revealed_chars || [], data.length);
+    startTimer();
+    setStatus('TARGET LOCKED · ' + data.label + ' (' + data.length + ' slots)');
+  }
+
+  function onSlotSolved(data) {
+    attemptsEl.textContent = data.attempts;
+    var slotEl = slotsEl.querySelector('[data-i="' + data.slot_index + '"]');
+    if (slotEl) {
+      slotEl.classList.remove('is-miss');
+      slotEl.classList.add('is-locked');
+      slotEl.style.borderColor = data.cracked_color || '';
+      slotEl.textContent = data.char;
+    }
+    setStatus('SLOT ' + (data.slot_index + 1) + ' CRACKED · ' + data.revealed_count + ' / ' + (data.revealed ? data.revealed.length : '?'));
+    playUnlockSfx();
+  }
+
+  function onMiss(data) {
+    attemptsEl.textContent = data.attempts;
+    var slotEl = slotsEl.querySelector('[data-i="' + data.slot_index + '"]');
+    if (slotEl && !slotEl.classList.contains('is-locked')) {
+      slotEl.classList.remove('is-miss');
+      void slotEl.offsetWidth;
+      slotEl.classList.add('is-miss');
+      setTimeout(function() { slotEl.classList.remove('is-miss'); }, 400);
+    }
+    playMissSfx();
+  }
+
+  function onWon(data) {
+    phase = 'won';
+    stopTimer();
+    clearActiveGame();
+    if (window.Music) Music.stop();
+
+    document.getElementById('hk-won-code').textContent = (data.code || []).join(' ');
+    document.getElementById('hk-won-time').textContent = formatMs(data.elapsed_ms);
+    document.getElementById('hk-won-attempts').textContent = data.attempts;
+
+    var lesson = '';
+    if (data.difficulty === 'easy') {
+      lesson = 'You cracked a 4-digit PIN. Real attackers crack these in <strong>' +
+        data.real_world_crack + '</strong>. Never use one as a password.';
+    } else if (data.difficulty === 'medium') {
+      lesson = '6 digits is better, but a real computer brute-forces it in <strong>' +
+        data.real_world_crack + '</strong>.';
+    } else if (data.difficulty === 'hard') {
+      lesson = '8 mixed-case alphanumeric chars: ~' + data.real_world_crack +
+        ' for a real attacker. Now you see why length matters.';
+    } else {
+      lesson = 'You actually cracked IMPOSSIBLE? Lucky team. A real attacker would need <strong>' +
+        data.real_world_crack + '</strong>. <em>That</em> is what a strong password buys you.';
+    }
+    document.getElementById('hk-won-lesson').innerHTML = lesson;
+
+    showPhase('won');
+    setStatus('ACCESS GRANTED · ' + data.label);
+    playWinSfx();
+  }
+
+  function onReset() {
+    phase = 'lobby';
+    stopTimer();
+    if (window.Music) Music.stop();
+    statusBar.hidden = true;
+    showPhase('lobby');
+    setStatus('Awaiting target selection');
+    if (tvRemoteSub) {
+      tvRemoteSub.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Hacker Pro' });
+    }
+    saveActiveGame();
+  }
+
+  // ── Renderers
+  function renderSlots(revealed, chars, length) {
+    slotsEl.innerHTML = '';
+    var n = length || revealed.length;
+    for (var i = 0; i < n; i++) {
+      var el = document.createElement('div');
+      el.className = 'hk-slot';
+      el.setAttribute('data-i', i);
+      if (revealed[i]) {
+        el.classList.add('is-locked');
+        el.textContent = chars[i] || '?';
+      } else {
+        el.textContent = '█';
+      }
+      slotsEl.appendChild(el);
+    }
+  }
+
+  function refreshLobbyPlayers(members) {
+    if (!members) return;
+    knownMembers = members.filter(function(m) { return m.role !== 'host'; });
+    lobbyPlayersEl.innerHTML = '';
+    if (knownMembers.length === 0) {
+      lobbyPlayersEl.innerHTML = '<div class="hk-no-players">No hackers yet. Scan to join.</div>';
+      return;
+    }
+    knownMembers.forEach(function(m) {
+      var color = SLOT_COLORS[m.slot] || '#00ff66';
+      var div = document.createElement('div');
+      div.className = 'hk-joined-player';
+      div.innerHTML =
+        '<span class="hk-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
+        esc(m.name || ('Player ' + m.slot));
+      lobbyPlayersEl.appendChild(div);
+    });
+  }
+
+  function showPhase(name) {
+    lobbyEl.hidden = name !== 'lobby';
+    stageEl.hidden = name !== 'stage';
+    wonEl.hidden   = name !== 'won';
+  }
+
+  // ── Timer
+  function startTimer() {
+    stopTimer();
+    timerInterval = setInterval(function() {
+      var ms = Date.now() - (startedAtMs || Date.now());
+      timeEl.textContent = formatMs(ms);
+    }, 100);
+  }
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+  function formatMs(ms) {
+    var s = Math.floor(ms / 1000);
+    var m = Math.floor(s / 60);
+    var rs = s % 60;
+    var tenths = Math.floor((ms % 1000) / 100);
+    if (m > 0) return m + 'm ' + (rs < 10 ? '0' : '') + rs + 's';
+    return rs + '.' + tenths + 's';
+  }
+
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── SFX (shared audio context for short blips)
+  var sfxCtx = null;
+  function ensureSfx() {
+    if (sfxCtx) return sfxCtx;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) sfxCtx = new Ctx();
+    } catch (_) {}
+    return sfxCtx;
+  }
+  function blip(freq, dur, type, gain) {
+    var c = ensureSfx(); if (!c) return;
+    var t = c.currentTime;
+    var o = c.createOscillator();
+    var g = c.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(gain || 0.12, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  function playUnlockSfx() {
+    blip(880, 0.08, 'square', 0.15);
+    setTimeout(function() { blip(1320, 0.18, 'triangle', 0.18); }, 60);
+  }
+  function playMissSfx() {
+    blip(140, 0.12, 'sawtooth', 0.1);
+  }
+  function playWinSfx() {
+    [523, 659, 784, 1046].forEach(function(f, i) {
+      setTimeout(function() { blip(f, 0.2, 'triangle', 0.18); }, i * 110);
+    });
+  }
+
+  // ── Init
+  var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
+  if (initMembers.length) { knownMembers = initMembers; refreshLobbyPlayers(initMembers); }
+
+  // TV remote D-pad mapping
+  var remoteToken = <%= @room.tv_token.to_json.html_safe %>;
+  var tvRemoteSub = null;
+  if (remoteToken) {
+    tvRemoteSub = consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: remoteToken },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Hacker Pro' });
+        },
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          if (data.nav_type === 'release') return;
+          var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };
+          var key = keyMap[data.direction];
+          if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+        }
+      }
+    );
+  }
+</script>

@@ -10,7 +10,8 @@ class Score < ApplicationRecord
     "az-cipher" => :desc,
     "trivia" => :desc,
     "spotlight" => :desc,
-    "treasure-hunt" => :desc
+    "treasure-hunt" => :desc,
+    "hacker-pro" => :asc
   }.freeze
 
   DEFAULT_NAMES = {

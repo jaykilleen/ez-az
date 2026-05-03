@@ -80,6 +80,15 @@ class Game
       path: "/games/treasure-hunt",
       icon: "treasure",
       tv_optimised: true
+    },
+    {
+      slug: "hacker-pro",
+      title: "Hacker Pro",
+      creators: "Az",
+      tagline: "Brute-force the code together. Easy cracks fast. Impossible never cracks. That's the password lesson.",
+      path: "/games/hacker-pro",
+      icon: "hacker",
+      tv_optimised: true
     }
   ].freeze
 

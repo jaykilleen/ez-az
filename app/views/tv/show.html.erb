@@ -372,7 +372,8 @@
   'az-cipher'    => 'cipherCover',
   'trivia'       => 'triviaCover',
   'spotlight'    => 'spotlightCover',
-  'treasure-hunt' => 'treasureCover'
+  'treasure-hunt' => 'treasureCover',
+  'hacker-pro'   => 'hackerCover'
 } %>
 
 <div class="tv">
@@ -517,7 +518,12 @@
   (function() {
     var KEY = 'ezaz_active_tv_game';
     var MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours, matches Room::DEFAULT_TTL
-    var GAME_PATH = { spotlight: '/games/spotlight/', trivia: '/games/trivia/' };
+    var GAME_PATH = {
+      spotlight:       '/games/spotlight/',
+      trivia:          '/games/trivia/',
+      'treasure-hunt': '/games/treasure-hunt/',
+      'hacker-pro':    '/games/hacker-pro/'
+    };
 
     var raw;
     try { raw = localStorage.getItem(KEY); } catch (_) { return; }

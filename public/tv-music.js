@@ -125,6 +125,27 @@
         // Mystery accent every 8
         if (step === 7) pad(NF.A3, t, 0.6, 0.12);
       }
+    },
+
+    hacker: {
+      tempo: 124,
+      gain: 0.14,
+      pattern: function (t, beat) {
+        // 16-beat tense cyber loop in C minor
+        var step = beat % 16;
+        // Driving bass on every 2nd step
+        var bassSeq = [NF.C2, null, NF.C2, null, NF.G2, null, NF.Eb2, null,
+                       NF.C2, null, NF.C2, null, NF.Bb2, null, NF.G2, null];
+        if (bassSeq[step]) bass(bassSeq[step], t, 0.28, 0.32);
+        // Keyboard chatter — high tick on every offbeat
+        if (step % 2 === 1) tick(t, 0.05);
+        // Sparse melodic stabs — minor 7 arpeggio
+        var melody = [NF.C5, null, null, NF.Eb5, null, NF.G5, null, NF.Bb5,
+                      NF.C6, null, NF.G5, null, NF.Eb5, null, NF.C5, null];
+        if (melody[step]) pluck(melody[step], t, 0.22, 0.09);
+        // Sub pulse every 8 — adds urgency
+        if (step === 0 || step === 8) pad(NF.C3, t, 0.6, 0.08);
+      }
     }
   };
 
