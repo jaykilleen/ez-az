@@ -1,0 +1,749 @@
+<style>
+  [hidden] { display: none !important; }
+
+  :root {
+    --c1: #ff4757; --c2: #3742fa; --c3: #ffa502; --c4: #2ed573;
+    --bg: #0a0a12; --surface: #13131f; --border: rgba(255,255,255,0.08);
+    --teal: #00ffc8;
+    --gold: #ffd700;
+    --card-red: #ff4757;
+    --card-blue: #3742fa;
+    --card-green: #2ed573;
+    --card-yellow: #ffc312;
+  }
+
+  .th {
+    width: 100vw; height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(ellipse at top right, rgba(255,215,0,0.08), transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(0,150,255,0.08), transparent 50%),
+      var(--bg);
+    padding: 2vh 3vw;
+    gap: 1.5vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .th-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2vw; overflow: hidden;
+  }
+  .th-logo {
+    font-size: clamp(1.8rem, 3.5vw, 3.5rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #00ffc8, #ff6ec7);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    flex-shrink: 0;
+  }
+  .th-title {
+    font-size: clamp(1.2rem, 2vw, 2rem); font-weight: 700; color: #fff;
+    flex: 1; text-align: center;
+  }
+  .th-code {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: var(--teal);
+    font-family: "Courier New", monospace; font-weight: 700;
+    background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.3);
+    padding: 0.4em 0.8em; border-radius: 0.5em; flex-shrink: 0;
+  }
+  .th-exit-btn {
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    color: #556; text-decoration: none;
+    padding: 0.3em 0.9em;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0.5em;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer; background: none; font-family: inherit;
+  }
+  .th-exit-btn:hover { color: #ff4757; border-color: rgba(255,69,87,0.4); }
+
+  /* ── Player score strip ── */
+  .th-scores { display: flex; gap: 1vw; }
+  .th-player {
+    flex: 1; display: flex; align-items: center; gap: 0.7vw;
+    background: var(--surface); border-radius: 0.6vw;
+    padding: 0.6vh 1vw; border: 2px solid var(--border);
+    min-width: 0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .th-player.is-winner {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(255,215,0,0.2);
+  }
+  .th-dot { width: 0.8vw; height: 0.8vw; border-radius: 50%; flex-shrink: 0; background: var(--slot-color); }
+  .th-pname {
+    font-size: clamp(0.8rem, 1.1vw, 1.1rem); font-weight: 700; color: #fff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .th-pmeta {
+    margin-left: auto; display: flex; align-items: baseline; gap: 0.3vw;
+    font-family: "Courier New", monospace;
+  }
+  .th-pmeta .th-pts {
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+  }
+  .th-pmeta .th-cards {
+    font-size: clamp(0.65rem, 0.9vw, 0.9rem); color: #667;
+  }
+  .th-empty {
+    flex: 1; background: var(--surface); border: 2px dashed var(--border);
+    border-radius: 0.6vw; display: flex; align-items: center; justify-content: center;
+    color: #334; font-size: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  .th-main { display: flex; align-items: center; justify-content: center; min-height: 0; grid-row: 3; }
+  .th-footer { grid-row: 4; }
+
+  /* ── Lobby ── */
+  .th-lobby {
+    display: grid; grid-template-columns: 1fr auto; gap: 5vw;
+    align-items: center; width: 100%;
+  }
+  .th-lobby-left { display: flex; flex-direction: column; gap: 2vh; }
+  .th-lobby-heading {
+    font-size: clamp(2rem, 4vw, 4.5rem); font-weight: 900; color: #fff; line-height: 1.1;
+  }
+  .th-lobby-heading span {
+    background: linear-gradient(135deg, var(--gold), #ff8c00);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .th-lobby-sub { font-size: clamp(1rem, 1.5vw, 1.5rem); color: #c8b48a; }
+  .th-lobby-rules {
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem); color: #8ab4c8; line-height: 1.6;
+    background: rgba(255,215,0,0.05); border-left: 3px solid rgba(255,215,0,0.4);
+    padding: 1vh 1.4vw; border-radius: 0 0.6vw 0.6vw 0;
+    max-width: 38vw;
+  }
+  .th-lobby-rules strong { color: #fff; }
+  .th-alt-rules {
+    font-size: clamp(0.7rem, 1vw, 1rem); color: #667; line-height: 1.5;
+    margin-top: 0.6vh;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 0.8vh;
+  }
+  .th-alt-rules .th-suit { color: var(--gold); font-weight: 700; }
+
+  .th-lobby-players { display: flex; flex-direction: column; gap: 1vh; margin-top: 1vh; }
+  .th-joined-player {
+    display: flex; align-items: center; gap: 1vw;
+    font-size: clamp(1rem, 1.5vw, 1.5rem); font-weight: 700; color: #fff;
+  }
+  .th-joined-dot { width: 1vw; height: 1vw; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .th-no-players { color: #556; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
+  .th-start-btn {
+    align-self: flex-start; margin-top: 2vh;
+    padding: 1.2vh 3vw; border-radius: 1vw;
+    background: var(--gold); color: #0a0a12;
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    border: none; cursor: pointer; letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .th-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .th-start-btn:not(:disabled):hover { transform: scale(1.04); }
+  .th-qr-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+    padding: 2vh 2vw; background: rgba(0,255,200,0.06);
+    border: 2px solid rgba(0,255,200,0.3); border-radius: 1.2vw;
+  }
+  .th-qr-label { font-size: clamp(0.9rem, 1.2vw, 1.2rem); color: #cfe; text-align: center; line-height: 1.4; }
+  .th-qr-label strong { display: block; color: var(--teal); font-size: clamp(1rem, 1.4vw, 1.4rem); margin-bottom: 0.4vh; }
+  .th-qr-img { width: clamp(160px, 17vw, 260px); height: clamp(160px, 17vw, 260px); }
+  .th-qr-img svg { width: 100%; height: 100%; display: block; }
+
+  /* ── Stage ── */
+  .th-stage { display: flex; flex-direction: column; gap: 2.5vh; width: 100%; align-items: center; }
+
+  .th-challenge {
+    display: flex; flex-direction: column; align-items: center; gap: 0.6vh;
+    padding: 1.6vh 3vw; border-radius: 1.2vw;
+    background: linear-gradient(135deg, rgba(255,215,0,0.16), rgba(255,140,0,0.04));
+    border: 2px solid rgba(255,215,0,0.5);
+    box-shadow: 0 0 28px rgba(255,215,0,0.18);
+    min-width: 40vw;
+  }
+  .th-challenge-round {
+    font-size: clamp(0.7rem, 1vw, 1rem); color: #c8b48a;
+    letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .th-challenge-label {
+    font-size: clamp(2rem, 3.6vw, 3.8rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: 0.04em;
+    text-align: center; line-height: 1.1;
+  }
+  .th-challenge-hint {
+    font-size: clamp(0.95rem, 1.4vw, 1.4rem); color: #8ab4c8;
+    text-align: center;
+  }
+  .th-challenge-timer {
+    font-size: clamp(2rem, 3.5vw, 4rem); font-weight: 900;
+    font-family: "Courier New", monospace; color: var(--teal);
+    line-height: 1; transition: color 0.3s;
+  }
+  .th-challenge-timer.urgent { color: #ff4757; animation: pulse 0.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .th-played-count {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: #c8b48a;
+    font-family: "Courier New", monospace;
+  }
+
+  /* ── Played card slots ── */
+  .th-plays { display: flex; gap: 1.2vw; flex-wrap: wrap; justify-content: center; align-items: flex-end; }
+  .th-play {
+    display: flex; flex-direction: column; align-items: center; gap: 0.6vh;
+  }
+  .th-play-name {
+    font-size: clamp(0.75rem, 1vw, 1rem); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--slot-color);
+  }
+
+  /* ── Card visuals ── */
+  .th-card {
+    width: clamp(76px, 8vw, 130px);
+    height: clamp(108px, 11.6vw, 188px);
+    border-radius: 0.8vw;
+    background: linear-gradient(160deg, var(--card-bg, #1a1a2e), color-mix(in srgb, var(--card-bg, #1a1a2e) 70%, #000));
+    border: 2px solid var(--card-bg, var(--border));
+    color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 0.8vh 0.6vw;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    position: relative;
+    transition: transform 0.25s, box-shadow 0.25s;
+    font-family: "Courier New", monospace;
+  }
+  .th-card.is-back {
+    background: linear-gradient(135deg, #1a0820, #0a0610);
+    border-color: rgba(255,215,0,0.25);
+    color: var(--gold);
+  }
+  .th-card.is-back::before {
+    content: '◆'; font-size: 2em; opacity: 0.4;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  }
+  .th-card.is-winner {
+    transform: translateY(-1vh) scale(1.08);
+    box-shadow: 0 0 0 4px var(--gold), 0 12px 30px rgba(255,215,0,0.3);
+  }
+  .th-card.is-disabled { opacity: 0.4; }
+
+  .th-card-corner-top, .th-card-corner-bottom {
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem); font-weight: 900; line-height: 1;
+    align-self: flex-start;
+  }
+  .th-card-corner-bottom { align-self: flex-end; transform: rotate(180deg); }
+  .th-card-centre {
+    font-size: clamp(2.2rem, 3.4vw, 3.4rem); font-weight: 900; line-height: 1;
+  }
+  .th-card-pip {
+    font-size: clamp(0.9rem, 1.4vw, 1.4rem); opacity: 0.8;
+    margin-top: 0.4vh;
+  }
+
+  .th-card[data-colour="red"]    { --card-bg: var(--card-red);    background: linear-gradient(160deg, #fff, #ffd9dc); color: #6b0e1a; }
+  .th-card[data-colour="blue"]   { --card-bg: var(--card-blue);   background: linear-gradient(160deg, #fff, #d6dcff); color: #161a4a; }
+  .th-card[data-colour="green"]  { --card-bg: var(--card-green);  background: linear-gradient(160deg, #fff, #d4f7df); color: #0d4e22; }
+  .th-card[data-colour="yellow"] { --card-bg: var(--card-yellow); background: linear-gradient(160deg, #fff, #fff0c2); color: #5e4500; }
+
+  .th-card-suit {
+    position: absolute; top: 0.6vh; right: 0.6vw;
+    font-size: clamp(0.8rem, 1.1vw, 1.1rem); opacity: 0.85;
+  }
+
+  /* ── Reading hint ── */
+  .th-reading-hint {
+    font-size: clamp(1.1rem, 1.6vw, 1.7rem); color: #c8b48a;
+    text-align: center; padding: 1vh 0;
+  }
+
+  /* ── Game Over ── */
+  .th-gameover {
+    display: flex; flex-direction: column; align-items: center; gap: 3vh; width: 100%;
+  }
+  .th-gameover-title {
+    font-size: clamp(2.5rem, 6vw, 7rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .th-final-scores { display: flex; gap: 3vw; align-items: flex-end; justify-content: center; flex-wrap: wrap; }
+  .th-final-player {
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+    padding: 2vh 2.5vw; border-radius: 1vw;
+    background: var(--surface); border: 3px solid var(--slot-color, #334);
+    min-width: 12vw;
+  }
+  .th-final-player.is-winner { border-width: 4px; }
+  .th-final-name { font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 700; color: #fff; }
+  .th-final-pts {
+    font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 900;
+    font-family: "Courier New", monospace;
+    color: var(--slot-color, var(--teal));
+  }
+  .th-final-cards { font-size: clamp(0.8rem, 1.1vw, 1.1rem); color: #667; }
+  .th-crown { font-size: clamp(1.5rem, 3vw, 3rem); }
+
+  /* ── Footer ── */
+  .th-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1.5vh; border-top: 1px solid var(--border);
+  }
+  .th-progress { font-size: clamp(0.85rem, 1.2vw, 1.2rem); color: #556; }
+  .th-next-btn {
+    padding: 0.9vh 2.5vw; border-radius: 0.7vw;
+    background: rgba(255,215,0,0.12); border: 2px solid rgba(255,215,0,0.4);
+    color: var(--gold); font-size: clamp(0.9rem, 1.3vw, 1.3rem); font-weight: 700;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    letter-spacing: 0.03em; font-family: inherit;
+  }
+  .th-next-btn:hover { background: rgba(255,215,0,0.25); border-color: var(--gold); }
+  .th-status { font-size: clamp(0.8rem, 1vw, 1rem); color: #445; }
+</style>
+
+<div class="th" id="th">
+  <header class="th-header">
+    <div class="th-logo">EZ-AZ</div>
+    <div class="th-title">Treasure Hunt</div>
+    <button class="th-exit-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
+    <div class="th-code">Room <%= @room.code %></div>
+  </header>
+
+  <div class="th-scores" id="th-scores" hidden>
+    <% 4.times do |i| %>
+      <div class="th-empty" id="th-slot-<%= i+1 %>">P<%= i+1 %> empty</div>
+    <% end %>
+  </div>
+
+  <main class="th-main" id="th-main">
+
+    <!-- LOBBY -->
+    <div class="th-lobby" id="th-lobby">
+      <div class="th-lobby-left">
+        <div class="th-lobby-heading"><span>Treasure Hunt</span></div>
+        <div class="th-lobby-sub">Pick a card. Win the round. Take the pot.</div>
+        <div class="th-lobby-rules">
+          You're dealt <strong>5 cards</strong>. Each round the TV shows a <strong>challenge</strong> (Highest Wins,
+          Closest to 7, Reds Rule…). Everyone picks one card from their phone, all reveal at once.
+          The <strong>winner takes every card played</strong> into their treasure pile.
+          <br><br>
+          <strong>5 rounds. Highest treasure value wins.</strong>
+          <div class="th-alt-rules">
+            <strong>Holiday version:</strong> Use a standard deck.
+            <span class="th-suit">♥ Hearts</span> = red,
+            <span class="th-suit">♠ Spades</span> = blue,
+            <span class="th-suit">♣ Clubs</span> = green,
+            <span class="th-suit">♦ Diamonds</span> = yellow.
+            Aces = 1, J = 11, Q = 12, K = 13.
+          </div>
+        </div>
+        <div class="th-lobby-players" id="th-lobby-players">
+          <% if @members.any? %>
+            <% @members.each do |m| %>
+              <div class="th-joined-player">
+                <span class="th-joined-dot" style="color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>; background: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>"></span>
+                <%= m.name %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="th-no-players">No players yet — waiting for scans...</div>
+          <% end %>
+        </div>
+        <button class="th-start-btn" id="th-start-btn" <%= @members.size < 2 ? "disabled" : "" %>>
+          Start Game
+        </button>
+      </div>
+      <div class="th-qr-box">
+        <div class="th-qr-label">
+          <strong>Scan to join</strong>
+          ez-az.net
+        </div>
+        <div class="th-qr-img"><%= @qr_code_svg %></div>
+      </div>
+    </div>
+
+    <!-- STAGE -->
+    <div class="th-stage" id="th-stage" hidden>
+      <div class="th-challenge">
+        <div class="th-challenge-round" id="th-challenge-round">Round 1 of 5</div>
+        <div class="th-challenge-label" id="th-challenge-label">—</div>
+        <div class="th-challenge-hint" id="th-challenge-hint">—</div>
+      </div>
+
+      <div class="th-reading-hint" id="th-reading-hint" hidden>Look at your cards on your phone…</div>
+
+      <div class="th-played-count" id="th-played-count" hidden>0 / 0 played</div>
+      <div class="th-challenge-timer" id="th-timer" hidden>30</div>
+
+      <div class="th-plays" id="th-plays" hidden></div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="th-gameover" id="th-gameover" hidden>
+      <div class="th-gameover-title">Treasure Tally!</div>
+      <div class="th-final-scores" id="th-final-scores"></div>
+    </div>
+
+  </main>
+
+  <footer class="th-footer">
+    <div class="th-progress" id="th-progress">Waiting to start</div>
+    <button class="th-next-btn" id="th-next-btn" hidden>Next →</button>
+    <div class="th-status" id="th-status">Ready</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var SLOT_COLORS = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var COLOUR_SUIT = { red: '♥', blue: '♠', green: '♣', yellow: '♦' };
+  var consumer = createConsumer();
+  var code = <%= @room.code.to_json.html_safe %>;
+
+  // Resume tracking
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'treasure-hunt',
+        game_title: 'Treasure Hunt',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
+  // ── State
+  var phase = 'lobby';
+  var knownMembers = [];
+  var roundIndex = 0, totalRounds = 5;
+  var gameOver = false;
+  var timerInterval = null;
+
+  // ── Elements
+  var scoresEl   = document.getElementById('th-scores');
+  var lobbyEl    = document.getElementById('th-lobby');
+  var stageEl    = document.getElementById('th-stage');
+  var gameoverEl = document.getElementById('th-gameover');
+  var progressEl = document.getElementById('th-progress');
+  var nextBtn    = document.getElementById('th-next-btn');
+  var startBtn   = document.getElementById('th-start-btn');
+  var lobbyPlayersEl = document.getElementById('th-lobby-players');
+  var timerEl    = document.getElementById('th-timer');
+  var playedCountEl = document.getElementById('th-played-count');
+  var readingHintEl = document.getElementById('th-reading-hint');
+  var playsEl    = document.getElementById('th-plays');
+  var challengeLabelEl = document.getElementById('th-challenge-label');
+  var challengeHintEl  = document.getElementById('th-challenge-hint');
+  var challengeRoundEl = document.getElementById('th-challenge-round');
+
+  // RoomChannel for lobby joins
+  consumer.subscriptions.create(
+    { channel: 'RoomChannel', code: code },
+    {
+      received: function(data) {
+        if (data && data.type === 'member_joined') refreshLobbyPlayers(data.members);
+      }
+    }
+  );
+
+  var treasure = consumer.subscriptions.create(
+    { channel: 'TreasureChannel', code: code, role: 'tv' },
+    {
+      connected:    function() { setStatus('Connected'); },
+      disconnected: function() { setStatus('Disconnected'); },
+      received: function(data) {
+        if (!data) return;
+        switch (data.type) {
+          case 'round':         onRound(data);        break;
+          case 'picking':       onPicking(data);      break;
+          case 'player_played': onPlayerPlayed(data); break;
+          case 'revealed':      onRevealed(data);     break;
+          case 'game_over':     onGameOver(data);     break;
+          case 'error':         setStatus(data.message); break;
+        }
+      }
+    }
+  );
+
+  startBtn.addEventListener('click', function() {
+    treasure.perform('start_game', {});
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+  });
+
+  nextBtn.addEventListener('click', function() {
+    if (gameOver) { window.location.href = '/tv'; return; }
+    nextBtn.hidden = true;
+    treasure.perform('next_round', {});
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { window.location.href = '/tv'; return; }
+    if (e.key === ' ' && phase === 'picking') {
+      e.preventDefault();
+      treasure.perform('force_reveal', {});
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (phase === 'lobby' && !startBtn.disabled) startBtn.click();
+      else if (!nextBtn.hidden) nextBtn.click();
+    }
+  });
+
+  // ── Timer
+  function startTimer(secs, onEnd) {
+    clearInterval(timerInterval);
+    timerEl.hidden = false;
+    timerEl.textContent = secs;
+    timerEl.classList.remove('urgent');
+    timerInterval = setInterval(function() {
+      secs--;
+      timerEl.textContent = secs;
+      if (secs <= 5) timerEl.classList.add('urgent');
+      if (secs <= 0) { clearInterval(timerInterval); onEnd(); }
+    }, 1000);
+  }
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerEl.hidden = true;
+    timerEl.classList.remove('urgent');
+  }
+
+  // ── Game events
+  function onRound(data) {
+    roundIndex = data.round;
+    totalRounds = data.total;
+    phase = 'reading';
+
+    if (data.round === 0 && tvRemoteSub) {
+      tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Treasure Hunt' });
+    }
+
+    showPhase('stage');
+    if (knownMembers.length) renderScoreBar(knownMembers);
+    updateScores(data.scores || {});
+
+    challengeRoundEl.textContent = 'Round ' + (data.round + 1) + ' of ' + data.total;
+    challengeLabelEl.textContent = data.challenge.label;
+    challengeHintEl.textContent  = data.challenge.hint;
+
+    readingHintEl.hidden = false;
+    playedCountEl.hidden = true;
+    playsEl.hidden = true;
+    playsEl.innerHTML = '';
+    nextBtn.hidden = true;
+    progressEl.textContent = 'Round ' + (data.round + 1) + ' of ' + data.total;
+    setStatus('Reading…');
+
+    startTimer(4, function() { treasure.perform('start_picking', {}); });
+  }
+
+  function onPicking(data) {
+    phase = 'picking';
+    stopTimer();
+    readingHintEl.hidden = true;
+    playedCountEl.hidden = false;
+    playsEl.hidden = false;
+
+    var expected = data.expected_count || (knownMembers.length || 0);
+    playedCountEl.textContent = (data.played_count || 0) + ' / ' + expected + ' played';
+
+    renderPlays(buildBackPlaceholders(expected));
+    setStatus('Picking…');
+    startTimer(30, function() { treasure.perform('force_reveal', {}); });
+  }
+
+  function buildBackPlaceholders(count) {
+    var out = [];
+    for (var i = 0; i < count; i++) {
+      out.push({ slot: knownMembers[i] ? knownMembers[i].slot : (i + 1), back: true });
+    }
+    return out;
+  }
+
+  function onPlayerPlayed(data) {
+    playedCountEl.textContent = data.played_count + ' / ' + data.expected_count + ' played';
+    if (data.played_count >= data.expected_count) {
+      stopTimer();
+      setStatus('All in!');
+    }
+  }
+
+  function onRevealed(data) {
+    phase = 'revealed';
+    stopTimer();
+    readingHintEl.hidden = true;
+    playedCountEl.hidden = true;
+    playsEl.hidden = false;
+
+    var revealed = data.plays.map(function(p) {
+      return {
+        slot: p.slot,
+        name: p.name,
+        slot_color: p.slot_color,
+        card: p.card,
+        winner: p.winner
+      };
+    });
+    renderPlays(revealed);
+
+    updateScores(data.scores);
+    setStatus(data.winners.length === 0 ? 'No winner — discarded' : 'Reveal');
+
+    nextBtn.hidden = false;
+    nextBtn.textContent = (roundIndex + 1) >= totalRounds ? 'See Results' : 'Next Round →';
+  }
+
+  function onGameOver(data) {
+    stopTimer();
+    phase = 'game_over';
+    gameOver = true;
+    clearActiveGame();
+    showPhase('gameover');
+    nextBtn.hidden = false;
+    nextBtn.textContent = '← Back to Store';
+    progressEl.textContent = 'Game over!';
+
+    var finalEl = document.getElementById('th-final-scores');
+    finalEl.innerHTML = '';
+    data.scores.forEach(function(p, idx) {
+      var div = document.createElement('div');
+      div.className = 'th-final-player' + (idx === 0 ? ' is-winner' : '');
+      div.style.setProperty('--slot-color', p.slot_color);
+      div.innerHTML =
+        (idx === 0 ? '<div class="th-crown">👑</div>' : '') +
+        '<div class="th-final-name">' + esc(p.name) + '</div>' +
+        '<div class="th-final-pts">' + p.points + '</div>' +
+        '<div class="th-final-cards">' + p.cards_won + ' card' + (p.cards_won === 1 ? '' : 's') + '</div>';
+      finalEl.appendChild(div);
+    });
+  }
+
+  // ── Renderers ────────────────────────────────────────────────────────
+  function renderPlays(plays) {
+    playsEl.innerHTML = '';
+    plays.forEach(function(p) {
+      var col = document.createElement('div');
+      col.className = 'th-play';
+      col.style.setProperty('--slot-color', p.slot_color || SLOT_COLORS[p.slot] || '#fff');
+      var label = document.createElement('div');
+      label.className = 'th-play-name';
+      label.textContent = p.name || ('P' + p.slot);
+      col.appendChild(label);
+      col.appendChild(makeCard(p.card, { back: p.back, winner: p.winner }));
+      playsEl.appendChild(col);
+    });
+  }
+
+  function makeCard(card, opts) {
+    opts = opts || {};
+    var el = document.createElement('div');
+    if (opts.back || !card) {
+      el.className = 'th-card is-back';
+      return el;
+    }
+    el.className = 'th-card' + (opts.winner ? ' is-winner' : '');
+    el.setAttribute('data-colour', card.colour);
+    var suit = COLOUR_SUIT[card.colour] || '◆';
+    el.innerHTML =
+      '<div class="th-card-corner-top">' + card.value + ' ' + suit + '</div>' +
+      '<div class="th-card-centre">' + card.value + '</div>' +
+      '<div class="th-card-corner-bottom">' + card.value + ' ' + suit + '</div>' +
+      '<div class="th-card-suit">' + suit + '</div>';
+    return el;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  function updateScores(scores) {
+    Object.entries(scores).forEach(function(entry) {
+      var slot = parseInt(entry[0]);
+      var pts  = entry[1];
+      var el = scoresEl.querySelector('[data-slot="' + slot + '"]');
+      if (el) el.querySelector('.th-pts').textContent = pts;
+    });
+  }
+
+  function refreshLobbyPlayers(members) {
+    if (!members || !members.length) return;
+    knownMembers = members.filter(function(m) { return m.role !== 'host'; });
+    lobbyPlayersEl.innerHTML = '';
+    knownMembers.forEach(function(m) {
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var div = document.createElement('div');
+      div.className = 'th-joined-player';
+      div.innerHTML =
+        '<span class="th-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
+        esc(m.name || ('Player ' + m.slot));
+      lobbyPlayersEl.appendChild(div);
+    });
+    startBtn.disabled = knownMembers.length < 2;
+    if (phase !== 'lobby') renderScoreBar(knownMembers);
+  }
+
+  function renderScoreBar(members) {
+    members.forEach(function(m) {
+      if (m.role === 'host') return;
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var existing = scoresEl.querySelector('[data-slot="' + m.slot + '"]');
+      if (existing) {
+        existing.querySelector('.th-pname').textContent = m.name;
+      } else {
+        var el = document.getElementById('th-slot-' + m.slot);
+        if (!el) return;
+        el.className = 'th-player';
+        el.setAttribute('data-slot', m.slot);
+        el.style.setProperty('--slot-color', color);
+        el.innerHTML =
+          '<div class="th-dot" style="background:' + color + '"></div>' +
+          '<div class="th-pname">' + esc(m.name) + '</div>' +
+          '<div class="th-pmeta">' +
+            '<div class="th-pts" style="color:' + color + '">0</div>' +
+            '<div class="th-cards">pts</div>' +
+          '</div>';
+      }
+    });
+  }
+
+  function showPhase(name) {
+    lobbyEl.hidden    = name !== 'lobby';
+    stageEl.hidden    = name !== 'stage';
+    gameoverEl.hidden = name !== 'gameover';
+    scoresEl.hidden   = name === 'lobby';
+  }
+
+  function setStatus(msg) { document.getElementById('th-status').textContent = msg; }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
+  if (initMembers.length) { knownMembers = initMembers; renderScoreBar(initMembers); }
+
+  // TV remote D-pad mapping
+  var remoteToken = <%= @room.tv_token.to_json.html_safe %>;
+  var tvRemoteSub = null;
+  if (remoteToken) {
+    tvRemoteSub = consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: remoteToken },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Treasure Hunt' });
+        },
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };
+          var key = keyMap[data.direction];
+          if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+        }
+      }
+    );
+  }
+</script>

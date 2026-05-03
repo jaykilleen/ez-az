@@ -71,6 +71,15 @@ class Game
       path: "/games/spotlight",
       icon: "spotlight",
       tv_optimised: true
+    },
+    {
+      slug: "treasure-hunt",
+      title: "Treasure Hunt",
+      creators: "Az",
+      tagline: "Pick a card. Win the round. Take the pot. Most treasure wins. Plays with a real deck on holidays too.",
+      path: "/games/treasure-hunt",
+      icon: "treasure",
+      tv_optimised: true
     }
   ].freeze
 

@@ -1111,3 +1111,141 @@
   ctx.textAlign = 'center';
   ctx.fillText('YOUR TURN TO SHINE', W / 2, H - 8);
 })();
+
+// Draw the Treasure Hunt cover art
+(function () {
+  var canvas = document.getElementById('treasureCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Velvet backdrop
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#08081a');
+  bg.addColorStop(0.6, '#1a0d2c');
+  bg.addColorStop(1, '#08081a');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gold radial glow behind cards
+  var glow = ctx.createRadialGradient(W / 2, H * 0.42, 10, W / 2, H * 0.42, W * 0.55);
+  glow.addColorStop(0, 'rgba(255, 200, 60, 0.22)');
+  glow.addColorStop(1, 'rgba(255, 200, 60, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Three fanned cards — yellow, red, blue
+  var cards = [
+    { x: W / 2 - 56, y: H * 0.28, rot: -0.34, fill: '#ffe9b0', border: '#caa14a', value: 7,  colour: '#bf7d12', suit: '♦' },
+    { x: W / 2,      y: H * 0.22, rot: 0,     fill: '#ffd9dc', border: '#a93140', value: 13, colour: '#7a1228', suit: '♥' },
+    { x: W / 2 + 56, y: H * 0.28, rot: 0.34,  fill: '#d6dcff', border: '#3742a8', value: 9,  colour: '#1a2070', suit: '♠' }
+  ];
+  cards.forEach(function (card) {
+    ctx.save();
+    ctx.translate(card.x, card.y);
+    ctx.rotate(card.rot);
+
+    // shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 6;
+
+    // body
+    var grad = ctx.createLinearGradient(0, -76, 0, 76);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(1, card.fill);
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = card.border;
+    ctx.lineWidth = 3;
+    roundRect(ctx, -52, -76, 104, 152, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // top corner number + suit
+    ctx.fillStyle = card.colour;
+    ctx.font = 'bold 18px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(String(card.value), -42, -64);
+    ctx.font = 'bold 16px serif';
+    ctx.fillText(card.suit, -42, -42);
+
+    // big centre number
+    ctx.font = 'bold 56px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(card.value), 0, 0);
+
+    // bottom corner (rotated)
+    ctx.save();
+    ctx.translate(42, 64);
+    ctx.rotate(Math.PI);
+    ctx.font = 'bold 18px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(String(card.value), 0, 0);
+    ctx.font = 'bold 16px serif';
+    ctx.fillText(card.suit, 0, 22);
+    ctx.restore();
+
+    ctx.restore();
+  });
+
+  // Treasure pile — a row of coins below the cards
+  ctx.save();
+  var coinY = H * 0.7;
+  var coins = [-44, -22, 0, 22, 44, -33, -11, 11, 33];
+  coins.forEach(function (dx, i) {
+    var cy = coinY + (i < 5 ? 0 : -10);
+    var cx = W / 2 + dx;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    var coinGrad = ctx.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 12);
+    coinGrad.addColorStop(0, '#fff2b3');
+    coinGrad.addColorStop(0.5, '#ffd84d');
+    coinGrad.addColorStop(1, '#a37a00');
+    ctx.fillStyle = coinGrad;
+    ctx.shadowColor = 'rgba(255,200,60,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#7a5800';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#7a5800';
+    ctx.font = 'bold 9px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$', cx, cy);
+  });
+  ctx.restore();
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#fff2b3';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TREASURE', W / 2, H - 30);
+  ctx.fillText('HUNT', W / 2, H - 10);
+  ctx.restore();
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+})();

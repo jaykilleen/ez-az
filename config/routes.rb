@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   get  "/games/spotlight",       to: "spotlight#new",  as: :new_spotlight
   get  "/games/spotlight/:code", to: "spotlight#show", as: :spotlight
 
+  get  "/games/treasure-hunt",       to: "treasure#new",  as: :new_treasure
+  get  "/games/treasure-hunt/:code", to: "treasure#show", as: :treasure
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

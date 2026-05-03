@@ -244,6 +244,96 @@
   }
   .spot-status-line b { color: #ffd700; }
 
+  /* ── Treasure Hunt phone states ── */
+  .th-banner {
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    padding: 10px 14px; border-radius: 10px;
+    background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);
+    width: 100%; max-width: 360px; box-sizing: border-box;
+  }
+  .th-banner-round {
+    font-size: 11px; color: #ffd700; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .th-banner-label {
+    font-size: 17px; font-weight: 900; color: #fff; line-height: 1.2;
+    letter-spacing: 0.04em;
+  }
+  .th-banner-hint {
+    font-size: 13px; color: #ccc; line-height: 1.4;
+  }
+
+  .th-status-line {
+    font-size: 13px; color: #8ab4c8; text-align: center; line-height: 1.5;
+  }
+  .th-status-line b { color: #ffd700; }
+
+  /* hand grid */
+  .th-hand {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    width: 100%; max-width: 340px;
+  }
+  .th-hand.is-locked .th-card-btn { pointer-events: none; opacity: 0.55; }
+
+  .th-card-btn {
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #fff, #ddd);
+    border: 2px solid var(--card-border, #888);
+    color: #222;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 6px 5px;
+    cursor: pointer; touch-action: manipulation;
+    font-family: "Courier New", monospace;
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .th-card-btn:active { transform: scale(0.96); }
+  .th-card-btn.is-selected {
+    box-shadow: 0 0 0 3px #ffd700, 0 0 14px rgba(255,215,0,0.5);
+    transform: translateY(-3px) scale(1.02);
+  }
+  .th-card-btn[data-colour="red"]    { --card-border: #ff4757; background: linear-gradient(160deg, #fff, #ffd9dc); color: #6b0e1a; }
+  .th-card-btn[data-colour="blue"]   { --card-border: #3742fa; background: linear-gradient(160deg, #fff, #d6dcff); color: #161a4a; }
+  .th-card-btn[data-colour="green"]  { --card-border: #2ed573; background: linear-gradient(160deg, #fff, #d4f7df); color: #0d4e22; }
+  .th-card-btn[data-colour="yellow"] { --card-border: #ffc312; background: linear-gradient(160deg, #fff, #fff0c2); color: #5e4500; }
+
+  .th-card-corner {
+    align-self: flex-start;
+    font-size: 13px; font-weight: 900; line-height: 1;
+    display: flex; flex-direction: column; align-items: flex-start;
+  }
+  .th-card-corner-suit { font-size: 14px; line-height: 1; }
+  .th-card-centre {
+    font-size: 26px; font-weight: 900; line-height: 1;
+  }
+  .th-card-corner-bottom {
+    align-self: flex-end; transform: rotate(180deg);
+    font-size: 13px; font-weight: 900; line-height: 1;
+    display: flex; flex-direction: column; align-items: flex-start;
+  }
+
+  .th-locked-card {
+    width: 96px; height: 144px; border-radius: 12px;
+    border: 3px solid #ffd700; box-shadow: 0 0 18px rgba(255,215,0,0.4);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 8px 7px;
+    font-family: "Courier New", monospace;
+  }
+  .th-locked-card[data-colour="red"]    { background: linear-gradient(160deg, #fff, #ffd9dc); color: #6b0e1a; }
+  .th-locked-card[data-colour="blue"]   { background: linear-gradient(160deg, #fff, #d6dcff); color: #161a4a; }
+  .th-locked-card[data-colour="green"]  { background: linear-gradient(160deg, #fff, #d4f7df); color: #0d4e22; }
+  .th-locked-card[data-colour="yellow"] { background: linear-gradient(160deg, #fff, #fff0c2); color: #5e4500; }
+
+  .th-confirm-btn {
+    width: 100%; max-width: 340px;
+    padding: 14px; border-radius: 12px;
+    background: #ffd700; color: #0a0a12;
+    font-size: 16px; font-weight: 900; border: none; cursor: pointer;
+    letter-spacing: 0.04em; transition: opacity 0.15s;
+  }
+  .th-confirm-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
   .back-to-store {
     display: block; padding: 14px 24px; border-radius: 12px;
     background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.12);
@@ -521,6 +611,36 @@
       </div>
     </div>
 
+    <!-- treasure: card game in progress, joined -->
+    <div class="zone-content buzzer-content" data-screen="treasure" hidden>
+      <div class="buzzer-info" id="th-info">P1</div>
+
+      <div class="th-banner">
+        <div class="th-banner-round" id="th-banner-round">Round 1 of 5</div>
+        <div class="th-banner-label" id="th-banner-label">—</div>
+        <div class="th-banner-hint" id="th-banner-hint">—</div>
+      </div>
+
+      <div class="th-status-line" id="th-status-line">Pick a card from your hand.</div>
+
+      <!-- hand: tap to pick -->
+      <div id="th-hand" class="th-hand"></div>
+
+      <button class="th-confirm-btn" id="th-confirm-btn" disabled>Lock it in →</button>
+
+      <!-- locked: showing the locked card -->
+      <div id="th-locked-wrap" class="phone-locked" hidden>
+        <div class="phone-locked-msg" id="th-locked-msg">Locked in!</div>
+        <div class="th-locked-card" id="th-locked-card"></div>
+      </div>
+
+      <!-- result: after reveal -->
+      <div id="th-result-wrap" class="phone-result" hidden>
+        <div class="phone-result-icon" id="th-result-icon"></div>
+        <div class="phone-result-msg" id="th-result-msg"></div>
+      </div>
+    </div>
+
     <!-- watching: game in progress, not joined -->
     <div class="zone-content" data-screen="watching" hidden>
       <div class="zone-hint watching-hint">
@@ -593,6 +713,7 @@
   var myColor          = null;
   var triviaChannel    = null;
   var spotlightChannel = null;
+  var treasureChannel  = null;
   var roomChannel      = null;
   var remote           = null;
   var myAnswerIndex    = null;
@@ -640,8 +761,8 @@
   var remoteDot       = document.getElementById('remote-dot');
 
   // ── Screen switching ────────────────────────────────────────────────
-  var PARTY_SCREENS  = new Set(['buzzer', 'spotlight']);
-  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer', 'spotlight']);
+  var PARTY_SCREENS  = new Set(['buzzer', 'spotlight', 'treasure']);
+  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer', 'spotlight', 'treasure']);
 
   function showScreen(name) {
     currentScreen = name;
@@ -901,6 +1022,7 @@
     document.documentElement.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
     document.getElementById('spot-info').textContent = 'P' + mySlot;
+    document.getElementById('th-info').textContent = 'P' + mySlot;
 
     if (data.members) renderPlayers(data.members);
     showScreen('waiting');
@@ -918,6 +1040,7 @@
     document.documentElement.style.setProperty('--buzz-color', myColor);
     buzzerInfo.textContent = 'P' + mySlot;
     document.getElementById('spot-info').textContent = 'P' + mySlot;
+    document.getElementById('th-info').textContent = 'P' + mySlot;
     if (roomCode && mySlot) {
       subscribeToGameChannel(roomCode, mySlot);
       subscribeToRoom(roomCode);
@@ -926,6 +1049,7 @@
 
   function subscribeToGameChannel(code, slot) {
     if (gameSlug === 'spotlight') subscribeToSpotlight(code, slot);
+    else if (gameSlug === 'treasure-hunt') subscribeToTreasure(code, slot);
     else subscribeToTrivia(code, slot);
   }
 
@@ -982,6 +1106,7 @@
     if (roomChannel) { roomChannel.unsubscribe(); roomChannel = null; }
     if (triviaChannel) { triviaChannel.unsubscribe(); triviaChannel = null; }
     if (spotlightChannel) { spotlightChannel.unsubscribe(); spotlightChannel = null; }
+    if (treasureChannel)  { treasureChannel.unsubscribe();  treasureChannel = null; }
     showScreen('lobby');
   }
 
@@ -1223,6 +1348,169 @@
       msgEl.insertAdjacentElement('afterend', link);
     }
     showSpotPhase('result');
+  }
+
+  // ── Treasure Hunt subscription ────────────────────────────────────────
+  var thState = { hand: [], selected: null, locked: null, totalRounds: 5, lastChallenge: null };
+
+  function subscribeToTreasure(code, slot) {
+    if (treasureChannel) return;
+    treasureChannel = consumer.subscriptions.create(
+      { channel: 'TreasureChannel', code: code, slot: slot },
+      {
+        received: function(data) {
+          switch (data.type) {
+            case 'deal':          onThDeal(data);         break;
+            case 'round':         onThRound(data);        break;
+            case 'picking':       onThPicking(data);      break;
+            case 'player_played': onThPlayerPlayed(data); break;
+            case 'revealed':      onThRevealed(data);     break;
+            case 'game_over':     onThGameOver(data);     break;
+          }
+        }
+      }
+    );
+  }
+
+  function showThPhase(name) {
+    document.getElementById('th-hand').hidden        = !(name === 'reading' || name === 'picking');
+    document.getElementById('th-confirm-btn').hidden = !(name === 'reading' || name === 'picking');
+    document.getElementById('th-locked-wrap').hidden = name !== 'locked';
+    document.getElementById('th-result-wrap').hidden = name !== 'result';
+  }
+
+  var COLOUR_SUIT = { red: '♥', blue: '♠', green: '♣', yellow: '♦' };
+
+  function onThDeal(data) {
+    if (data.slot !== mySlot) return;
+    thState.hand = data.hand || [];
+    thState.selected = null;
+    thState.locked = null;
+    renderHand();
+  }
+
+  function onThRound(data) {
+    thState.totalRounds = data.total;
+    thState.lastChallenge = data.challenge;
+    thState.selected = null;
+    thState.locked = null;
+    document.getElementById('th-info').textContent = 'P' + mySlot + '  ·  R' + (data.round + 1) + ' / ' + data.total;
+    document.getElementById('th-banner-round').textContent = 'Round ' + (data.round + 1) + ' of ' + data.total;
+    document.getElementById('th-banner-label').textContent = data.challenge.label;
+    document.getElementById('th-banner-hint').textContent  = data.challenge.hint;
+    document.getElementById('th-status-line').innerHTML = 'Get ready…';
+    document.getElementById('th-confirm-btn').disabled = true;
+    document.getElementById('th-confirm-btn').textContent = 'Lock it in →';
+    showThPhase('reading');
+    showScreen('treasure');
+    if (activeTab === 'remote') { remoteDot.hidden = false; } else { applyTab('game'); }
+    renderHand({ disabled: true });
+  }
+
+  function onThPicking(data) {
+    document.getElementById('th-status-line').innerHTML = 'Pick a card. <b>' + data.expected_count + '</b> players in.';
+    document.getElementById('th-confirm-btn').disabled = true;
+    showThPhase('picking');
+    if (activeTab !== 'options') applyTab('game');
+    renderHand({ disabled: false });
+  }
+
+  function onThPlayerPlayed(data) {
+    if (data.slot === mySlot) return;
+    document.getElementById('th-status-line').innerHTML =
+      '<b>' + data.played_count + ' / ' + data.expected_count + '</b> played.';
+  }
+
+  function onThRevealed(data) {
+    var iconEl = document.getElementById('th-result-icon');
+    var msgEl  = document.getElementById('th-result-msg');
+    var iWon = data.winners.indexOf(String(mySlot)) !== -1 || data.winners.indexOf(mySlot) !== -1;
+    var myPlay = data.plays.find(function(p) { return p.slot === mySlot; });
+    var winnerNames = data.plays.filter(function(p) { return p.winner; }).map(function(p) { return esc(p.name); });
+
+    if (data.winners.length === 0) {
+      iconEl.textContent = '✗'; iconEl.style.color = '#ff4757';
+      msgEl.innerHTML = 'No winner this round.<br>All cards discarded.';
+    } else if (iWon && data.winners.length === 1) {
+      iconEl.textContent = '👑'; iconEl.style.color = '#ffd700';
+      msgEl.innerHTML = 'You won the round!<br>You take the pot.';
+      if (navigator.vibrate) navigator.vibrate([60, 30, 80]);
+    } else if (iWon) {
+      iconEl.textContent = '🤝'; iconEl.style.color = '#ffd700';
+      msgEl.innerHTML = 'Tied for the win!<br>You keep your card.';
+      if (navigator.vibrate) navigator.vibrate(50);
+    } else {
+      iconEl.textContent = '·'; iconEl.style.color = '#8ab4c8';
+      msgEl.innerHTML = (winnerNames.length ? '<b>' + winnerNames.join(' &amp; ') + '</b> won.' : 'No winner.') +
+                        '<br>You played ' + (myPlay ? myPlay.card.value + COLOUR_SUIT[myPlay.card.colour] : '—') + '.';
+    }
+    showThPhase('result');
+  }
+
+  function onThGameOver(data) {
+    var iconEl = document.getElementById('th-result-icon');
+    var msgEl  = document.getElementById('th-result-msg');
+    iconEl.textContent = '🏆'; iconEl.style.color = '#ffd700';
+    msgEl.innerHTML = 'Game over!<br>Check the TV for the treasure tally.';
+    var existingLink = msgEl.parentElement.querySelector('.back-to-store');
+    if (!existingLink) {
+      var link = document.createElement('a');
+      link.href = '/'; link.className = 'back-to-store';
+      link.textContent = '← Back to Store';
+      msgEl.insertAdjacentElement('afterend', link);
+    }
+    showThPhase('result');
+  }
+
+  function renderHand(opts) {
+    opts = opts || {};
+    var handEl = document.getElementById('th-hand');
+    handEl.innerHTML = '';
+    handEl.classList.toggle('is-locked', !!opts.disabled);
+    thState.hand.forEach(function(card) {
+      var btn = document.createElement('button');
+      btn.className = 'th-card-btn';
+      btn.setAttribute('data-colour', card.colour);
+      btn.setAttribute('data-card-id', card.id);
+      var suit = COLOUR_SUIT[card.colour] || '◆';
+      btn.innerHTML =
+        '<div class="th-card-corner"><div>' + card.value + '</div><div class="th-card-corner-suit">' + suit + '</div></div>' +
+        '<div class="th-card-centre">' + card.value + '</div>' +
+        '<div class="th-card-corner-bottom"><div>' + card.value + '</div><div class="th-card-corner-suit">' + suit + '</div></div>';
+      if (thState.selected === card.id) btn.classList.add('is-selected');
+      btn.addEventListener('click', function() {
+        if (opts.disabled) return;
+        thState.selected = card.id;
+        document.getElementById('th-confirm-btn').disabled = false;
+        handEl.querySelectorAll('.th-card-btn').forEach(function(b) { b.classList.remove('is-selected'); });
+        btn.classList.add('is-selected');
+        if (navigator.vibrate) navigator.vibrate(20);
+      });
+      handEl.appendChild(btn);
+    });
+  }
+
+  document.getElementById('th-confirm-btn').addEventListener('click', function() {
+    if (!treasureChannel || !thState.selected) return;
+    var card = thState.hand.find(function(c) { return c.id === thState.selected; });
+    if (!card) return;
+    treasureChannel.perform('play_card', { card_id: card.id });
+    thState.locked = card;
+    thState.hand = thState.hand.filter(function(c) { return c.id !== card.id; });
+    thState.selected = null;
+    renderLockedCard(card);
+    if (navigator.vibrate) navigator.vibrate(60);
+    showThPhase('locked');
+  });
+
+  function renderLockedCard(card) {
+    var el = document.getElementById('th-locked-card');
+    el.setAttribute('data-colour', card.colour);
+    var suit = COLOUR_SUIT[card.colour] || '◆';
+    el.innerHTML =
+      '<div class="th-card-corner" style="font-size:14px"><div>' + card.value + '</div><div class="th-card-corner-suit">' + suit + '</div></div>' +
+      '<div class="th-card-centre" style="font-size:36px;align-self:center">' + card.value + '</div>' +
+      '<div class="th-card-corner-bottom" style="font-size:14px"><div>' + card.value + '</div><div class="th-card-corner-suit">' + suit + '</div></div>';
   }
 
   // ── Phone timer ───────────────────────────────────────────────────────
