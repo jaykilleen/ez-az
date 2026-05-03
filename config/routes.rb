@@ -21,6 +21,9 @@ Rails.application.routes.draw do
   get  "/games/hacker-pro",       to: "hacker#new",  as: :new_hacker
   get  "/games/hacker-pro/:code", to: "hacker#show", as: :hacker
 
+  get  "/games/boomerang-brawl",       to: "boomerang#new",  as: :new_boomerang
+  get  "/games/boomerang-brawl/:code", to: "boomerang#show", as: :boomerang
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

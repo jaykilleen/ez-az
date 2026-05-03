@@ -11,7 +11,8 @@ class Score < ApplicationRecord
     "trivia" => :desc,
     "spotlight" => :desc,
     "treasure-hunt" => :desc,
-    "hacker-pro" => :asc
+    "hacker-pro" => :asc,
+    "boomerang-brawl" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
