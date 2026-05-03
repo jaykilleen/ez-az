@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   get "/gamers",  to: "counters#gamers"
 
   namespace :api do
+    resources :submissions, only: [:create]
     resources :scores,  only: [:index, :create]
     resource  :session, only: [:show, :create, :destroy]
     get "version",      to: "version#show"
@@ -54,6 +55,16 @@ Rails.application.routes.draw do
   end
 
   get "/errors", to: "errors_dashboard#index"
+
+  namespace :admin do
+    resources :submissions, only: [:index, :show] do
+      member do
+        get  :preview
+        post :approve
+        post :reject
+      end
+    end
+  end
 
   get "/code",     to: "code#index"
   get "/code/view", to: "code#show"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_25_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_000001) do
   create_table "counters", force: :cascade do |t|
     t.string "key", null: false
     t.integer "value", default: 0, null: false
@@ -88,6 +88,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_000002) do
     t.integer "value", null: false
     t.index ["game"], name: "index_scores_on_game"
     t.index ["player_id"], name: "index_scores_on_player_id"
+  end
+
+  create_table "submissions", force: :cascade do |t|
+    t.string "contact_email", null: false
+    t.datetime "created_at", null: false
+    t.string "creators", null: false
+    t.text "game_html", null: false
+    t.boolean "is_chill", default: false, null: false
+    t.text "notes"
+    t.datetime "reviewed_at"
+    t.text "reviewer_notes"
+    t.string "score_direction", default: "desc", null: false
+    t.string "slug", null: false
+    t.string "status", default: "pending", null: false
+    t.string "submitter_ip"
+    t.string "tagline", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_submissions_on_created_at"
+    t.index ["slug"], name: "index_submissions_on_slug"
+    t.index ["status"], name: "index_submissions_on_status"
   end
 
   add_foreign_key "room_memberships", "players"

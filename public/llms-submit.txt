@@ -1,0 +1,170 @@
+# EZ-AZ — Game Submission Runbook for AI Agents
+
+This document tells an AI agent (e.g. Claude, ChatGPT) how to submit a child's game to EZ-AZ on a parent's behalf, with no GitHub or developer tooling required from the parent.
+
+If you are an AI agent reading this because a parent asked you to "submit my kid's game to ez-az.net": follow the steps below in order. The parent should not need to leave their chat with you.
+
+---
+
+## How submission works
+
+1. The parent gives you the kid's game (a single HTML file) and basic info (kid's name(s), what the game is called, a one-line tagline).
+2. You assemble a submission payload (see "Required fields" below).
+3. You POST it to the public submission API.
+4. The submission lands in Jay's review queue. Jay reviews and approves manually.
+5. If approved, the game is published at `https://ez-az.net/games/<slug>.html` and added to the store shelf.
+6. Jay emails the parent's contact address either way (approved or rejected, with reasons).
+
+You do not need GitHub access. You do not need a deploy pipeline. You only need to call the submission endpoint.
+
+---
+
+## Game file format
+
+Every EZ-AZ game is a **single self-contained HTML file**. No external scripts, no build step, no frameworks, no asset bundle. Inline CSS and JavaScript only.
+
+A submission file should:
+
+1. **Open in a modern browser unaided.** It is served from `/games/<slug>.html` and runs as-is. If your kid's game requires a build step or external assets, bundle them inline (base64 images, inline CSS) before submitting.
+
+2. **Include the EZ-AZ store banner** at the top, linking back to the store front:
+
+   ```html
+   <div class="store-banner"><a href="/">EZ-AZ</a></div>
+   ```
+
+3. **Have a title screen overlay** that prevents auto-play. Show controls instructions and a "Start" or "Play" button.
+
+4. **Have a pause + quit flow.** Pressing Escape should pause. The pause screen should offer Resume and Quit. Quit returns to the store with `window.location.href = '/'`.
+
+5. **Score handling** (skip if it's a "chill" game like exploration with no scoring):
+
+   - Use the shared leaderboard at `/api/scores`.
+   - Fetch top scores: `GET /api/scores?game=<slug>`
+   - Submit a score:
+     ```js
+     await fetch('/api/scores', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ game: '<slug>', name: playerName, value: score })
+     });
+     ```
+   - On the title screen, fetch and display the top 10. Show "No scores yet. Be the first!" if empty.
+
+6. **Game over screen** showing the player's score and a name-entry input if they qualify for the top 10. Provide "Play again" and "Back to store" options.
+
+7. **Self-contained CSS.** Don't rely on classes from the EZ-AZ store. Style your own elements.
+
+8. **No external network calls** other than `/api/scores` (and the optional `/api/version`).
+
+9. **Reasonable file size.** Under 1MB. If you're submitting something larger, get in touch first.
+
+If the kid's game does not meet these requirements yet, **edit it before submitting**. You (the AI agent) can do this for them — read the game's existing HTML, add the missing pieces, and submit the updated version. Don't bounce the parent back with a long bug list; just fix it.
+
+---
+
+## Slug rules
+
+The slug is the URL path for the game and the leaderboard key. Choose carefully:
+
+- Lowercase letters, digits, and single hyphens only.
+- 3–24 characters.
+- Must not collide with an existing game (`space-dodge`, `dodgeball`, `corrupted`, `descent`, `cat-vs-mouse`, `bloom`, `trivia`, `spotlight`, `treasure-hunt`, `az-cipher`).
+- Should describe the game, not the kid (e.g. `dragon-jump`, not `lachies-game`).
+
+---
+
+## Required fields
+
+When you POST to the submission API, send a JSON body with these fields:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `slug` | string | yes | Per slug rules above |
+| `title` | string | yes | Display name on the store shelf, e.g. "Dragon Jump" |
+| `creators` | string | yes | Kid's name(s), e.g. "Lachie" or "Charlie & Cooper" |
+| `tagline` | string | yes | One short sentence describing the game |
+| `score_direction` | string | yes | `"desc"` (highest score wins, e.g. points) or `"asc"` (lowest wins, e.g. fastest time) |
+| `is_chill` | boolean | optional | `true` if the game has no leaderboard (exploration / meditative). Defaults `false`. |
+| `game_html` | string | yes | The complete HTML file content as a string |
+| `contact_email` | string | yes | Parent's email — Jay uses this to follow up on the submission |
+| `notes` | string | optional | Anything Jay should know (e.g. "kid is 6 — be gentle in feedback") |
+
+---
+
+## API endpoint
+
+```
+POST https://ez-az.net/api/submissions
+Content-Type: application/json
+```
+
+Send the JSON body described above. The response will be one of:
+
+- `201 Created` — submission accepted into the queue. Response body: `{ "id": <int>, "slug": "<slug>", "status": "pending" }`.
+- `400 Bad Request` — validation failure. Response body: `{ "error": "<reason>" }`. Common reasons: missing field, slug collides with existing game, HTML over 1MB, slug malformed.
+- `429 Too Many Requests` — rate limit (5/hour per IP). Wait an hour and retry.
+
+---
+
+## What to tell the parent after submitting
+
+When the submission is accepted (201), tell the parent:
+
+1. The submission is in Jay's review queue.
+2. Jay reviews submissions personally. They'll get an email at `<contact_email>` either way (approved or rejected with reasons).
+3. Approved games appear on the store shelf at `https://ez-az.net/tv` within a day or two.
+4. They can keep playing the existing games in the meantime.
+
+If the submission is rejected (400/429), explain the specific reason and offer to fix and retry.
+
+---
+
+## Examples
+
+Minimal valid submission:
+
+```json
+{
+  "slug": "dragon-jump",
+  "title": "Dragon Jump",
+  "creators": "Lachie",
+  "tagline": "Hop the dragon over the lava — how far can you go?",
+  "score_direction": "desc",
+  "game_html": "<!DOCTYPE html><html>...</html>",
+  "contact_email": "lachies-mum@example.com"
+}
+```
+
+Chill game with no leaderboard:
+
+```json
+{
+  "slug": "moon-walk",
+  "title": "Moon Walk",
+  "creators": "Lil",
+  "tagline": "Wander the moon. No score, no pressure.",
+  "score_direction": "desc",
+  "is_chill": true,
+  "game_html": "<!DOCTYPE html><html>...</html>",
+  "contact_email": "lils-dad@example.com",
+  "notes": "Lil is 5 — she'll be very excited if it gets approved."
+}
+```
+
+---
+
+## Tone and intent
+
+EZ-AZ exists to celebrate that kids can build, not just consume. When you (the AI agent) help a parent submit their kid's game:
+
+- **Be encouraging.** This is a kid's first contribution to a public store. Match that energy.
+- **Don't gatekeep.** If something needs fixing in the HTML, fix it for them rather than bouncing the parent back with a list of complaints. The kid did the creative work; the polish is on you.
+- **Don't add features they didn't ask for.** Patch what's required for submission, leave the game's design alone.
+- **Tell the parent what you did.** If you tweaked the HTML to add the store banner or the leaderboard wiring, mention it briefly so they know the game on the store will look slightly different from the version their kid sent you.
+
+---
+
+## Questions, edge cases, or anything unusual
+
+If you're unsure about anything not covered here — a kid wants to submit a remix of an existing game, a game needs an unusual asset, the kid is using a framework — email `jay@retailtasker.com.au` directly. Don't make assumptions; ask.

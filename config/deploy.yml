@@ -30,6 +30,8 @@ env:
   secret:
     - SECRET_KEY_BASE
     - HONEYBADGER_API_KEY
+    - ADMIN_PASSWORD
+    - SENDGRID_API_KEY
 
 builder:
   arch: amd64

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>EZ-AZ — Submissions queue</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #0a0a12; color: #fff; margin: 0; padding: 24px; }
+    h1 { color: #00ffc8; margin-top: 0; }
+    h2 { color: #ffd700; margin-top: 32px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #222; }
+    th { color: #888; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    a { color: #00ffc8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge.pending  { background: rgba(255,215,0,0.15); color: #ffd700; }
+    .badge.approved { background: rgba(46,213,115,0.15); color: #2ed573; }
+    .badge.rejected { background: rgba(255,71,87,0.15); color: #ff4757; }
+    .empty { color: #666; padding: 16px; }
+    .notice { background: rgba(0,255,200,0.1); border: 1px solid #00ffc8; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <h1>📦 EZ-AZ submissions</h1>
+  <% if flash[:notice] %><div class="notice"><%= flash[:notice] %></div><% end %>
+
+  <h2>Pending review (<%= @pending.size %>)</h2>
+  <% if @pending.any? %>
+    <table>
+      <tr><th>Title</th><th>By</th><th>Slug</th><th>Submitted</th><th>Warnings</th></tr>
+      <% @pending.each do |s| %>
+        <tr>
+          <td><a href="<%= admin_submission_path(s) %>"><%= s.title %></a></td>
+          <td><%= s.creators %></td>
+          <td><code><%= s.slug %></code></td>
+          <td><%= s.created_at.strftime("%b %-d, %H:%M") %></td>
+          <td><%= s.html_warnings.size %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <div class="empty">No pending submissions.</div>
+  <% end %>
+
+  <h2>Recently reviewed</h2>
+  <% if @reviewed.any? %>
+    <table>
+      <tr><th>Title</th><th>By</th><th>Status</th><th>Reviewed</th></tr>
+      <% @reviewed.each do |s| %>
+        <tr>
+          <td><a href="<%= admin_submission_path(s) %>"><%= s.title %></a></td>
+          <td><%= s.creators %></td>
+          <td><span class="badge <%= s.status %>"><%= s.status %></span></td>
+          <td><%= s.reviewed_at&.strftime("%b %-d, %H:%M") %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <div class="empty">No reviewed submissions yet.</div>
+  <% end %>
+</body>
+</html>
