@@ -1,6 +1,6 @@
 module EzAz
   module Version
-    STRING = "20260503.9"
-    COMMIT = "4dd2c5a"
+    STRING = "20260503.10"
+    COMMIT = "53cbf23"
   end
 end
