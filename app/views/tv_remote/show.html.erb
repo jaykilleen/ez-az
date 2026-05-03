@@ -571,6 +571,19 @@
   }
   .options-room-close:active { background: rgba(255,71,87,0.2); }
   .options-rooms-empty { font-size: 12px; color: #445; text-align: center; padding: 8px; }
+  .options-join-row { display: flex; gap: 8px; margin-top: 4px; }
+  #options-code-input {
+    flex: 1; padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.12);
+    color: #fff; font-size: 18px; font-weight: 800;
+    letter-spacing: 0.2em; text-align: center;
+    font-family: "Courier New", monospace; outline: none;
+  }
+  #options-code-input:focus { border-color: #00ffc8; }
+  .options-code-go { flex: 0 0 auto; width: 72px; padding: 12px; }
+  .options-code-go:disabled { opacity: 0.4; cursor: not-allowed; }
+  .options-code-error { font-size: 13px; color: #ff4466; text-align: center; margin-top: 4px; }
   .options-exit-btn {
     display: block; width: 100%;
     padding: 14px; border-radius: 10px; text-align: center;
@@ -917,6 +930,17 @@
     </div>
 
     <div class="options-section">
+      <div class="options-label">Join a TV by code</div>
+      <div class="options-join-row">
+        <input id="options-code-input" type="text" maxlength="4"
+               placeholder="ABCD"
+               autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <button class="options-secondary-btn options-code-go" id="options-code-go" type="button" disabled>Go</button>
+      </div>
+      <div class="options-code-error" id="options-code-error" hidden></div>
+    </div>
+
+    <div class="options-section">
       <div class="options-label">Active games on EZ-AZ</div>
       <div class="options-rooms" id="options-rooms">
         <div class="options-rooms-empty">Loading…</div>
@@ -1164,6 +1188,30 @@
   }
 
   optionsRoomsRefresh.addEventListener('click', loadActiveRooms);
+
+  var optionsCodeInput = document.getElementById('options-code-input');
+  var optionsCodeGo    = document.getElementById('options-code-go');
+  var optionsCodeError = document.getElementById('options-code-error');
+
+  optionsCodeInput.addEventListener('input', function() {
+    var v = optionsCodeInput.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    optionsCodeInput.value = v;
+    optionsCodeGo.disabled = v.length < 4;
+    optionsCodeError.hidden = true;
+  });
+  optionsCodeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && optionsCodeInput.value.length >= 4) optionsCodeGo.click();
+  });
+  optionsCodeGo.addEventListener('click', function() {
+    var c = optionsCodeInput.value.trim().toUpperCase();
+    if (c.length < 4) return;
+    if (c === roomCode) {
+      optionsCodeError.textContent = 'You are already on this TV.';
+      optionsCodeError.hidden = false;
+      return;
+    }
+    window.location.href = '/tv/remote?code=' + encodeURIComponent(c);
+  });
 
   optionsTvHomeBtn.addEventListener('click', function() {
     if (!remote) return;
