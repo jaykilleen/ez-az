@@ -1,0 +1,88 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Jay Killeen -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
+<script src="/error-reporter.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Letterbox - EZ-AZ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #6cc6ff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+  #wrap { position: relative; }
+  canvas { display: block; }
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #2a3140; text-align: center; z-index: 10; padding: 20px; overflow-y: auto; background: rgba(255, 248, 220, 0.94); }
+  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.4); }
+  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.7; transition: opacity 0.2s; }
+  .store-banner a:hover { opacity: 1; }
+
+  #titleScreen h1 { font-family: 'Press Start 2P', monospace; font-size: 30px; margin-bottom: 12px; color: #d63f3f; letter-spacing: 3px; text-shadow: 3px 3px 0 #ffd24d; }
+  #titleScreen .subtitle { font-size: 14px; color: #555; margin-bottom: 18px; font-style: italic; max-width: 460px; line-height: 1.5; }
+  .btn { margin-top: 12px; padding: 14px 36px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg, #ffb84d, #ff8d2e); color: #fff; font-weight: bold; transition: transform 0.1s; box-shadow: 0 4px 0 #c66800; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #c66800; }
+  .btn-quit { margin-top: 10px; padding: 12px 30px; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #cc4444, #aa2222); color: white; font-weight: bold; transition: transform 0.1s; }
+  .btn-quit:hover { transform: scale(1.05); }
+  .info { font-size: 11px; color: #666; margin-top: 14px; line-height: 1.9; font-family: 'Press Start 2P', monospace; }
+
+  #pauseScreen, #endScreen { display: none; }
+  #pauseScreen h1, #endScreen h1 { font-family: 'Press Start 2P', monospace; font-size: 22px; color: #d63f3f; margin-bottom: 14px; line-height: 1.5; }
+  #endScreen .final-score { font-family: 'Press Start 2P', monospace; font-size: 28px; color: #d63f3f; margin: 12px 0; }
+  #endScreen .death-line { font-size: 14px; color: #666; font-style: italic; margin-bottom: 8px; }
+
+  .leaderboard, .title-leaderboard { margin: 14px auto; max-width: 360px; text-align: left; }
+  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #d63f3f; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
+  .lb-empty { color: #888; font-size: 13px; padding: 8px 0; text-align: center; font-style: italic; }
+  .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 12px; color: #2a3140; font-family: 'Press Start 2P', monospace; }
+  .lb-row.placeholder { color: #bbb; }
+  .lb-row.highlight { color: #fff; background: #2a8a3a; border-radius: 4px; }
+  .lb-name-input { background: #fff; border: 2px solid #2a3140; color: #2a3140; padding: 8px 10px; font-size: 14px; border-radius: 6px; width: 140px; font-family: 'Press Start 2P', monospace; margin-right: 8px; text-transform: uppercase; }
+  .lb-name-input::placeholder { color: #aaa; font-size: 10px; }
+  .btn-small { margin-top: 10px; padding: 8px 20px; font-size: 12px; border: none; border-radius: 8px; cursor: pointer; background: #2a8a3a; color: #fff; font-weight: bold; transition: transform 0.1s; }
+  .btn-small:hover { transform: scale(1.05); }
+  .credit { font-size: 12px; color: #888; margin-top: 14px; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="store-banner"><a href="/">EZ-AZ</a></div>
+
+<div id="wrap">
+<div id="titleScreen" class="overlay">
+  <h1>LETTERBOX</h1>
+  <p class="subtitle">Az is up early doing the marketing run. Hop forward through Gumdale before the sun catches you. Hit every letterbox you pass. Watch for cars, dogs, the creek and the train.</p>
+  <button class="btn" onclick="startGame()">Ride</button>
+  <div class="info">Arrow keys or WASD to hop<br>One tile at a time<br>Don't fall behind<br>Escape to pause</div>
+  <div class="title-leaderboard" id="titleLeaderboard"></div>
+</div>
+
+<div id="pauseScreen" class="overlay">
+  <h1>Paused</h1>
+  <button class="btn" onclick="resumeGame()">Resume</button>
+  <button class="btn-quit" onclick="quitGame()">Back to the store</button>
+</div>
+
+<div id="endScreen" class="overlay">
+  <h1 id="endTitle">Ride's over</h1>
+  <p class="death-line" id="deathLine"></p>
+  <div class="final-score" id="finalScoreDisplay"></div>
+  <div id="nameEntrySection" style="display:none; margin-bottom: 12px;">
+    <input type="text" id="nameInput" class="lb-name-input" maxlength="10" placeholder="NAME">
+    <button class="btn-small" onclick="saveScore()">Save</button>
+  </div>
+  <div class="leaderboard" id="leaderboardSection"></div>
+  <p class="credit">Letterbox. Built at EZ-AZ.</p>
+  <button class="btn" onclick="startGame()">Ride again</button>
+  <button class="btn-quit" onclick="window.location.href='/'">Back to the store</button>
+</div>
+
+<canvas id="game"></canvas>
+</div>
+
+<script src="game.js"></script>
+<script src="/controls.js" data-buttons="none"></script>
+</body>
+</html>
