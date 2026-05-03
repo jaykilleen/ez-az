@@ -207,10 +207,17 @@
 
   <div class="store-banner">
     <a href="/" class="zone-brand">EZ-AZ</a>
-    <span class="zone-sub">Scan for Party</span>
+    <span class="zone-sub" id="modeSub">Scan for Party</span>
   </div>
 
-  <div class="viewfinder-wrap">
+  <div id="activeRoomsWrap" hidden style="padding:14px 20px 4px;">
+    <div style="font-size:11px;color:#445;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;font-weight:700;">Live games on EZ-AZ</div>
+    <div id="activeRoomsList" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:13px;color:#334;text-align:center;padding:10px;">Loading…</div>
+    </div>
+  </div>
+
+  <div class="viewfinder-wrap" id="viewfinderWrap">
     <video id="video" playsinline autoplay muted></video>
     <div class="dim-overlay"></div>
     <div class="reticle" id="reticle">
@@ -277,6 +284,46 @@
 
   var scanning  = false;
   var stream    = null;
+
+  // ── Manual mode (no camera) ──────────────────────────────────────────────
+  var isManualMode = /[?&]manual=1\b/.test(location.search);
+  if (isManualMode) {
+    document.getElementById('viewfinderWrap').style.display = 'none';
+    startBtn.style.display = 'none';
+    statusEl.textContent = 'Type a room code or pick a live game';
+    document.getElementById('modeSub').textContent = 'Connect to TV';
+    var roomsWrap = document.getElementById('activeRoomsWrap');
+    var roomsList = document.getElementById('activeRoomsList');
+    roomsWrap.hidden = false;
+    fetch('/api/active_rooms')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { renderActiveRooms((d && d.rooms) || []); })
+      .catch(function() {
+        roomsList.innerHTML = '<div style="font-size:13px;color:#ff8888;text-align:center;padding:10px;">Could not load games</div>';
+      });
+
+    function renderActiveRooms(rooms) {
+      roomsList.innerHTML = '';
+      if (!rooms.length) {
+        roomsList.innerHTML = '<div style="font-size:13px;color:#334;text-align:center;padding:10px;">No games running. Type a code below.</div>';
+        return;
+      }
+      rooms.forEach(function(r) {
+        var btn = document.createElement('a');
+        btn.href = '/tv/remote?code=' + encodeURIComponent(r.code);
+        btn.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(0,255,200,0.06);border:1px solid rgba(0,255,200,0.25);border-radius:10px;text-decoration:none;color:#fff;';
+        var safeTitle = String(r.game_title || r.game_slug).replace(/[<>&]/g, '');
+        var safeCode  = String(r.code).replace(/[^A-Z0-9]/gi, '');
+        btn.innerHTML =
+          '<div>' +
+            '<div style="font-size:14px;font-weight:800;color:#fff;">' + safeTitle + '</div>' +
+            '<div style="font-size:11px;color:#557;margin-top:2px;">' + r.member_count + ' player' + (r.member_count === 1 ? '' : 's') + '</div>' +
+          '</div>' +
+          '<div style="font-family:Courier New,monospace;font-size:14px;color:#00ffc8;letter-spacing:0.18em;font-weight:900;">' + safeCode + '</div>';
+        roomsList.appendChild(btn);
+      });
+    }
+  }
 
   // ── Rejoin last session ──────────────────────────────────────────────────
   var lastUrl = localStorage.getItem('ezaz_last_zone_url');

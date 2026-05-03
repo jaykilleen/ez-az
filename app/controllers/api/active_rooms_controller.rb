@@ -21,5 +21,17 @@ module Api
         }
       }
     end
+
+    def destroy
+      code = params[:code].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 4]
+      room = Room.active.find_by(code: code)
+      return render(json: { error: "Room not found" }, status: :not_found) unless room
+
+      if room.tv_token.present?
+        ActionCable.server.broadcast("tv_remote:#{room.tv_token}", { type: "tv_home" })
+      end
+      room.update!(expires_at: 1.minute.ago)
+      render json: { ok: true }
+    end
   end
 end

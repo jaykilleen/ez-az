@@ -16,8 +16,15 @@
     border-bottom: 1px solid rgba(255,255,255,0.08);
     flex-shrink: 0;
   }
-  .zone-brand { font-size: 14px; font-weight: 900; color: #00ffc8; letter-spacing: 0.1em; }
-  .zone-conn  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #445; }
+  .zone-brand { font-size: 14px; font-weight: 900; color: #00ffc8; letter-spacing: 0.1em; flex: 0 0 auto; }
+  .zone-room {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 900; letter-spacing: 0.18em;
+    color: #ffe44d; font-family: "Courier New", monospace;
+    text-transform: uppercase; min-width: 0;
+  }
+  .zone-room-label { font-size: 9px; color: #667; letter-spacing: 0.12em; font-family: inherit; margin-right: 4px; }
+  .zone-conn  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #445; flex: 0 0 auto; }
   .zone-dot   { width: 8px; height: 8px; border-radius: 50%; background: #334; transition: background 0.3s; }
   .zone-dot.live { background: #00ffc8; box-shadow: 0 0 6px #00ffc8; }
 
@@ -550,6 +557,19 @@
     font-size: 13px; color: #00ffc8; font-weight: 900;
     letter-spacing: 0.15em;
   }
+  .options-room-row {
+    display: flex; align-items: stretch; gap: 6px;
+  }
+  .options-room-row .options-room { flex: 1; }
+  .options-room-close {
+    flex: 0 0 auto; width: 40px;
+    background: rgba(255,71,87,0.08);
+    border: 1px solid rgba(255,71,87,0.3);
+    border-radius: 8px;
+    color: #ff4757; font-size: 16px; font-weight: 900;
+    cursor: pointer; font-family: inherit;
+  }
+  .options-room-close:active { background: rgba(255,71,87,0.2); }
   .options-rooms-empty { font-size: 12px; color: #445; text-align: center; padding: 8px; }
   .options-exit-btn {
     display: block; width: 100%;
@@ -616,6 +636,9 @@
 
   <div class="zone-bar">
     <span class="zone-brand">EZ-AZ</span>
+    <div class="zone-room" id="zone-room">
+      <span class="zone-room-label">ROOM</span><span id="zone-room-code"><%= @room_code %></span>
+    </div>
     <div class="zone-conn">
       <span class="zone-dot" id="zone-dot"></span>
       <span id="zone-status">Connecting...</span>
@@ -1077,6 +1100,9 @@
       return;
     }
     rooms.forEach(function(r) {
+      var row = document.createElement('div');
+      row.className = 'options-room-row';
+
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'options-room';
@@ -1091,8 +1117,44 @@
         if (isCurrent) return;
         window.location.href = '/tv/remote?code=' + encodeURIComponent(r.code);
       });
-      optionsRooms.appendChild(btn);
+
+      var close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'options-room-close';
+      close.title = 'Close this game';
+      close.textContent = '✕';
+      close.addEventListener('click', function() {
+        if (!confirm('Close ' + r.game_title + ' (' + r.code + ')?')) return;
+        close.disabled = true;
+        close.textContent = '…';
+        fetch('/api/active_rooms/' + encodeURIComponent(r.code), {
+          method: 'DELETE',
+          headers: { 'X-CSRF-Token': csrfToken() }
+        })
+          .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+          .then(function(res) {
+            if (!res.ok) {
+              alert(res.data.error || 'Could not close room');
+              close.disabled = false; close.textContent = '✕';
+              return;
+            }
+            loadActiveRooms();
+          })
+          .catch(function() {
+            alert('Connection error');
+            close.disabled = false; close.textContent = '✕';
+          });
+      });
+
+      row.appendChild(btn);
+      row.appendChild(close);
+      optionsRooms.appendChild(row);
     });
+  }
+
+  function csrfToken() {
+    var m = document.querySelector('meta[name="csrf-token"]');
+    return m ? m.content : '';
   }
 
   function escText(s) {
