@@ -195,7 +195,7 @@
   }
 
   .hk-lobby-players {
-    display: flex; flex-direction: column; gap: 0.8vh;
+    display: flex; flex-direction: column; gap: 0.6vh;
     margin-top: 1vh;
   }
   .hk-lobby-players-title {
@@ -204,13 +204,21 @@
     letter-spacing: 0.15em;
     text-transform: uppercase;
   }
+  #hk-lobby-players {
+    display: flex; flex-wrap: wrap; gap: 0.6vh 0.8vw;
+    align-items: center;
+  }
   .hk-joined-player {
-    display: flex; align-items: center; gap: 0.8vw;
-    font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+    display: inline-flex; align-items: center; gap: 0.5vw;
+    font-size: clamp(0.85rem, 1.1vw, 1.1rem);
     color: var(--hk-green);
+    background: rgba(0, 255, 102, 0.06);
+    border: 1px solid var(--hk-border);
+    padding: 0.3vh 0.8vw;
   }
   .hk-joined-dot {
-    width: 0.8vw; height: 0.8vw; border-radius: 50%;
+    width: 0.7vw; height: 0.7vw; min-width: 8px; min-height: 8px;
+    border-radius: 50%;
     box-shadow: 0 0 6px currentColor;
   }
   .hk-no-players { color: var(--hk-green-dim); font-size: clamp(0.85rem, 1.1vw, 1.1rem); }
@@ -823,6 +831,7 @@
           this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Hacker Pro' });
         },
         received: function(data) {
+          if (data.type === 'tv_home') { clearActiveGame(); window.location.href = '/tv'; return; }
           if (data.type !== 'navigate') return;
           if (data.nav_type === 'release') return;
           var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };

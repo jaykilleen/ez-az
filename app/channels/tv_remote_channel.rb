@@ -66,6 +66,10 @@ class TvRemoteChannel < ApplicationCable::Channel
     })
   end
 
+  def tv_home(_data = {})
+    ActionCable.server.broadcast("tv_remote:#{clean_token}", { type: "tv_home" })
+  end
+
   def set_state(data)
     state = data["state"].to_s
     return unless ALLOWED_STATES.include?(state)

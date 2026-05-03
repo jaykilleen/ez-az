@@ -501,15 +501,63 @@
   /* ── Options panel (replaces main when Options tab active) ── */
   .zone-options-panel {
     flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px; padding: 24px 20px;
+    align-items: stretch; justify-content: flex-start;
+    gap: 18px; padding: 18px 18px 24px; overflow-y: auto;
   }
+  .options-section {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+  }
+  .options-label {
+    font-size: 11px; color: #557; letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .options-username {
+    font-size: 18px; color: #fff; font-weight: 900;
+    letter-spacing: 0.04em;
+  }
+  .options-secondary-btn {
+    display: block; width: 100%;
+    padding: 13px; border-radius: 10px;
+    background: rgba(0,255,200,0.08);
+    border: 1px solid rgba(0,255,200,0.3);
+    color: #00ffc8; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; text-align: center;
+    transition: background 0.15s;
+  }
+  .options-secondary-btn:active { background: rgba(0,255,200,0.18); }
+  .options-rooms {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 4px;
+  }
+  .options-room {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    cursor: pointer; font-family: inherit;
+    color: #cdd; text-align: left;
+  }
+  .options-room:active { background: rgba(0,255,200,0.1); border-color: rgba(0,255,200,0.3); }
+  .options-room-game { font-size: 14px; font-weight: 700; color: #fff; }
+  .options-room-meta { font-size: 11px; color: #667; letter-spacing: 0.04em; margin-top: 2px; }
+  .options-room-code {
+    font-family: "Courier New", monospace;
+    font-size: 13px; color: #00ffc8; font-weight: 900;
+    letter-spacing: 0.15em;
+  }
+  .options-rooms-empty { font-size: 12px; color: #445; text-align: center; padding: 8px; }
   .options-exit-btn {
-    display: block; width: 100%; max-width: 280px;
-    padding: 16px; border-radius: 12px; text-align: center;
-    background: rgba(255,71,87,0.12); border: 2px solid rgba(255,71,87,0.35);
-    color: #ff4757; font-size: 15px; font-weight: 700;
-    text-decoration: none; transition: background 0.15s;
+    display: block; width: 100%;
+    padding: 14px; border-radius: 10px; text-align: center;
+    background: rgba(255,71,87,0.12); border: 1px solid rgba(255,71,87,0.35);
+    color: #ff4757; font-size: 14px; font-weight: 700;
+    text-decoration: none; transition: background 0.15s; cursor: pointer;
+    font-family: inherit;
   }
   .options-exit-btn:active { background: rgba(255,71,87,0.25); }
   .options-hint { font-size: 12px; color: #334; text-align: center; line-height: 1.6; }
@@ -839,8 +887,26 @@
 
   <!-- Options panel content -->
   <div class="zone-options-panel" id="zone-options-panel" hidden>
+    <div class="options-section">
+      <div class="options-label">Logged in as</div>
+      <div class="options-username" id="options-username">—</div>
+      <button class="options-secondary-btn" id="options-switch-user-btn" type="button">Switch user</button>
+    </div>
+
+    <div class="options-section">
+      <div class="options-label">Active games on EZ-AZ</div>
+      <div class="options-rooms" id="options-rooms">
+        <div class="options-rooms-empty">Loading…</div>
+      </div>
+      <button class="options-secondary-btn" id="options-rooms-refresh" type="button">↻ Refresh</button>
+    </div>
+
+    <div class="options-section">
+      <button class="options-secondary-btn" id="options-tv-home-btn" type="button">↺ Send TV to shelf</button>
+      <div class="options-hint">Use the Remote tab to control the TV D-pad.</div>
+    </div>
+
     <a href="/" class="options-exit-btn">← Exit to Store</a>
-    <div class="options-hint">You can also use the Remote tab<br>to control the TV D-pad.</div>
   </div>
 
   <!-- D-pad — shown when browsing non-game screens, or Remote tab active -->
@@ -927,6 +993,11 @@
   var zoneTabs        = document.getElementById('zone-tabs');
   var zoneOptionsPanel = document.getElementById('zone-options-panel');
   var remoteDot       = document.getElementById('remote-dot');
+  var optionsUsername    = document.getElementById('options-username');
+  var optionsSwitchBtn   = document.getElementById('options-switch-user-btn');
+  var optionsRooms       = document.getElementById('options-rooms');
+  var optionsRoomsRefresh = document.getElementById('options-rooms-refresh');
+  var optionsTvHomeBtn   = document.getElementById('options-tv-home-btn');
 
   // ── Screen switching ────────────────────────────────────────────────
   var PARTY_SCREENS  = new Set(['buzzer', 'spotlight', 'treasure', 'hacker']);
@@ -977,7 +1048,75 @@
   }
 
   document.querySelectorAll('.zone-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() { applyTab(btn.dataset.tab); });
+    btn.addEventListener('click', function() {
+      applyTab(btn.dataset.tab);
+      if (btn.dataset.tab === 'options') refreshOptionsPanel();
+    });
+  });
+
+  // ── Options panel ───────────────────────────────────────────────────
+  function refreshOptionsPanel() {
+    optionsUsername.textContent = myUsername || '(no name)';
+    loadActiveRooms();
+  }
+
+  function loadActiveRooms() {
+    optionsRooms.innerHTML = '<div class="options-rooms-empty">Loading…</div>';
+    fetch('/api/active_rooms', { headers: { Accept: 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { renderActiveRooms((d && d.rooms) || []); })
+      .catch(function() {
+        optionsRooms.innerHTML = '<div class="options-rooms-empty">Could not reach server</div>';
+      });
+  }
+
+  function renderActiveRooms(rooms) {
+    optionsRooms.innerHTML = '';
+    if (!rooms.length) {
+      optionsRooms.innerHTML = '<div class="options-rooms-empty">No games running right now.</div>';
+      return;
+    }
+    rooms.forEach(function(r) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'options-room';
+      var isCurrent = r.code === roomCode;
+      btn.innerHTML =
+        '<div>' +
+          '<div class="options-room-game">' + escText(r.game_title) + (isCurrent ? ' · this TV' : '') + '</div>' +
+          '<div class="options-room-meta">' + r.member_count + ' player' + (r.member_count === 1 ? '' : 's') + '</div>' +
+        '</div>' +
+        '<div class="options-room-code">' + escText(r.code) + '</div>';
+      btn.addEventListener('click', function() {
+        if (isCurrent) return;
+        window.location.href = '/tv/remote?code=' + encodeURIComponent(r.code);
+      });
+      optionsRooms.appendChild(btn);
+    });
+  }
+
+  function escText(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+
+  optionsRoomsRefresh.addEventListener('click', loadActiveRooms);
+
+  optionsTvHomeBtn.addEventListener('click', function() {
+    if (!remote) return;
+    remote.perform('tv_home', {});
+    optionsTvHomeBtn.textContent = 'Sent ✓';
+    setTimeout(function() { optionsTvHomeBtn.textContent = '↺ Send TV to shelf'; }, 1200);
+  });
+
+  optionsSwitchBtn.addEventListener('click', function() {
+    if (!confirm('Log out of ' + (myUsername || 'this device') + '?')) return;
+    try {
+      localStorage.removeItem('ezaz_device_token');
+      localStorage.removeItem('ezaz_username');
+    } catch (_) {}
+    window.location.reload();
   });
 
   // ── TV Remote channel ────────────────────────────────────────────────

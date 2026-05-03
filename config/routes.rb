@@ -55,6 +55,7 @@ Rails.application.routes.draw do
     get "watch/position", to: "watch#position"
     put "watch/position", to: "watch#update_position"
     get "tv_session",     to: "tv_session#show"
+    get "active_rooms",   to: "active_rooms#index"
   end
 
   get "/errors", to: "errors_dashboard#index"

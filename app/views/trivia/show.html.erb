@@ -663,6 +663,7 @@
           this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Family Trivia' });
         },
         received: function(data) {
+          if (data.type === 'tv_home') { clearActiveGame(); window.location.href = '/tv'; return; }
           if (data.type !== 'navigate') return;
           var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };
           var key = keyMap[data.direction];

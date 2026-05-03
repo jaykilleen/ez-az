@@ -580,6 +580,7 @@
         this.perform('set_state', { state: 'shelf' });
       },
       received: function(data) {
+        if (data.type === 'tv_home') { window.location.href = '/tv'; return; }
         if (data.type !== 'navigate') return;
         if (data.nav_type === 'release') return;
         var keyMap = {
