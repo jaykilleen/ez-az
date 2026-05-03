@@ -468,6 +468,94 @@
   .hk-zone-won-icon { font-size: 56px; line-height: 1; }
   .hk-zone-won-msg { font-size: 16px; text-align: center; line-height: 1.5; }
 
+  /* ── Boomerang Brawl phone states ── */
+  .br-zone {
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+  }
+  .br-zone-content {
+    gap: 14px;
+    justify-content: space-between;
+    padding-top: 14px;
+  }
+  .br-zone-banner {
+    width: 100%; max-width: 360px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: 12px;
+    background: rgba(255, 136, 0, 0.08);
+    border: 1px solid rgba(255, 136, 0, 0.3);
+  }
+  .br-zone-badge {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 800;
+  }
+  .br-zone-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .br-zone-status {
+    font-size: 12px; color: #c8b48a;
+    letter-spacing: 0.05em;
+  }
+  .br-zone-status.is-out { color: #ff4757; font-weight: 700; }
+
+  .br-zone-rounds {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: #889;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .br-zone-rounds-pips { display: flex; gap: 4px; }
+  .br-zone-rounds-pip {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .br-zone-rounds-pip.is-on { background: var(--my-color, #00ffc8); }
+
+  .br-zone-controls {
+    width: 100%;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 8px max(env(safe-area-inset-bottom, 0px), 12px);
+  }
+  .br-zone-dpad {
+    display: grid;
+    grid-template-columns: 64px 64px 64px;
+    grid-template-rows: 64px 64px 64px;
+    gap: 6px; justify-self: center;
+  }
+  .br-zone-dpad-btn {
+    border-radius: 14px; background: rgba(255, 136, 0, 0.1);
+    border: 2px solid rgba(255, 136, 0, 0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #ff8800;
+    user-select: none; touch-action: none;
+    -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .br-zone-dpad-btn.pressed { background: rgba(255, 136, 0, 0.4); border-color: #ff8800; }
+  .br-zone-dpad-empty { background: none !important; border: none !important; }
+  .br-zone-attack {
+    width: 130px; height: 130px; border-radius: 50%;
+    justify-self: center;
+    background: rgba(255, 71, 87, 0.18);
+    border: 4px solid rgba(255, 71, 87, 0.6);
+    color: #ff4757; font-weight: 900; font-size: 18px;
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 16px rgba(255, 71, 87, 0.3);
+  }
+  .br-zone-attack.pressed { background: rgba(255, 71, 87, 0.5); border-color: #ff4757; }
+  .br-zone-attack.is-cooldown { opacity: 0.4; }
+  .br-zone-attack.is-out { opacity: 0.25; pointer-events: none; }
+
+  .br-zone-out-msg {
+    font-size: 14px; color: #ff4757; font-weight: 700;
+    text-align: center; line-height: 1.5;
+  }
+
   /* watching */
   .watching-hint { color: #8ab4c8; }
 
@@ -808,6 +896,42 @@
       </div>
     </div>
 
+    <!-- boomerang: real-time arena, joined -->
+    <div class="zone-content br-zone br-zone-content" data-screen="boomerang" hidden>
+      <div class="br-zone-banner">
+        <div class="br-zone-badge">
+          <span class="br-zone-dot" id="br-zone-dot"></span>
+          <span id="br-zone-name">P1</span>
+          <span class="br-zone-status" id="br-zone-status">ALIVE</span>
+        </div>
+        <div class="br-zone-rounds">
+          R<span id="br-zone-round">1</span>
+          <div class="br-zone-rounds-pips" id="br-zone-rounds-pips"></div>
+        </div>
+      </div>
+
+      <div id="br-zone-out-msg" class="br-zone-out-msg" hidden>
+        You're out!<br>Wait for the next round…
+      </div>
+
+      <div class="br-zone-controls" id="br-zone-controls">
+        <div class="br-zone-dpad">
+          <div class="br-zone-dpad-empty"></div>
+          <div class="br-zone-dpad-btn" data-br-dir="up">▲</div>
+          <div class="br-zone-dpad-empty"></div>
+
+          <div class="br-zone-dpad-btn" data-br-dir="left">◀</div>
+          <div class="br-zone-dpad-empty"></div>
+          <div class="br-zone-dpad-btn" data-br-dir="right">▶</div>
+
+          <div class="br-zone-dpad-empty"></div>
+          <div class="br-zone-dpad-btn" data-br-dir="down">▼</div>
+          <div class="br-zone-dpad-empty"></div>
+        </div>
+        <div class="br-zone-attack" id="br-zone-attack">THROW</div>
+      </div>
+    </div>
+
     <!-- watching: game in progress, not joined -->
     <div class="zone-content" data-screen="watching" hidden>
       <div class="zone-hint watching-hint">
@@ -882,6 +1006,7 @@
   var spotlightChannel = null;
   var treasureChannel  = null;
   var hackerChannel    = null;
+  var boomerangChannel = null;
   var roomChannel      = null;
   var remote           = null;
   var myAnswerIndex    = null;
@@ -929,8 +1054,8 @@
   var remoteDot       = document.getElementById('remote-dot');
 
   // ── Screen switching ────────────────────────────────────────────────
-  var PARTY_SCREENS  = new Set(['buzzer', 'spotlight', 'treasure', 'hacker']);
-  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer', 'spotlight', 'treasure', 'hacker']);
+  var PARTY_SCREENS  = new Set(['buzzer', 'spotlight', 'treasure', 'hacker', 'boomerang']);
+  var TABBED_SCREENS = new Set(['shelf', 'lobby', 'waiting', 'watching', 'buzzer', 'spotlight', 'treasure', 'hacker', 'boomerang']);
 
   function showScreen(name) {
     currentScreen = name;
@@ -1221,6 +1346,7 @@
     if (gameSlug === 'spotlight') subscribeToSpotlight(code, slot);
     else if (gameSlug === 'treasure-hunt') subscribeToTreasure(code, slot);
     else if (gameSlug === 'hacker-pro') subscribeToHacker(code, slot);
+    else if (gameSlug === 'boomerang-brawl') subscribeToBoomerang(code, slot);
     else subscribeToTrivia(code, slot);
   }
 
@@ -1279,6 +1405,7 @@
     if (spotlightChannel) { spotlightChannel.unsubscribe(); spotlightChannel = null; }
     if (treasureChannel)  { treasureChannel.unsubscribe();  treasureChannel = null; }
     if (hackerChannel)    { hackerChannel.unsubscribe();    hackerChannel = null; }
+    if (boomerangChannel) { boomerangChannel.unsubscribe(); boomerangChannel = null; }
     showScreen('lobby');
   }
 
@@ -1872,6 +1999,163 @@
     hackerChannel.perform('attempt', { slot_index: hkState.cursor, char: ch });
     if (navigator.vibrate) navigator.vibrate(40);
   });
+
+  // ── Boomerang Brawl subscription ──────────────────────────────────────
+  var brZone = {
+    alive:       true,
+    phase:       'lobby',
+    held:        { up: false, down: false, left: false, right: false },
+    rangInFlight: false,
+    lastThrowAt: 0
+  };
+
+  function subscribeToBoomerang(code, slot) {
+    if (boomerangChannel) return;
+    boomerangChannel = consumer.subscriptions.create(
+      { channel: 'BoomerangChannel', code: code, slot: slot },
+      {
+        connected: function() {
+          var dot = document.getElementById('br-zone-dot');
+          if (myColor) dot.style.background = myColor;
+          document.getElementById('br-zone-name').textContent = 'P' + mySlot;
+          document.documentElement.style.setProperty('--my-color', myColor || '#ff8800');
+        },
+        received: function(data) {
+          if (!data) return;
+          switch (data.type) {
+            case 'tick':       onBrTick(data); break;
+            case 'round_over': onBrRoundOver(data); break;
+            case 'match_over': onBrMatchOver(data); break;
+            case 'reset':      onBrReset(); break;
+          }
+        }
+      }
+    );
+  }
+
+  function onBrTick(data) {
+    if (currentScreen !== 'boomerang') {
+      showScreen('boomerang');
+      if (activeTab === 'remote') { remoteDot.hidden = false; } else { applyTab('game'); }
+    }
+    var me = (data.players || []).find(function(p) { return p.slot === mySlot; });
+    if (me) {
+      brZone.alive = me.alive;
+      var statusEl = document.getElementById('br-zone-status');
+      var attackBtn = document.getElementById('br-zone-attack');
+      var outMsg = document.getElementById('br-zone-out-msg');
+      var controls = document.getElementById('br-zone-controls');
+      if (me.alive) {
+        statusEl.textContent = 'ALIVE';
+        statusEl.classList.remove('is-out');
+        attackBtn.classList.remove('is-out');
+        outMsg.hidden = true;
+        controls.style.opacity = 1;
+      } else {
+        statusEl.textContent = 'OUT';
+        statusEl.classList.add('is-out');
+        attackBtn.classList.add('is-out');
+        outMsg.hidden = false;
+        controls.style.opacity = 0.4;
+      }
+    }
+    // Track if my rang is in flight (cooldown UI)
+    var mine = (data.boomerangs || []).find(function(b) { return b.owner === mySlot; });
+    brZone.rangInFlight = !!mine;
+    var attackBtn2 = document.getElementById('br-zone-attack');
+    attackBtn2.classList.toggle('is-cooldown', brZone.rangInFlight && brZone.alive);
+
+    // Update round + score pips
+    document.getElementById('br-zone-round').textContent = data.round || 1;
+    var roundsToWin = data.rounds_to_win || 2;
+    var myScore = (data.scores && data.scores[mySlot]) || 0;
+    var pipsEl = document.getElementById('br-zone-rounds-pips');
+    if (pipsEl.children.length !== roundsToWin) {
+      pipsEl.innerHTML = '';
+      for (var i = 0; i < roundsToWin; i++) {
+        var pip = document.createElement('div');
+        pip.className = 'br-zone-rounds-pip';
+        pipsEl.appendChild(pip);
+      }
+    }
+    Array.prototype.forEach.call(pipsEl.children, function(pip, idx) {
+      pip.classList.toggle('is-on', idx < myScore);
+    });
+
+    brZone.phase = data.phase;
+  }
+
+  function onBrRoundOver(data) {
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+  function onBrMatchOver(data) {
+    var attackBtn = document.getElementById('br-zone-attack');
+    attackBtn.classList.add('is-out');
+    var statusEl = document.getElementById('br-zone-status');
+    statusEl.textContent = (data.match_winner === mySlot) ? 'CHAMPION' : 'MATCH OVER';
+    statusEl.classList.toggle('is-out', data.match_winner !== mySlot);
+    if (data.match_winner === mySlot && navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 100]);
+  }
+  function onBrReset() {
+    showScreen('waiting');
+  }
+
+  function brSendInput(dir, pressed) {
+    if (!boomerangChannel) return;
+    if (brZone.held[dir] === pressed) return;
+    brZone.held[dir] = pressed;
+    boomerangChannel.perform('input', { dir: dir, state: pressed ? 'press' : 'release' });
+  }
+
+  function brSendThrow() {
+    if (!boomerangChannel || !brZone.alive || brZone.rangInFlight) return;
+    var now = performance.now();
+    if (now - brZone.lastThrowAt < 120) return; // debounce double-fire
+    brZone.lastThrowAt = now;
+    boomerangChannel.perform('throw', {});
+    if (navigator.vibrate) navigator.vibrate(30);
+  }
+
+  // Wire D-pad direction buttons (touch + mouse, with explicit press/release).
+  document.querySelectorAll('[data-br-dir]').forEach(function(btn) {
+    var dir = btn.dataset.brDir;
+    function press(e) {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      brSendInput(dir, true);
+    }
+    function release(e) {
+      if (e) e.preventDefault();
+      btn.classList.remove('pressed');
+      brSendInput(dir, false);
+    }
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release);
+    btn.addEventListener('touchcancel', release);
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', function(e) {
+      if (btn.classList.contains('pressed')) release(e);
+    });
+  });
+
+  (function() {
+    var btn = document.getElementById('br-zone-attack');
+    function press(e) {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      brSendThrow();
+    }
+    function release(e) {
+      if (e) e.preventDefault();
+      btn.classList.remove('pressed');
+    }
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release);
+    btn.addEventListener('touchcancel', release);
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+  })();
 
   // ── Phone timer ───────────────────────────────────────────────────────
   function startPhoneTimer(elId, secs) {

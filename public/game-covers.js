@@ -1335,3 +1335,92 @@
   ctx.fillStyle = '#00ff66';
   ctx.fillRect(W - 22, H - 24, 8, 12);
 })();
+
+// ── Boomerang Brawl cover ─────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('boomerangCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Sunset-arena background
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#180a14');
+  bg.addColorStop(0.55, '#3a1408');
+  bg.addColorStop(1, '#080414');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Floor grid lines (top-down vibe)
+  ctx.strokeStyle = 'rgba(255,136,0,0.16)';
+  ctx.lineWidth = 1;
+  for (var gx = 22; gx < W; gx += 22) {
+    ctx.beginPath(); ctx.moveTo(gx, 50); ctx.lineTo(gx, H - 60); ctx.stroke();
+  }
+  for (var gy = 56; gy < H - 60; gy += 22) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+
+  // Glow halo behind centre
+  var glow = ctx.createRadialGradient(W / 2, H * 0.5, 8, W / 2, H * 0.5, W * 0.6);
+  glow.addColorStop(0, 'rgba(255, 136, 0, 0.28)');
+  glow.addColorStop(1, 'rgba(255, 136, 0, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Two boomerangs arcing across
+  function rang(cx, cy, rot, color) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.shadowColor = color; ctx.shadowBlur = 14;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-20, -3); ctx.lineTo(0, -16); ctx.lineTo(20, -3);
+    ctx.lineTo(4, 0);
+    ctx.lineTo(20, 20); ctx.lineTo(0, 10); ctx.lineTo(-20, 20);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Trail
+  ctx.strokeStyle = 'rgba(255,136,0,0.45)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(W * 0.18, H * 0.78);
+  ctx.bezierCurveTo(W * 0.2, H * 0.4, W * 0.55, H * 0.25, W * 0.78, H * 0.55);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  rang(W * 0.32, H * 0.34, -0.6, '#ff8800');
+  rang(W * 0.66, H * 0.55, 0.8, '#3742fa');
+
+  // Player avatars (corner spawns)
+  function avatar(cx, cy, color) {
+    ctx.save();
+    ctx.shadowColor = color; ctx.shadowBlur = 10;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  avatar(38, 60, '#ff4757');
+  avatar(W - 36, H - 70, '#2ed573');
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#ff8800';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('BOOMERANG', W / 2, H - 32);
+  ctx.fillStyle = '#ff8800';
+  ctx.fillText('BRAWL', W / 2, H - 12);
+  ctx.restore();
+})();

@@ -89,6 +89,15 @@ class Game
       path: "/games/hacker-pro",
       icon: "hacker",
       tv_optimised: true
+    },
+    {
+      slug: "boomerang-brawl",
+      title: "Boomerang Brawl",
+      creators: "Az",
+      tagline: "Top-down arena brawl. Throw your boomerang, dodge theirs. Last one standing wins the round. Best of 3.",
+      path: "/games/boomerang-brawl",
+      icon: "boomerang",
+      tv_optimised: true
     }
   ].freeze
 

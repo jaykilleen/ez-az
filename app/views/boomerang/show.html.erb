@@ -1,0 +1,790 @@
+<style>
+  [hidden] { display: none !important; }
+
+  :root {
+    --br-bg: #0a0a14;
+    --br-surface: #121224;
+    --br-border: rgba(255, 136, 0, 0.18);
+    --br-orange: #ff8800;
+    --br-cyan:   #00e5ff;
+    --br-gold:   #ffd700;
+  }
+
+  .br {
+    width: 100vw; height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(ellipse at top, rgba(255, 136, 0, 0.08), transparent 55%),
+      radial-gradient(ellipse at bottom, rgba(0, 180, 255, 0.06), transparent 55%),
+      var(--br-bg);
+    color: #fff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    padding: 2vh 3vw;
+    gap: 1.2vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .br-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2vw; overflow: hidden;
+    border-bottom: 1px solid var(--br-border);
+    padding-bottom: 1vh;
+  }
+  .br-logo {
+    font-size: clamp(1.6rem, 3vw, 3rem); font-weight: 900;
+    background: linear-gradient(135deg, var(--br-orange), var(--br-gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    flex-shrink: 0;
+  }
+  .br-title {
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 800;
+    color: var(--br-orange); flex: 1; text-align: center;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .br-code {
+    font-size: clamp(0.85rem, 1.2vw, 1.2rem);
+    color: var(--br-orange);
+    background: rgba(255, 136, 0, 0.08);
+    border: 1px solid var(--br-border);
+    padding: 0.4em 0.8em; border-radius: 0.4em;
+    font-family: "Courier New", monospace;
+    flex-shrink: 0;
+    letter-spacing: 0.1em;
+  }
+  .br-btn {
+    font-size: clamp(0.75rem, 1vw, 1rem);
+    color: #667; background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.4em 0.9em; border-radius: 0.4em;
+    flex-shrink: 0;
+    cursor: pointer; font-family: inherit;
+    text-decoration: none;
+  }
+  .br-btn:hover { color: #ff4757; border-color: rgba(255,69,87,0.4); }
+
+  /* ── Score strip ── */
+  .br-scores {
+    display: flex; gap: 1vw;
+  }
+  .br-score {
+    flex: 1; display: flex; align-items: center; gap: 0.7vw;
+    background: var(--br-surface);
+    border: 2px solid var(--slot-color, transparent);
+    border-radius: 0.6vw; padding: 0.7vh 1vw;
+    min-width: 0;
+    position: relative;
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .br-score.is-eliminated {
+    opacity: 0.45;
+    filter: grayscale(0.6);
+  }
+  .br-score.is-leader::after {
+    content: '👑';
+    position: absolute; top: -0.6vh; right: 0.4vw;
+    font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+  }
+  .br-score-dot {
+    width: 1vw; height: 1vw; border-radius: 50%;
+    background: var(--slot-color); flex-shrink: 0;
+    box-shadow: 0 0 8px var(--slot-color);
+  }
+  .br-score-name {
+    font-weight: 700; color: #fff;
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1;
+  }
+  .br-score-points {
+    margin-left: auto;
+    font-family: "Courier New", monospace;
+    font-size: clamp(1.2rem, 1.8vw, 1.8rem); font-weight: 900;
+    color: var(--slot-color);
+    letter-spacing: 0.04em;
+  }
+  .br-score-pips {
+    display: flex; gap: 0.3vw;
+    margin-left: 0.6vw;
+  }
+  .br-score-pip {
+    width: 0.6vw; height: 0.6vw; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .br-score-pip.is-on { background: var(--slot-color); box-shadow: 0 0 6px var(--slot-color); }
+  .br-empty {
+    flex: 1; background: var(--br-surface);
+    border: 2px dashed rgba(255,255,255,0.06);
+    border-radius: 0.6vw;
+    display: flex; align-items: center; justify-content: center;
+    color: #334; font-size: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  .br-main {
+    grid-row: 3;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0; min-width: 0;
+  }
+
+  /* ── Lobby ── */
+  .br-lobby {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 4vw; align-items: center; width: 100%; max-width: 95vw;
+  }
+  .br-lobby-left { display: flex; flex-direction: column; gap: 2vh; }
+  .br-lobby-heading {
+    font-size: clamp(2.4rem, 5.5vw, 5.5rem); font-weight: 900;
+    background: linear-gradient(135deg, var(--br-orange), var(--br-gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1;
+  }
+  .br-lobby-sub {
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    color: #c8b48a; line-height: 1.5;
+    max-width: 50vw;
+  }
+  .br-lobby-rules {
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem);
+    color: #8ab4c8; line-height: 1.6;
+    background: rgba(255, 136, 0, 0.05);
+    border-left: 3px solid rgba(255, 136, 0, 0.5);
+    padding: 1vh 1.4vw; border-radius: 0 0.6vw 0.6vw 0;
+    max-width: 50vw;
+  }
+  .br-lobby-rules strong { color: #fff; }
+
+  .br-lobby-players {
+    display: flex; flex-direction: column; gap: 0.8vh;
+    margin-top: 1vh;
+  }
+  .br-joined-player {
+    display: flex; align-items: center; gap: 0.8vw;
+    font-size: clamp(0.95rem, 1.3vw, 1.3rem);
+    font-weight: 700; color: #fff;
+  }
+  .br-joined-dot {
+    width: 1vw; height: 1vw; border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .br-no-players {
+    color: #556; font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+  }
+  .br-start-btn {
+    align-self: flex-start; margin-top: 1.5vh;
+    padding: 1.4vh 3vw; border-radius: 0.8vw;
+    background: var(--br-orange);
+    color: #0a0a14;
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    border: none; cursor: pointer; letter-spacing: 0.04em;
+    transition: opacity 0.15s, transform 0.15s;
+    font-family: inherit;
+  }
+  .br-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .br-start-btn:not(:disabled):hover { transform: scale(1.04); }
+
+  .br-qr-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+    padding: 2vh 2vw; background: rgba(255, 136, 0, 0.06);
+    border: 2px solid var(--br-border);
+    border-radius: 1.2vw;
+  }
+  .br-qr-label {
+    font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+    color: #cfe; text-align: center; line-height: 1.4;
+  }
+  .br-qr-label strong {
+    display: block; color: var(--br-orange);
+    font-size: clamp(1rem, 1.4vw, 1.4rem);
+    margin-bottom: 0.4vh; letter-spacing: 0.06em;
+  }
+  .br-qr-img { width: clamp(160px, 17vw, 260px); height: clamp(160px, 17vw, 260px); }
+  .br-qr-img svg { width: 100%; height: 100%; display: block; }
+
+  /* ── Arena ── */
+  .br-stage {
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+    width: 100%; height: 100%;
+    justify-content: center;
+  }
+  .br-arena-wrap {
+    position: relative;
+    background: #050510;
+    border: 3px solid var(--br-orange);
+    border-radius: 1vw;
+    box-shadow: 0 0 0 4px rgba(255,136,0,0.15), 0 0 50px rgba(255,136,0,0.25);
+    overflow: hidden;
+    aspect-ratio: 800 / 500;
+    height: 100%;
+    max-height: 100%;
+    max-width: 100%;
+  }
+  .br-arena-canvas {
+    width: 100%; height: 100%; display: block;
+  }
+
+  .br-round-banner {
+    position: absolute; top: 12px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--br-border);
+    color: var(--br-orange);
+    padding: 0.6vh 1.4vw; border-radius: 0.6vw;
+    font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: clamp(0.85rem, 1.2vw, 1.2rem);
+    pointer-events: none;
+  }
+
+  .br-round-end-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1vh;
+    color: #fff;
+  }
+  .br-round-end-title {
+    font-size: clamp(2rem, 4.5vw, 4.5rem);
+    font-weight: 900;
+    color: var(--br-gold);
+    text-shadow: 0 0 24px rgba(255, 215, 0, 0.5);
+  }
+  .br-round-end-sub {
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    color: #c8b48a;
+  }
+
+  /* ── Match over ── */
+  .br-match-over {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3vh; width: 100%;
+  }
+  .br-match-title {
+    font-size: clamp(2.5rem, 6vw, 7rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--br-orange), var(--br-gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .br-match-winner {
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+    padding: 2vh 4vw; border-radius: 1vw;
+    border: 4px solid var(--winner-color, var(--br-gold));
+    background: rgba(255, 215, 0, 0.08);
+    box-shadow: 0 0 30px var(--winner-color, var(--br-gold));
+  }
+  .br-match-winner-crown { font-size: clamp(2.5rem, 5vw, 5rem); }
+  .br-match-winner-name {
+    font-size: clamp(1.5rem, 3vw, 3rem); font-weight: 900;
+    color: var(--winner-color, #fff);
+  }
+  .br-match-winner-sub { font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: #c8b48a; }
+
+  .br-match-actions { display: flex; gap: 1vw; }
+  .br-match-action-btn {
+    padding: 1.2vh 2.4vw;
+    background: var(--br-orange);
+    color: #0a0a14;
+    border: none; border-radius: 0.6vw;
+    font-size: clamp(0.95rem, 1.3vw, 1.3rem); font-weight: 900;
+    letter-spacing: 0.06em; cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.12s;
+  }
+  .br-match-action-btn:hover { transform: scale(1.04); }
+
+  /* ── Footer ── */
+  .br-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1vh; border-top: 1px solid var(--br-border);
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    color: #556;
+  }
+  .br-status { color: #889; }
+</style>
+
+<div class="br" id="br">
+  <header class="br-header">
+    <div class="br-logo">EZ-AZ</div>
+    <div class="br-title">Boomerang Brawl</div>
+    <button class="br-btn" id="br-mute-btn" type="button" aria-pressed="false">🔊</button>
+    <button class="br-btn" onclick="window.location.href='/tv'" title="Exit">✕ Exit</button>
+    <div class="br-code">Room <%= @room.code %></div>
+  </header>
+
+  <div class="br-scores" id="br-scores" hidden>
+    <% 4.times do |i| %>
+      <div class="br-empty" id="br-slot-<%= i+1 %>">P<%= i+1 %> empty</div>
+    <% end %>
+  </div>
+
+  <main class="br-main" id="br-main">
+
+    <!-- LOBBY -->
+    <div class="br-lobby" id="br-lobby">
+      <div class="br-lobby-left">
+        <div class="br-lobby-heading">Boomerang Brawl</div>
+        <div class="br-lobby-sub">
+          Top-down arena. Throw your boomerang. Don't get hit by theirs.
+        </div>
+        <div class="br-lobby-rules">
+          Move with the <strong>D-pad</strong>, throw with <strong>ATTACK</strong>.
+          Your boomerang flies out, bounces once, and homes back to you.
+          One hit eliminates you. <strong>Last alive wins the round. First to 2 wins the match.</strong>
+        </div>
+
+        <div class="br-lobby-players" id="br-lobby-players">
+          <% if @members.any? %>
+            <% @members.each do |m| %>
+              <div class="br-joined-player">
+                <span class="br-joined-dot" style="color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>; background: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>"></span>
+                <%= m.name %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="br-no-players">No brawlers yet — waiting for scans...</div>
+          <% end %>
+        </div>
+        <button class="br-start-btn" id="br-start-btn" <%= @members.size < 2 ? "disabled" : "" %>>
+          Start Match
+        </button>
+      </div>
+      <div class="br-qr-box">
+        <div class="br-qr-label">
+          <strong>SCAN TO BRAWL</strong>
+          ez-az.net
+        </div>
+        <div class="br-qr-img"><%= @qr_code_svg %></div>
+      </div>
+    </div>
+
+    <!-- STAGE: arena -->
+    <div class="br-stage" id="br-stage" hidden>
+      <div class="br-arena-wrap">
+        <canvas class="br-arena-canvas" id="br-arena" width="800" height="500"></canvas>
+        <div class="br-round-banner" id="br-round-banner">Round 1 of 3</div>
+        <div class="br-round-end-overlay" id="br-round-end" hidden>
+          <div class="br-round-end-title" id="br-round-end-title">Round Over</div>
+          <div class="br-round-end-sub" id="br-round-end-sub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATCH OVER -->
+    <div class="br-match-over" id="br-match-over" hidden>
+      <div class="br-match-title">Champion!</div>
+      <div class="br-match-winner" id="br-match-winner">
+        <div class="br-match-winner-crown">👑</div>
+        <div class="br-match-winner-name" id="br-match-winner-name">—</div>
+        <div class="br-match-winner-sub" id="br-match-winner-sub">—</div>
+      </div>
+      <div class="br-match-actions">
+        <button class="br-match-action-btn" id="br-again-btn" type="button">Play Again →</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="br-footer">
+    <div class="br-status" id="br-status">Ready</div>
+    <div>BEST OF 3 ROUNDS</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var SLOT_COLORS = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var consumer = createConsumer();
+  var code = <%= @room.code.to_json.html_safe %>;
+
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'boomerang-brawl',
+        game_title: 'Boomerang Brawl',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
+  if (window.Music) Music.attachMuteButton(document.getElementById('br-mute-btn'));
+
+  // ── State
+  var phase = 'lobby';
+  var knownMembers = [];
+  var lobbyPlayersEl = document.getElementById('br-lobby-players');
+  var startBtn   = document.getElementById('br-start-btn');
+  var lobbyEl    = document.getElementById('br-lobby');
+  var stageEl    = document.getElementById('br-stage');
+  var matchEl    = document.getElementById('br-match-over');
+  var scoresEl   = document.getElementById('br-scores');
+  var statusEl   = document.getElementById('br-status');
+  var roundBanner = document.getElementById('br-round-banner');
+  var roundEndEl  = document.getElementById('br-round-end');
+  var canvas     = document.getElementById('br-arena');
+  var ctx        = canvas.getContext('2d');
+
+  // Snapshot interpolation buffer — keep last two snapshots, lerp between them.
+  var prevSnap = null;
+  var nextSnap = null;
+  var prevAt = 0;        // perf timestamp at which we received prevSnap
+  var nextAt = 0;
+  var lastHitAt = {};    // for elimination flash
+  var rafId = null;
+
+  consumer.subscriptions.create(
+    { channel: 'RoomChannel', code: code },
+    {
+      received: function(data) {
+        if (data && data.type === 'member_joined') refreshLobbyPlayers(data.members);
+      }
+    }
+  );
+
+  var brawl = consumer.subscriptions.create(
+    { channel: 'BoomerangChannel', code: code, role: 'tv' },
+    {
+      connected:    function() { setStatus('Connected'); },
+      disconnected: function() { setStatus('Disconnected'); },
+      received: function(data) {
+        if (!data) return;
+        switch (data.type) {
+          case 'tick':         onTick(data); break;
+          case 'round_over':   onRoundOver(data); break;
+          case 'match_over':   onMatchOver(data); break;
+          case 'hit':          onHit(data); break;
+          case 'reset':        onReset(); break;
+          case 'lobby':        break;
+          case 'error':        setStatus(data.message); break;
+        }
+      }
+    }
+  );
+
+  startBtn.addEventListener('click', function() {
+    brawl.perform('start_match', {});
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+    if (window.Music) Music.start('boomerang');
+  });
+
+  document.getElementById('br-again-btn').addEventListener('click', function() {
+    brawl.perform('reset', {});
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      window.location.href = '/tv';
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (phase === 'lobby' && !startBtn.disabled) startBtn.click();
+      else if (phase === 'match_over') document.getElementById('br-again-btn').click();
+    }
+  });
+
+  // ── Tick handling
+  function onTick(data) {
+    if (phase === 'lobby' || phase === 'match_over') {
+      enterStage();
+    }
+    phase = data.phase || 'playing';
+    prevSnap = nextSnap;
+    prevAt = nextAt;
+    nextSnap = data;
+    nextAt = performance.now();
+    updateScoresHud(data);
+
+    if (data.round) roundBanner.textContent = 'Round ' + data.round + ' · First to ' + data.rounds_to_win;
+    if (phase === 'playing') {
+      roundEndEl.hidden = true;
+    }
+
+    if (!rafId) rafId = requestAnimationFrame(render);
+  }
+
+  function onRoundOver(data) {
+    var name = '';
+    var color = '#ffd700';
+    if (data.round_winner && data.players) {
+      var w = data.players.find(function(p) { return p.slot === data.round_winner; });
+      if (w) { name = w.name; color = w.color; }
+    }
+    document.getElementById('br-round-end-title').textContent = name ? name + ' wins the round' : 'Draw';
+    document.getElementById('br-round-end-title').style.color = color;
+    document.getElementById('br-round-end-sub').textContent = 'Next round in 2…';
+    roundEndEl.hidden = false;
+    setStatus(name ? name + ' takes round ' + data.round : 'Round ' + data.round + ' draw');
+  }
+
+  function onMatchOver(data) {
+    phase = 'match_over';
+    cancelAnimationFrame(rafId); rafId = null;
+    clearActiveGame();
+    if (window.Music) Music.stop();
+    showPhase('match');
+    document.getElementById('br-match-winner-name').textContent = data.winner_name || '—';
+    document.getElementById('br-match-winner-sub').textContent  = scoresLine(data.scores, data.players);
+    document.getElementById('br-match-winner').style.setProperty('--winner-color', data.winner_color || '#ffd700');
+    setStatus('Match over');
+  }
+
+  function onHit(data) {
+    lastHitAt[data.victim] = performance.now();
+  }
+
+  function onReset() {
+    phase = 'lobby';
+    cancelAnimationFrame(rafId); rafId = null;
+    scoresRendered = false;
+    prevSnap = nextSnap = null;
+    showPhase('lobby');
+    setStatus('Awaiting match');
+    saveActiveGame();
+  }
+
+  // ── Render
+  function render() {
+    rafId = requestAnimationFrame(render);
+    if (!nextSnap) return;
+
+    var arena = nextSnap.arena || { w: 800, h: 500 };
+    canvas.width  = arena.w;
+    canvas.height = arena.h;
+
+    // Background grid
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, arena.w, arena.h);
+    ctx.strokeStyle = 'rgba(255,136,0,0.06)';
+    ctx.lineWidth = 1;
+    for (var gx = 50; gx < arena.w; gx += 50) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, arena.h); ctx.stroke();
+    }
+    for (var gy = 50; gy < arena.h; gy += 50) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(arena.w, gy); ctx.stroke();
+    }
+    // Arena outline glow
+    ctx.strokeStyle = 'rgba(255,136,0,0.4)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, arena.w - 4, arena.h - 4);
+
+    // Interpolate at 90% of the way between snapshots — gives ~50ms lag, hides
+    // single-tick gaps without feeling delayed.
+    var alpha = 1.0;
+    if (prevSnap) {
+      var dt = nextAt - prevAt;
+      if (dt > 0) {
+        alpha = Math.min(1.0, (performance.now() - prevAt) / Math.max(dt, 30));
+      }
+    }
+
+    // Players
+    var players = nextSnap.players || [];
+    players.forEach(function(p) {
+      var prev = lookupPrev(prevSnap && prevSnap.players, 'slot', p.slot);
+      var x = prev ? lerp(prev.x, p.x, alpha) : p.x;
+      var y = prev ? lerp(prev.y, p.y, alpha) : p.y;
+      drawPlayer(x, y, p, performance.now() - (lastHitAt[p.slot] || -9999));
+    });
+
+    // Boomerangs (drawn after players so they read on top)
+    var rangs = nextSnap.boomerangs || [];
+    rangs.forEach(function(b) {
+      var prev = lookupPrev(prevSnap && prevSnap.boomerangs, 'id', b.id);
+      var x = prev ? lerp(prev.x, b.x, alpha) : b.x;
+      var y = prev ? lerp(prev.y, b.y, alpha) : b.y;
+      drawBoomerang(x, y, b);
+    });
+  }
+
+  function drawPlayer(x, y, p, sinceHitMs) {
+    ctx.save();
+    if (!p.alive) {
+      ctx.globalAlpha = 0.35;
+    }
+    // Hit flash
+    if (sinceHitMs >= 0 && sinceHitMs < 380) {
+      ctx.shadowColor = '#fff'; ctx.shadowBlur = 30;
+    } else {
+      ctx.shadowColor = p.color; ctx.shadowBlur = 14;
+    }
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Facing arrow
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + p.fx * 22, y + p.fy * 22);
+    ctx.stroke();
+    // Name tag
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(p.name || ('P' + p.slot), x, y - 24);
+    if (!p.alive) {
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.fillText('OUT', x, y + 32);
+    }
+    ctx.restore();
+  }
+
+  function drawBoomerang(x, y, b) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate((performance.now() / 60) % (Math.PI * 2));
+    ctx.shadowColor = b.color; ctx.shadowBlur = 16;
+    ctx.fillStyle = b.color;
+    // Boomerang shape — two stubby quad arms
+    ctx.beginPath();
+    ctx.moveTo(-12, -2); ctx.lineTo(0, -10); ctx.lineTo(12, -2);
+    ctx.lineTo(2, 0);
+    ctx.lineTo(12, 12); ctx.lineTo(0, 6); ctx.lineTo(-12, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function lookupPrev(arr, key, val) {
+    if (!arr) return null;
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i][key] === val) return arr[i];
+    }
+    return null;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // ── Scores HUD
+  var scoresRendered = false;
+  function updateScoresHud(snap) {
+    if (snap.players && snap.players.length && !scoresRendered) {
+      renderScoreSlots(snap.players, snap.scores);
+      scoresRendered = true;
+    }
+    if (snap.players) {
+      // Update points + alive state
+      var leaderSlot = leaderOf(snap.scores);
+      snap.players.forEach(function(p) {
+        var el = scoresEl.querySelector('[data-slot="' + p.slot + '"]');
+        if (!el) return;
+        el.classList.toggle('is-eliminated', !p.alive);
+        el.classList.toggle('is-leader', p.slot === leaderSlot);
+        var pts = (snap.scores && snap.scores[p.slot]) || 0;
+        el.querySelector('.br-score-points').textContent = pts;
+        var pips = el.querySelectorAll('.br-score-pip');
+        pips.forEach(function(pip, idx) {
+          pip.classList.toggle('is-on', idx < pts);
+        });
+      });
+    }
+  }
+  function renderScoreSlots(players, scores) {
+    var roundsToWin = (nextSnap && nextSnap.rounds_to_win) || 2;
+    players.forEach(function(p) {
+      var el = document.getElementById('br-slot-' + p.slot);
+      if (!el) return;
+      el.className = 'br-score';
+      el.setAttribute('data-slot', p.slot);
+      el.style.setProperty('--slot-color', p.color);
+      var pipsHtml = '';
+      for (var i = 0; i < roundsToWin; i++) pipsHtml += '<div class="br-score-pip"></div>';
+      el.innerHTML =
+        '<div class="br-score-dot"></div>' +
+        '<div class="br-score-name">' + esc(p.name) + '</div>' +
+        '<div class="br-score-pips">' + pipsHtml + '</div>' +
+        '<div class="br-score-points">0</div>';
+    });
+  }
+  function leaderOf(scores) {
+    if (!scores) return null;
+    var top = -1, ts = null;
+    Object.keys(scores).forEach(function(s) {
+      var v = scores[s];
+      if (v > top) { top = v; ts = parseInt(s); }
+    });
+    return ts;
+  }
+  function scoresLine(scores, players) {
+    if (!scores || !players) return '';
+    return players.map(function(p) {
+      return p.name + ': ' + (scores[p.slot] || 0);
+    }).join(' · ');
+  }
+
+  function refreshLobbyPlayers(members) {
+    if (!members) return;
+    knownMembers = members.filter(function(m) { return m.role !== 'host'; });
+    lobbyPlayersEl.innerHTML = '';
+    if (!knownMembers.length) {
+      lobbyPlayersEl.innerHTML = '<div class="br-no-players">No brawlers yet — waiting for scans...</div>';
+    } else {
+      knownMembers.forEach(function(m) {
+        var color = SLOT_COLORS[m.slot] || '#fff';
+        var div = document.createElement('div');
+        div.className = 'br-joined-player';
+        div.innerHTML =
+          '<span class="br-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
+          esc(m.name);
+        lobbyPlayersEl.appendChild(div);
+      });
+    }
+    startBtn.disabled = knownMembers.length < 2;
+  }
+
+  function showPhase(name) {
+    lobbyEl.hidden = name !== 'lobby';
+    stageEl.hidden = name !== 'stage';
+    matchEl.hidden = name !== 'match';
+    scoresEl.hidden = name === 'lobby';
+  }
+
+  function enterStage() {
+    if (stageEl.hidden) {
+      showPhase('stage');
+      if (tvRemoteSub) {
+        tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Boomerang Brawl' });
+      }
+    }
+  }
+
+  function setStatus(msg) { statusEl.textContent = msg; }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Init
+  var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
+  if (initMembers.length) { knownMembers = initMembers; refreshLobbyPlayers(initMembers); }
+
+  // TV remote D-pad navigation (Enter to start)
+  var remoteToken = <%= @room.tv_token.to_json.html_safe %>;
+  var tvRemoteSub = null;
+  if (remoteToken) {
+    tvRemoteSub = consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: remoteToken },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Boomerang Brawl' });
+        },
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          if (data.nav_type === 'release') return;
+          var keyMap = { select:'Enter', back:'Escape' };
+          var key = keyMap[data.direction];
+          if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+        }
+      }
+    );
+  }
+</script>

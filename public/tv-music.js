@@ -127,6 +127,28 @@
       }
     },
 
+    boomerang: {
+      tempo: 138,
+      gain: 0.16,
+      pattern: function (t, beat) {
+        // 8-beat punchy action loop in D minor
+        var step = beat % 8;
+        // Driving bass on every beat
+        var bassSeq = [NF.D2, NF.D2, NF.A2, NF.D2, NF.F2, NF.F2, NF.G2, NF.A2];
+        bass(bassSeq[step], t, 0.32, 0.32);
+        // Tribal clap-tick on backbeat
+        if (step === 2 || step === 6) tick(t, 0.12);
+        // Soaring synth lead — major-ish to feel heroic
+        var melody = [NF.D5, NF.F5, NF.A5, NF.D6, NF.A5, NF.F5, NF.G5, NF.A5];
+        pluck(melody[step], t, 0.28, 0.1);
+        // Stab chord every 8
+        if (step === 0) {
+          pad(NF.D4, t, 0.5, 0.1);
+          pad(NF.A4, t, 0.5, 0.08);
+        }
+      }
+    },
+
     hacker: {
       tempo: 124,
       gain: 0.14,
