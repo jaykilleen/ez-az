@@ -292,6 +292,7 @@
   <header class="sp-header">
     <div class="sp-logo">EZ-AZ</div>
     <div class="sp-title">Spotlight</div>
+    <button class="sp-exit-btn" id="sp-mute-btn" type="button" aria-pressed="false">🔊</button>
     <button class="sp-exit-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
     <div class="sp-code">Room <%= @room.code %></div>
   </header>
@@ -449,6 +450,9 @@
   }
   saveActiveGame();
 
+  // Background music
+  if (window.Music) Music.attachMuteButton(document.getElementById('sp-mute-btn'));
+
   // ── RoomChannel: lobby joins
   consumer.subscriptions.create(
     { channel: 'RoomChannel', code: code },
@@ -485,6 +489,7 @@
     spotlight.perform('start_game', {});
     startBtn.disabled = true;
     startBtn.textContent = 'Starting…';
+    if (window.Music) Music.start('spotlight');
   });
 
   nextBtn.addEventListener('click', function() {
@@ -633,6 +638,7 @@
     phase = 'game_over';
     gameOver = true;
     clearActiveGame();
+    if (window.Music) Music.stop();
     showPhase('gameover');
     nextBtn.hidden = false;
     nextBtn.textContent = '← Back to Store';

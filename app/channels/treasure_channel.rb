@@ -215,7 +215,7 @@ class TreasureChannel < ApplicationCable::Channel
       next if s[:played].key?(slot.to_s)
       hand = s[:hands][slot.to_s] || []
       next if hand.empty?
-      card = hand.first
+      card = hand.sample
       s[:hands][slot.to_s] = hand - [card]
       s[:played][slot.to_s] = card
     end

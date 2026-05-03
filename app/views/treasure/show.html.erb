@@ -190,6 +190,27 @@
     font-family: "Courier New", monospace;
   }
 
+  /* ── Result banner ── */
+  .th-result-banner {
+    display: flex; align-items: center; gap: 1.4vw;
+    padding: 1.2vh 2vw; border-radius: 1vw;
+    border: 2px solid var(--banner-color, var(--gold));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--banner-color, var(--gold)) 18%, transparent), transparent 80%);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--banner-color, var(--gold)) 25%, transparent);
+    max-width: 70vw;
+  }
+  .th-result-banner.is-tie     { --banner-color: var(--gold); }
+  .th-result-banner.is-win     { --banner-color: var(--gold); }
+  .th-result-banner.is-noone   { --banner-color: #ff4757; }
+  .th-result-icon {
+    font-size: clamp(2rem, 3.6vw, 3.6rem); line-height: 1;
+  }
+  .th-result-text {
+    font-size: clamp(1.1rem, 1.8vw, 1.9rem); font-weight: 800; color: #fff;
+    line-height: 1.2;
+  }
+  .th-result-text strong { color: var(--banner-color, var(--gold)); }
+
   /* ── Played card slots ── */
   .th-plays { display: flex; gap: 1.2vw; flex-wrap: wrap; justify-content: center; align-items: flex-end; }
   .th-play {
@@ -307,6 +328,7 @@
   <header class="th-header">
     <div class="th-logo">EZ-AZ</div>
     <div class="th-title">Treasure Hunt</div>
+    <button class="th-exit-btn" id="th-mute-btn" type="button" aria-pressed="false">🔊</button>
     <button class="th-exit-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
     <div class="th-code">Room <%= @room.code %></div>
   </header>
@@ -377,6 +399,11 @@
       <div class="th-played-count" id="th-played-count" hidden>0 / 0 played</div>
       <div class="th-challenge-timer" id="th-timer" hidden>30</div>
 
+      <div class="th-result-banner" id="th-result-banner" hidden>
+        <div class="th-result-icon" id="th-result-icon">👑</div>
+        <div class="th-result-text" id="th-result-text">—</div>
+      </div>
+
       <div class="th-plays" id="th-plays" hidden></div>
     </div>
 
@@ -418,6 +445,9 @@
     try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
   }
   saveActiveGame();
+
+  // Background music
+  if (window.Music) Music.attachMuteButton(document.getElementById('th-mute-btn'));
 
   // ── State
   var phase = 'lobby';
@@ -476,6 +506,7 @@
     treasure.perform('start_game', {});
     startBtn.disabled = true;
     startBtn.textContent = 'Starting…';
+    if (window.Music) Music.start('treasure');
   });
 
   nextBtn.addEventListener('click', function() {
@@ -538,6 +569,7 @@
     playedCountEl.hidden = true;
     playsEl.hidden = true;
     playsEl.innerHTML = '';
+    document.getElementById('th-result-banner').hidden = true;
     nextBtn.hidden = true;
     progressEl.textContent = 'Round ' + (data.round + 1) + ' of ' + data.total;
     setStatus('Reading…');
@@ -557,7 +589,7 @@
 
     renderPlays(buildBackPlaceholders(expected));
     setStatus('Picking…');
-    startTimer(30, function() { treasure.perform('force_reveal', {}); });
+    startTimer(60, function() { treasure.perform('force_reveal', {}); });
   }
 
   function buildBackPlaceholders(count) {
@@ -595,10 +627,42 @@
     renderPlays(revealed);
 
     updateScores(data.scores);
+    showResultBanner(data);
     setStatus(data.winners.length === 0 ? 'No winner — discarded' : 'Reveal');
 
     nextBtn.hidden = false;
     nextBtn.textContent = (roundIndex + 1) >= totalRounds ? 'See Results' : 'Next Round →';
+  }
+
+  function showResultBanner(data) {
+    var bannerEl = document.getElementById('th-result-banner');
+    var iconEl   = document.getElementById('th-result-icon');
+    var textEl   = document.getElementById('th-result-text');
+    bannerEl.classList.remove('is-tie', 'is-win', 'is-noone');
+
+    var winnerPlays = data.plays.filter(function(p) { return p.winner; });
+
+    if (winnerPlays.length === 0) {
+      bannerEl.classList.add('is-noone');
+      iconEl.textContent = '✗';
+      textEl.innerHTML = 'No-one matched the challenge. <strong>All cards discarded.</strong>';
+    } else if (winnerPlays.length === 1) {
+      var w = winnerPlays[0];
+      var pot = data.plays.reduce(function(sum, p) { return sum + (p.card ? p.card.value : 0); }, 0);
+      bannerEl.classList.add('is-win');
+      iconEl.textContent = '👑';
+      textEl.innerHTML = '<strong style="color:' + w.slot_color + '">' + esc(w.name) + '</strong> takes the pot · <strong>+' + pot + ' pts</strong>';
+    } else {
+      var names = winnerPlays.map(function(p) {
+        return '<strong style="color:' + p.slot_color + '">' + esc(p.name) + '</strong>';
+      });
+      var lastName = names.pop();
+      var nameStr = names.length ? names.join(', ') + ' & ' + lastName : lastName;
+      bannerEl.classList.add('is-tie');
+      iconEl.textContent = '🤝';
+      textEl.innerHTML = nameStr + ' tied! Each keeps their own card.';
+    }
+    bannerEl.hidden = false;
   }
 
   function onGameOver(data) {
@@ -606,6 +670,7 @@
     phase = 'game_over';
     gameOver = true;
     clearActiveGame();
+    if (window.Music) Music.stop();
     showPhase('gameover');
     nextBtn.hidden = false;
     nextBtn.textContent = '← Back to Store';
