@@ -12,7 +12,8 @@ class Score < ApplicationRecord
     "spotlight" => :desc,
     "treasure-hunt" => :desc,
     "hacker-pro" => :asc,
-    "boomerang-brawl" => :desc
+    "boomerang-brawl" => :desc,
+    "letterbox" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -22,7 +23,8 @@ class Score < ApplicationRecord
     "dodgeball" => "LACHIE",
     "descent" => "ANON",
     "corrupted" => "COOPER",
-    "az-cipher" => "JAYKILL"
+    "az-cipher" => "JAYKILL",
+    "letterbox" => "JAYKILL"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

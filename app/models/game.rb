@@ -98,6 +98,15 @@ class Game
       path: "/games/boomerang-brawl",
       icon: "boomerang",
       tv_optimised: true
+    },
+    {
+      slug: "letterbox",
+      title: "Letterbox",
+      creators: "Jaykill",
+      tagline: "Az rides through Gumdale on his bike, getting the word out. Hit the letterbox, dodge the dog, grab a coffee for the mums and dads.",
+      path: "/games/letterbox/",
+      icon: "letterbox",
+      tv_optimised: false
     }
   ].freeze
 
