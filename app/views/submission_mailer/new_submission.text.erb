@@ -1,0 +1,22 @@
+New game submission for EZ-AZ
+
+<%= @submission.title %> by <%= @submission.creators %>
+<%= @submission.tagline %>
+
+Slug:            <%= @submission.slug %>
+Score direction: <%= @submission.score_direction %>
+Chill game:      <%= @submission.is_chill ? "yes" : "no" %>
+HTML size:       <%= @submission.game_html.bytesize %> bytes
+Contact email:   <%= @submission.contact_email %>
+
+<% if @submission.notes.present? %>
+Notes:
+<%= @submission.notes %>
+
+<% end %>
+<% if (warnings = @submission.html_warnings).any? %>
+Warnings:
+<% warnings.each do |w| %>  - <%= w %>
+<% end %>
+<% end %>
+Review in queue: <%= @admin_url %>

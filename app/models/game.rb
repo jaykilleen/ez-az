@@ -62,6 +62,33 @@ class Game
       path: "/games/trivia",
       icon: "trivia",
       tv_optimised: true
+    },
+    {
+      slug: "spotlight",
+      title: "Spotlight",
+      creators: "Az",
+      tagline: "One round, one star. The Spotlight answers — everyone else guesses what they'd say.",
+      path: "/games/spotlight",
+      icon: "spotlight",
+      tv_optimised: true
+    },
+    {
+      slug: "treasure-hunt",
+      title: "Treasure Hunt",
+      creators: "Az",
+      tagline: "Pick a card. Win the round. Take the pot. Most treasure wins. Plays with a real deck on holidays too.",
+      path: "/games/treasure-hunt",
+      icon: "treasure",
+      tv_optimised: true
+    },
+    {
+      slug: "hacker-pro",
+      title: "Hacker Pro",
+      creators: "Az",
+      tagline: "Brute-force the code together. Easy cracks fast. Impossible never cracks. That's the password lesson.",
+      path: "/games/hacker-pro",
+      icon: "hacker",
+      tv_optimised: true
     }
   ].freeze
 

@@ -1,0 +1,792 @@
+<style>
+  [hidden] { display: none !important; }
+
+  :root {
+    --c1: #ff4757; --c2: #3742fa; --c3: #ffa502; --c4: #2ed573;
+    --bg: #0a0a12; --surface: #13131f; --border: rgba(255,255,255,0.08);
+    --teal: #00ffc8; --gold: #ffd700;
+  }
+
+  .sp {
+    width: 100vw; height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(ellipse at top right, rgba(255,215,0,0.06), transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(0,255,200,0.05), transparent 50%),
+      var(--bg);
+    padding: 2vh 3vw;
+    gap: 1.5vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .sp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 2vw; overflow: hidden;
+  }
+  .sp-logo {
+    font-size: clamp(1.8rem, 3.5vw, 3.5rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff8c00, #ff00aa);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    flex-shrink: 0;
+  }
+  .sp-title {
+    font-size: clamp(1.2rem, 2vw, 2rem); font-weight: 700; color: #fff;
+    flex: 1; text-align: center;
+  }
+  .sp-code {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: var(--teal);
+    font-family: "Courier New", monospace; font-weight: 700;
+    background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.3);
+    padding: 0.4em 0.8em; border-radius: 0.5em; flex-shrink: 0;
+  }
+
+  /* ── Scores bar ── */
+  .sp-scores { display: flex; gap: 1vw; }
+  .sp-player {
+    flex: 1; display: flex; align-items: center; gap: 0.7vw;
+    background: var(--surface); border-radius: 0.6vw;
+    padding: 0.6vh 1vw; border: 2px solid var(--border);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 0;
+  }
+  .sp-player.is-spotlight {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(255,215,0,0.18);
+  }
+  .sp-dot {
+    width: 0.8vw; height: 0.8vw; border-radius: 50%; flex-shrink: 0;
+    background: var(--slot-color);
+  }
+  .sp-pname {
+    font-size: clamp(0.8rem, 1.1vw, 1.1rem); font-weight: 700; color: #fff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sp-pts {
+    margin-left: auto; font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    font-family: "Courier New", monospace;
+  }
+  .sp-spot-icon {
+    font-size: clamp(0.8rem, 1.1vw, 1.1rem); flex-shrink: 0;
+  }
+  .sp-empty {
+    flex: 1; background: var(--surface); border: 2px dashed var(--border);
+    border-radius: 0.6vw; display: flex; align-items: center; justify-content: center;
+    color: #334; font-size: clamp(0.7rem, 1vw, 1rem);
+  }
+
+  /* ── Main ── */
+  .sp-main { display: flex; align-items: center; justify-content: center; min-height: 0; grid-row: 3; }
+  .sp-footer { grid-row: 4; }
+
+  /* ── Lobby ── */
+  .sp-lobby {
+    display: grid; grid-template-columns: 1fr auto; gap: 5vw;
+    align-items: center; width: 100%;
+  }
+  .sp-lobby-left { display: flex; flex-direction: column; gap: 2vh; }
+  .sp-lobby-heading {
+    font-size: clamp(2rem, 4vw, 4.5rem); font-weight: 900; color: #fff; line-height: 1.1;
+  }
+  .sp-lobby-heading span { color: var(--gold); }
+  .sp-lobby-sub { font-size: clamp(1rem, 1.5vw, 1.5rem); color: #c8b48a; }
+  .sp-lobby-rules {
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem); color: #8ab4c8; line-height: 1.6;
+    background: rgba(255,215,0,0.05); border-left: 3px solid rgba(255,215,0,0.4);
+    padding: 1vh 1.4vw; border-radius: 0 0.6vw 0.6vw 0;
+    max-width: 38vw;
+  }
+  .sp-lobby-players {
+    display: flex; flex-direction: column; gap: 1vh; margin-top: 1vh;
+  }
+  .sp-joined-player {
+    display: flex; align-items: center; gap: 1vw;
+    font-size: clamp(1rem, 1.5vw, 1.5rem); font-weight: 700; color: #fff;
+  }
+  .sp-joined-dot {
+    width: 1vw; height: 1vw; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .sp-no-players { color: #556; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
+  .sp-start-btn {
+    align-self: flex-start; margin-top: 2vh;
+    padding: 1.2vh 3vw; border-radius: 1vw;
+    background: var(--gold); color: #0a0a12;
+    font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 900;
+    border: none; cursor: pointer; letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .sp-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .sp-start-btn:not(:disabled):hover { transform: scale(1.04); }
+  .sp-qr-box {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh;
+    padding: 2vh 2vw; background: rgba(0,255,200,0.06);
+    border: 2px solid rgba(0,255,200,0.3); border-radius: 1.2vw;
+  }
+  .sp-qr-label { font-size: clamp(0.9rem, 1.2vw, 1.2rem); color: #cfe; text-align: center; line-height: 1.4; }
+  .sp-qr-label strong { display: block; color: var(--teal); font-size: clamp(1rem, 1.4vw, 1.4rem); margin-bottom: 0.4vh; }
+  .sp-qr-img { width: clamp(160px, 17vw, 260px); height: clamp(160px, 17vw, 260px); }
+  .sp-qr-img svg { width: 100%; height: 100%; display: block; }
+
+  /* ── Question stage ── */
+  .sp-stage { display: flex; flex-direction: column; gap: 2.5vh; width: 100%; }
+  .sp-spotlight-banner {
+    display: flex; align-items: center; gap: 1.4vw;
+    padding: 1.2vh 1.6vw; border-radius: 0.8vw;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--spot-color, var(--gold)) 22%, transparent), transparent 80%);
+    border-left: 4px solid var(--spot-color, var(--gold));
+  }
+  .sp-spotlight-icon { font-size: clamp(1.6rem, 3vw, 3rem); }
+  .sp-spotlight-text {
+    font-size: clamp(1rem, 1.7vw, 1.8rem);
+    font-weight: 700;
+    color: #fff;
+  }
+  .sp-spotlight-text strong {
+    color: var(--spot-color, var(--gold));
+    font-size: 1.15em;
+  }
+  .sp-category-badge {
+    align-self: flex-start;
+    padding: 0.3em 0.9em; border-radius: 2em;
+    background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.3);
+    font-size: clamp(0.7rem, 1vw, 1rem); font-weight: 700; color: var(--gold);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .sp-question-text {
+    font-size: clamp(1.6rem, 3.2vw, 3.5rem); font-weight: 800; color: #fff;
+    line-height: 1.2;
+  }
+  .sp-meta {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sp-submitted-count {
+    font-size: clamp(0.9rem, 1.3vw, 1.3rem); color: #8ab4c8;
+    font-family: "Courier New", monospace;
+  }
+  .sp-timer {
+    font-size: clamp(2rem, 3.5vw, 4rem); font-weight: 900;
+    font-family: "Courier New", monospace; color: var(--teal);
+    min-width: 2ch; text-align: right; transition: color 0.3s;
+  }
+  .sp-timer.urgent { color: #ff4757; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .sp-timer.urgent { animation: pulse 0.6s ease-in-out infinite; }
+  .sp-reading-hint, .sp-answering-hint {
+    font-size: clamp(1.1rem, 1.8vw, 2rem); color: #8ab4c8;
+    text-align: center; padding: 1.5vh 0;
+  }
+  .sp-answering-hint b { color: var(--spot-color, var(--gold)); }
+
+  /* ── Submission cards ── */
+  .sp-submissions {
+    display: grid; gap: 1.5vh 2vw;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  .sp-card {
+    display: flex; flex-direction: column; gap: 0.6vh;
+    padding: 1.4vh 1.4vw; border-radius: 0.8vw;
+    background: var(--surface); border: 2px solid var(--slot-color, var(--border));
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .sp-card.is-spotlight {
+    background: linear-gradient(160deg, rgba(255,215,0,0.18), rgba(255,140,0,0.05));
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 24px rgba(255,215,0,0.18);
+  }
+  .sp-card.is-matched {
+    box-shadow: 0 0 0 3px rgba(46,213,115,0.4);
+  }
+  .sp-card.is-picked {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 4px var(--gold), 0 0 32px rgba(255,215,0,0.4);
+  }
+  .sp-card-head {
+    display: flex; align-items: center; gap: 0.8vw;
+    font-size: clamp(0.85rem, 1.15vw, 1.15rem); font-weight: 700;
+  }
+  .sp-card-name { color: #fff; }
+  .sp-card-flag {
+    margin-left: auto;
+    font-size: clamp(0.7rem, 1vw, 1rem); font-weight: 800; letter-spacing: 0.05em;
+  }
+  .sp-card-flag.matched { color: #2ed573; }
+  .sp-card-flag.picked  { color: var(--gold); }
+  .sp-card-flag.spot    { color: var(--gold); }
+  .sp-card-text {
+    font-size: clamp(1.1rem, 1.7vw, 1.8rem); font-weight: 600; color: #fff;
+    line-height: 1.3; word-wrap: break-word;
+  }
+  .sp-card.is-spotlight .sp-card-text {
+    font-size: clamp(1.3rem, 2.2vw, 2.4rem); font-weight: 800;
+  }
+  .sp-card-text.hidden-answer {
+    color: #445; font-style: italic;
+  }
+
+  .sp-picking-hint {
+    font-size: clamp(1.1rem, 1.6vw, 1.6rem); font-weight: 700; color: #fff;
+    text-align: center; padding: 0.5vh 0;
+  }
+  .sp-picking-hint b { color: var(--spot-color, var(--gold)); }
+
+  /* ── Game over ── */
+  .sp-gameover {
+    display: flex; flex-direction: column; align-items: center; gap: 3vh; width: 100%;
+  }
+  .sp-gameover-title {
+    font-size: clamp(2.5rem, 6vw, 7rem); font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sp-final-scores {
+    display: flex; gap: 3vw; align-items: flex-end; justify-content: center; flex-wrap: wrap;
+  }
+  .sp-final-player {
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+    padding: 2vh 2.5vw; border-radius: 1vw;
+    background: var(--surface); border: 3px solid var(--slot-color, #334);
+    min-width: 12vw;
+  }
+  .sp-final-player.is-winner { border-width: 4px; }
+  .sp-final-name { font-size: clamp(1rem, 1.6vw, 1.6rem); font-weight: 700; color: #fff; }
+  .sp-final-pts {
+    font-size: clamp(2.5rem, 5vw, 5rem); font-weight: 900;
+    font-family: "Courier New", monospace;
+    color: var(--slot-color, var(--teal));
+  }
+  .sp-crown { font-size: clamp(1.5rem, 3vw, 3rem); }
+
+  /* ── Footer ── */
+  .sp-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1.5vh; border-top: 1px solid var(--border);
+  }
+  .sp-progress { font-size: clamp(0.85rem, 1.2vw, 1.2rem); color: #556; }
+  .sp-next-btn {
+    padding: 0.9vh 2.5vw; border-radius: 0.7vw;
+    background: rgba(255,215,0,0.1); border: 2px solid rgba(255,215,0,0.4);
+    color: var(--gold); font-size: clamp(0.9rem, 1.3vw, 1.3rem); font-weight: 700;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .sp-next-btn:hover { background: rgba(255,215,0,0.2); border-color: var(--gold); }
+  .sp-status { font-size: clamp(0.8rem, 1vw, 1rem); color: #445; }
+  .sp-exit-btn {
+    font-size: clamp(0.8rem, 1vw, 1rem);
+    color: #556; text-decoration: none;
+    padding: 0.3em 0.9em;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0.5em;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
+    cursor: pointer; background: none;
+    font-family: inherit;
+  }
+  .sp-exit-btn:hover { color: #ff4757; border-color: rgba(255,69,87,0.4); }
+</style>
+
+<div class="sp" id="sp">
+  <header class="sp-header">
+    <div class="sp-logo">EZ-AZ</div>
+    <div class="sp-title">Spotlight</div>
+    <button class="sp-exit-btn" id="sp-mute-btn" type="button" aria-pressed="false">🔊</button>
+    <button class="sp-exit-btn" onclick="window.location.href='/tv'" title="Exit to store">✕ Exit</button>
+    <div class="sp-code">Room <%= @room.code %></div>
+  </header>
+
+  <div class="sp-scores" id="sp-scores" hidden>
+    <% 4.times do |i| %>
+      <div class="sp-empty" id="sp-slot-<%= i+1 %>">P<%= i+1 %> empty</div>
+    <% end %>
+  </div>
+
+  <main class="sp-main" id="sp-main">
+
+    <!-- LOBBY -->
+    <div class="sp-lobby" id="sp-lobby">
+      <div class="sp-lobby-left">
+        <div class="sp-lobby-heading"><span>Spotlight</span></div>
+        <div class="sp-lobby-sub">One round, one star. Who knows them best?</div>
+        <div class="sp-lobby-rules">
+          Each round, one player is the <strong style="color: var(--gold)">Spotlight</strong>. A question about them shows on the TV.
+          They type their real answer. Everyone else guesses what they'd say.
+          <br><br>
+          <strong style="color: #2ed573">Match it: +2 points.</strong>
+          The Spotlight then picks their favourite answer for a <strong style="color: var(--gold)">+3 bonus</strong>.
+        </div>
+        <div class="sp-lobby-players" id="sp-lobby-players">
+          <% if @members.any? %>
+            <% @members.each do |m| %>
+              <div class="sp-joined-player">
+                <span class="sp-joined-dot" style="color: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>; background: <%= %w[#ff4757 #3742fa #ffa502 #2ed573][m.slot - 1] %>"></span>
+                <%= m.name %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="sp-no-players">No players yet — waiting for scans...</div>
+          <% end %>
+        </div>
+        <button class="sp-start-btn" id="sp-start-btn" <%= @members.size < 2 ? "disabled" : "" %>>
+          Start Game
+        </button>
+      </div>
+      <div class="sp-qr-box">
+        <div class="sp-qr-label">
+          <strong>Scan to join</strong>
+          ez-az.net
+        </div>
+        <div class="sp-qr-img"><%= @qr_code_svg %></div>
+      </div>
+    </div>
+
+    <!-- STAGE: question + answering + picking + reveal -->
+    <div class="sp-stage" id="sp-stage" hidden>
+      <div class="sp-spotlight-banner" id="sp-spot-banner">
+        <div class="sp-spotlight-icon">🌟</div>
+        <div class="sp-spotlight-text">
+          <strong id="sp-spot-name">—</strong> is in the spotlight
+        </div>
+      </div>
+
+      <div class="sp-meta">
+        <div class="sp-category-badge" id="sp-category">Category</div>
+        <div class="sp-timer" id="sp-timer" hidden>10</div>
+      </div>
+
+      <div class="sp-question-text" id="sp-question-text">Question goes here</div>
+
+      <!-- READING -->
+      <div class="sp-reading-hint" id="sp-reading-hint" hidden>
+        Read the question — get ready to answer on your phone…
+      </div>
+
+      <!-- ANSWERING -->
+      <div class="sp-answering-hint" id="sp-answering-hint" hidden>
+        <b id="sp-spot-name-2">—</b> types their real answer.<br>
+        Everyone else guesses what they'd say.
+      </div>
+      <div class="sp-meta" id="sp-answering-meta" hidden>
+        <div class="sp-submitted-count" id="sp-submitted-count">0 / 0 in</div>
+      </div>
+
+      <!-- PICKING / REVEALED -->
+      <div class="sp-picking-hint" id="sp-picking-hint" hidden>
+        <b id="sp-spot-name-3">—</b> is picking their favourite…
+      </div>
+      <div class="sp-submissions" id="sp-submissions" hidden></div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="sp-gameover" id="sp-gameover" hidden>
+      <div class="sp-gameover-title">Game Over!</div>
+      <div class="sp-final-scores" id="sp-final-scores"></div>
+    </div>
+
+  </main>
+
+  <footer class="sp-footer">
+    <div class="sp-progress" id="sp-progress">Waiting to start</div>
+    <button class="sp-next-btn" id="sp-skip-pick-btn" hidden>Skip Pick</button>
+    <button class="sp-next-btn" id="sp-next-btn" hidden>Next →</button>
+    <div class="sp-status" id="sp-status">Ready</div>
+  </footer>
+</div>
+
+<script type="module">
+  import { createConsumer } from "<%= asset_path('actioncable.esm.js') %>";
+
+  var SLOT_COLORS = { 1: '#ff4757', 2: '#3742fa', 3: '#ffa502', 4: '#2ed573' };
+  var consumer = createConsumer();
+  var code = <%= @room.code.to_json.html_safe %>;
+
+  // ── State
+  var phase = 'lobby';
+  var knownMembers = [];
+  var qIndex = 0, qTotal = 0;
+  var gameOver = false;
+  var timerInterval = null;
+  var currentSpotlightSlot = null;
+
+  // ── Elements
+  var scoresEl   = document.getElementById('sp-scores');
+  var lobbyEl    = document.getElementById('sp-lobby');
+  var stageEl    = document.getElementById('sp-stage');
+  var gameoverEl = document.getElementById('sp-gameover');
+  var progressEl = document.getElementById('sp-progress');
+  var nextBtn    = document.getElementById('sp-next-btn');
+  var skipPickBtn = document.getElementById('sp-skip-pick-btn');
+  var startBtn   = document.getElementById('sp-start-btn');
+  var lobbyPlayersEl = document.getElementById('sp-lobby-players');
+  var timerEl    = document.getElementById('sp-timer');
+  var spotBanner = document.getElementById('sp-spot-banner');
+  var spotName   = document.getElementById('sp-spot-name');
+  var spotName2  = document.getElementById('sp-spot-name-2');
+  var spotName3  = document.getElementById('sp-spot-name-3');
+  var readingHint  = document.getElementById('sp-reading-hint');
+  var answeringHint = document.getElementById('sp-answering-hint');
+  var answeringMeta = document.getElementById('sp-answering-meta');
+  var submittedCountEl = document.getElementById('sp-submitted-count');
+  var pickingHint = document.getElementById('sp-picking-hint');
+  var submissionsEl = document.getElementById('sp-submissions');
+
+  // ── Resume tracking ─────────────────────────────────────────────────────
+  // Saved on load so the TV can offer "Resume" from the store front if the
+  // game tab is closed mid-session. Cleared on game_over.
+  function saveActiveGame() {
+    try {
+      localStorage.setItem('ezaz_active_tv_game', JSON.stringify({
+        code: code,
+        game_slug: 'spotlight',
+        game_title: 'Spotlight',
+        started_at: Date.now()
+      }));
+    } catch (_) {}
+  }
+  function clearActiveGame() {
+    try { localStorage.removeItem('ezaz_active_tv_game'); } catch (_) {}
+  }
+  saveActiveGame();
+
+  // Background music
+  if (window.Music) Music.attachMuteButton(document.getElementById('sp-mute-btn'));
+
+  // ── RoomChannel: lobby joins
+  consumer.subscriptions.create(
+    { channel: 'RoomChannel', code: code },
+    {
+      received: function(data) {
+        if (!data) return;
+        if (data.type === 'member_joined') refreshLobbyPlayers(data.members);
+      }
+    }
+  );
+
+  // ── SpotlightChannel as TV
+  var spotlight = consumer.subscriptions.create(
+    { channel: 'SpotlightChannel', code: code, role: 'tv' },
+    {
+      connected:    function() { setStatus('Connected'); },
+      disconnected: function() { setStatus('Disconnected'); },
+      received: function(data) {
+        if (!data) return;
+        switch (data.type) {
+          case 'question':         onQuestion(data);        break;
+          case 'answering':        onAnswering(data);       break;
+          case 'player_submitted': onPlayerSubmitted(data); break;
+          case 'picking':          onPicking(data);         break;
+          case 'revealed':         onRevealed(data);        break;
+          case 'game_over':        onGameOver(data);        break;
+          case 'error':            setStatus(data.message); break;
+        }
+      }
+    }
+  );
+
+  startBtn.addEventListener('click', function() {
+    spotlight.perform('start_game', {});
+    startBtn.disabled = true;
+    startBtn.textContent = 'Starting…';
+    if (window.Music) Music.start('spotlight');
+  });
+
+  nextBtn.addEventListener('click', function() {
+    if (gameOver) { window.location.href = '/tv'; return; }
+    nextBtn.hidden = true;
+    spotlight.perform('next_question', {});
+  });
+
+  skipPickBtn.addEventListener('click', function() {
+    skipPickBtn.hidden = true;
+    spotlight.perform('skip_pick', {});
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { window.location.href = '/tv'; return; }
+    if (e.key === ' ' && phase === 'answering') {
+      e.preventDefault();
+      spotlight.perform('end_answering', {});
+    }
+    if (e.key === ' ' && phase === 'picking') {
+      e.preventDefault();
+      spotlight.perform('skip_pick', {});
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (phase === 'lobby' && !startBtn.disabled) startBtn.click();
+      else if (!nextBtn.hidden) nextBtn.click();
+    }
+  });
+
+  // ── Timer
+  function startTimer(secs, onEnd) {
+    clearInterval(timerInterval);
+    timerEl.hidden = false;
+    timerEl.textContent = secs;
+    timerEl.classList.remove('urgent');
+    timerInterval = setInterval(function() {
+      secs--;
+      timerEl.textContent = secs;
+      if (secs <= 5) timerEl.classList.add('urgent');
+      if (secs <= 0) { clearInterval(timerInterval); onEnd(); }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerEl.hidden = true;
+    timerEl.classList.remove('urgent');
+  }
+
+  // ── Game events
+  function onQuestion(data) {
+    qIndex = data.q_index + 1;
+    qTotal = data.total;
+    phase = 'reading';
+    currentSpotlightSlot = data.spotlight_slot;
+    gameOver = false;
+
+    if (data.q_index === 0 && tvRemoteSub) {
+      tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Spotlight' });
+    }
+
+    showPhase('stage');
+    if (qIndex === 1 && knownMembers.length) renderScoreBar(knownMembers);
+    highlightSpotlightInScores(data.spotlight_slot);
+    nextBtn.hidden = true;
+
+    document.getElementById('sp-category').textContent = data.category;
+    document.getElementById('sp-question-text').textContent = data.question;
+    spotName.textContent = data.spotlight_name;
+    spotName2.textContent = data.spotlight_name;
+    spotName3.textContent = data.spotlight_name;
+    document.documentElement.style.setProperty('--spot-color', data.spotlight_color);
+    spotBanner.style.setProperty('--spot-color', data.spotlight_color);
+
+    readingHint.hidden = false;
+    answeringHint.hidden = true;
+    answeringMeta.hidden = true;
+    pickingHint.hidden = true;
+    submissionsEl.hidden = true;
+
+    progressEl.textContent = 'Question ' + qIndex + ' of ' + qTotal;
+    setStatus('Reading…');
+
+    startTimer(5, function() { spotlight.perform('start_answering', {}); });
+  }
+
+  function onAnswering(data) {
+    phase = 'answering';
+    stopTimer();
+
+    readingHint.hidden = true;
+    answeringHint.hidden = false;
+    answeringMeta.hidden = false;
+    pickingHint.hidden = true;
+    submissionsEl.hidden = true;
+    submittedCountEl.textContent = (data.submitted_count || 0) + ' / ' + (data.expected_count || 0) + ' in';
+
+    setStatus('Answering…');
+    startTimer(40, function() { spotlight.perform('end_answering', {}); });
+  }
+
+  function onPlayerSubmitted(data) {
+    submittedCountEl.textContent = data.submitted_count + ' / ' + data.expected_count + ' in';
+    if (data.submitted_count >= data.expected_count) {
+      stopTimer();
+      setStatus('All in!');
+    }
+  }
+
+  function onPicking(data) {
+    phase = 'picking';
+    stopTimer();
+
+    answeringHint.hidden = true;
+    answeringMeta.hidden = true;
+    pickingHint.hidden = false;
+    submissionsEl.hidden = false;
+
+    renderSubmissions(data.submissions, { reveal: false });
+    setStatus('Picking…');
+    nextBtn.hidden = true;
+    skipPickBtn.hidden = false;
+  }
+
+  function onRevealed(data) {
+    phase = 'revealed';
+    stopTimer();
+
+    pickingHint.hidden = true;
+    answeringHint.hidden = true;
+    answeringMeta.hidden = true;
+    submissionsEl.hidden = false;
+    skipPickBtn.hidden = true;
+
+    renderSubmissions(data.submissions, { reveal: true });
+    updateScores(data.scores);
+    setStatus('Reveal');
+
+    nextBtn.hidden = false;
+    nextBtn.textContent = qIndex >= qTotal ? 'See Results' : 'Next Question →';
+  }
+
+  function onGameOver(data) {
+    stopTimer();
+    phase = 'game_over';
+    gameOver = true;
+    clearActiveGame();
+    if (window.Music) Music.stop();
+    showPhase('gameover');
+    nextBtn.hidden = false;
+    nextBtn.textContent = '← Back to Store';
+    progressEl.textContent = 'Game over!';
+
+    var finalEl = document.getElementById('sp-final-scores');
+    finalEl.innerHTML = '';
+    data.scores.forEach(function(p, idx) {
+      var div = document.createElement('div');
+      div.className = 'sp-final-player' + (idx === 0 ? ' is-winner' : '');
+      div.style.setProperty('--slot-color', p.color);
+      div.innerHTML =
+        (idx === 0 ? '<div class="sp-crown">👑</div>' : '') +
+        '<div class="sp-final-name">' + esc(p.name) + '</div>' +
+        '<div class="sp-final-pts">' + p.points + '</div>';
+      finalEl.appendChild(div);
+    });
+  }
+
+  // ── Submission cards
+  function renderSubmissions(subs, opts) {
+    submissionsEl.innerHTML = '';
+    var reveal = opts && opts.reveal;
+    subs.forEach(function(sub) {
+      var card = document.createElement('div');
+      var classes = ['sp-card'];
+      if (sub.is_spotlight) classes.push('is-spotlight');
+      if (reveal && sub.matched) classes.push('is-matched');
+      if (reveal && sub.picked)  classes.push('is-picked');
+      card.className = classes.join(' ');
+      card.style.setProperty('--slot-color', sub.color);
+
+      var flag = '';
+      if (sub.is_spotlight) flag = '<div class="sp-card-flag spot">⭐ The Answer</div>';
+      else if (reveal && sub.matched && sub.picked) flag = '<div class="sp-card-flag picked">✓ Matched · 👑 Favourite</div>';
+      else if (reveal && sub.matched) flag = '<div class="sp-card-flag matched">✓ Matched +2</div>';
+      else if (reveal && sub.picked)  flag = '<div class="sp-card-flag picked">👑 Favourite +3</div>';
+
+      var textHtml;
+      if (sub.is_spotlight && !reveal) {
+        textHtml = '<div class="sp-card-text hidden-answer">…revealed after pick</div>';
+      } else {
+        textHtml = '<div class="sp-card-text">' + esc(sub.text) + '</div>';
+      }
+
+      card.innerHTML =
+        '<div class="sp-card-head">' +
+          '<div class="sp-dot" style="background:' + sub.color + '"></div>' +
+          '<div class="sp-card-name" style="color:' + sub.color + '">' + esc(sub.name) + '</div>' +
+          flag +
+        '</div>' +
+        textHtml;
+      submissionsEl.appendChild(card);
+    });
+  }
+
+  // ── Helpers
+  function updateScores(scores) {
+    Object.entries(scores).forEach(function(entry) {
+      var slot = parseInt(entry[0]);
+      var pts  = entry[1];
+      var el = scoresEl.querySelector('[data-slot="' + slot + '"]');
+      if (el) el.querySelector('.sp-pts').textContent = pts;
+    });
+  }
+
+  function highlightSpotlightInScores(slot) {
+    scoresEl.querySelectorAll('.sp-player').forEach(function(el) {
+      var isSpot = parseInt(el.getAttribute('data-slot')) === slot;
+      el.classList.toggle('is-spotlight', isSpot);
+      var flag = el.querySelector('.sp-spot-icon');
+      if (flag) flag.textContent = isSpot ? '🌟' : '';
+    });
+  }
+
+  function refreshLobbyPlayers(members) {
+    if (!members || !members.length) return;
+    knownMembers = members.filter(function(m) { return m.role !== 'host'; });
+    lobbyPlayersEl.innerHTML = '';
+    knownMembers.forEach(function(m) {
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var div = document.createElement('div');
+      div.className = 'sp-joined-player';
+      div.innerHTML =
+        '<span class="sp-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
+        esc(m.name || ('Player ' + m.slot));
+      lobbyPlayersEl.appendChild(div);
+    });
+    startBtn.disabled = knownMembers.length < 2;
+    if (phase !== 'lobby') renderScoreBar(knownMembers);
+  }
+
+  function renderScoreBar(members) {
+    members.forEach(function(m) {
+      if (m.role === 'host') return;
+      var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var existing = scoresEl.querySelector('[data-slot="' + m.slot + '"]');
+      if (existing) {
+        existing.querySelector('.sp-pname').textContent = m.name;
+      } else {
+        var el = document.getElementById('sp-slot-' + m.slot);
+        if (!el) return;
+        el.className = 'sp-player';
+        el.setAttribute('data-slot', m.slot);
+        el.style.setProperty('--slot-color', color);
+        el.innerHTML =
+          '<div class="sp-dot" style="background:' + color + '"></div>' +
+          '<div class="sp-pname">' + esc(m.name) + '</div>' +
+          '<div class="sp-spot-icon"></div>' +
+          '<div class="sp-pts" style="color:' + color + '">0</div>';
+      }
+    });
+  }
+
+  function showPhase(name) {
+    lobbyEl.hidden    = name !== 'lobby';
+    stageEl.hidden    = name !== 'stage';
+    gameoverEl.hidden = name !== 'gameover';
+    scoresEl.hidden   = name === 'lobby';
+  }
+
+  function setStatus(msg) { document.getElementById('sp-status').textContent = msg; }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Seed lobby with server-rendered members
+  var initMembers = <%= @members.map { |m| { slot: m.slot, name: m.name, role: m.role } }.to_json.html_safe %>;
+  if (initMembers.length) { knownMembers = initMembers; renderScoreBar(initMembers); }
+
+  // ── TV remote (D-pad mapping)
+  var remoteToken = <%= @room.tv_token.to_json.html_safe %>;
+  var tvRemoteSub = null;
+  if (remoteToken) {
+    tvRemoteSub = consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: remoteToken },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Spotlight' });
+        },
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          var keyMap = { left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown', select:'Enter', back:'Escape' };
+          var key = keyMap[data.direction];
+          if (key) document.dispatchEvent(new KeyboardEvent('keydown', { key: key, bubbles: true }));
+        }
+      }
+    );
+  }
+</script>

@@ -8,7 +8,10 @@ class Score < ApplicationRecord
     "descent" => :asc,
     "corrupted" => :desc,
     "az-cipher" => :desc,
-    "trivia" => :desc
+    "trivia" => :desc,
+    "spotlight" => :desc,
+    "treasure-hunt" => :desc,
+    "hacker-pro" => :asc
   }.freeze
 
   DEFAULT_NAMES = {

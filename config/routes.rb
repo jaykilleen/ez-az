@@ -12,6 +12,15 @@ Rails.application.routes.draw do
   get  "/games/trivia",       to: "trivia#new",  as: :new_trivia
   get  "/games/trivia/:code", to: "trivia#show", as: :trivia
 
+  get  "/games/spotlight",       to: "spotlight#new",  as: :new_spotlight
+  get  "/games/spotlight/:code", to: "spotlight#show", as: :spotlight
+
+  get  "/games/treasure-hunt",       to: "treasure#new",  as: :new_treasure
+  get  "/games/treasure-hunt/:code", to: "treasure#show", as: :treasure
+
+  get  "/games/hacker-pro",       to: "hacker#new",  as: :new_hacker
+  get  "/games/hacker-pro/:code", to: "hacker#show", as: :hacker
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join
@@ -29,6 +38,7 @@ Rails.application.routes.draw do
   get "/gamers",  to: "counters#gamers"
 
   namespace :api do
+    resources :submissions, only: [:create]
     resources :scores,  only: [:index, :create]
     resource  :session, only: [:show, :create, :destroy]
     get "version",      to: "version#show"
@@ -48,6 +58,16 @@ Rails.application.routes.draw do
   end
 
   get "/errors", to: "errors_dashboard#index"
+
+  namespace :admin do
+    resources :submissions, only: [:index, :show] do
+      member do
+        get  :preview
+        post :approve
+        post :reject
+      end
+    end
+  end
 
   get "/code",     to: "code#index"
   get "/code/view", to: "code#show"

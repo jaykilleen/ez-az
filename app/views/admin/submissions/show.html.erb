@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>EZ-AZ — <%= @submission.title %></title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #0a0a12; color: #fff; margin: 0; padding: 24px; }
+    h1 { color: #00ffc8; margin: 0 0 8px; }
+    .tagline { color: #ffd700; font-size: 16px; margin-bottom: 16px; }
+    .breadcrumb { color: #666; margin-bottom: 16px; font-size: 13px; }
+    .breadcrumb a { color: #00ffc8; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .preview { background: #fff; border-radius: 8px; overflow: hidden; min-height: 600px; border: 1px solid #333; }
+    .preview iframe { width: 100%; height: 600px; border: 0; display: block; }
+    .meta { background: #13131f; border: 1px solid #222; border-radius: 8px; padding: 16px; }
+    .meta dt { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 12px; }
+    .meta dt:first-child { margin-top: 0; }
+    .meta dd { margin: 4px 0 0; word-break: break-word; }
+    .meta dd code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge.pending  { background: rgba(255,215,0,0.15); color: #ffd700; }
+    .badge.approved { background: rgba(46,213,115,0.15); color: #2ed573; }
+    .badge.rejected { background: rgba(255,71,87,0.15); color: #ff4757; }
+    .warnings { background: rgba(255,165,0,0.1); border: 1px solid rgba(255,165,0,0.4); border-radius: 8px; padding: 12px; margin-top: 16px; }
+    .warnings ul { margin: 4px 0 0; padding-left: 20px; }
+    .warnings li { color: #ffa500; }
+    .actions { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .actions form { display: flex; flex-direction: column; gap: 8px; }
+    .actions textarea { background: rgba(255,255,255,0.06); border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; font-family: inherit; font-size: 13px; resize: vertical; min-height: 80px; }
+    .actions button { padding: 12px; border-radius: 6px; border: 0; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .approve { background: #2ed573; color: #0a0a12; }
+    .reject { background: #ff4757; color: #fff; }
+    .approve:hover { background: #4ee68b; }
+    .reject:hover { background: #ff6478; }
+    .notice { background: rgba(46,213,115,0.1); border: 1px solid #2ed573; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .reviewer-notes { background: rgba(255,255,255,0.04); border-left: 3px solid #555; padding: 8px 12px; margin-top: 8px; white-space: pre-wrap; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="breadcrumb"><a href="<%= admin_submissions_path %>">← all submissions</a></div>
+  <% if flash[:notice] %><div class="notice"><%= flash[:notice] %></div><% end %>
+
+  <h1><%= @submission.title %> <span class="badge <%= @submission.status %>"><%= @submission.status %></span></h1>
+  <div class="tagline">by <%= @submission.creators %> — <%= @submission.tagline %></div>
+
+  <div class="grid">
+    <div>
+      <div class="preview">
+        <iframe src="<%= preview_admin_submission_path(@submission) %>" sandbox="allow-scripts"></iframe>
+      </div>
+      <p style="color: #666; font-size: 12px; margin-top: 8px;">Preview runs the submitted HTML in a sandboxed iframe. <a href="<%= preview_admin_submission_path(@submission) %>" target="_blank" style="color:#00ffc8;">Open full-screen →</a></p>
+    </div>
+
+    <div class="meta">
+      <dl>
+        <dt>Slug</dt><dd><code><%= @submission.slug %></code></dd>
+        <dt>Score direction</dt><dd><%= @submission.score_direction %><%= " (chill — no leaderboard)" if @submission.is_chill %></dd>
+        <dt>HTML size</dt><dd><%= @submission.game_html.bytesize %> bytes</dd>
+        <dt>Submitter contact</dt><dd><a href="mailto:<%= @submission.contact_email %>" style="color:#00ffc8;"><%= @submission.contact_email %></a></dd>
+        <dt>Submitted</dt><dd><%= @submission.created_at.strftime("%a %b %-d, %Y at %H:%M") %></dd>
+        <dt>From IP</dt><dd><code><%= @submission.submitter_ip %></code></dd>
+        <% if @submission.notes.present? %>
+          <dt>Notes from submitter</dt><dd><%= simple_format @submission.notes %></dd>
+        <% end %>
+      </dl>
+
+      <% if (warnings = @submission.html_warnings).any? %>
+        <div class="warnings">
+          <strong>Spec warnings (informational):</strong>
+          <ul>
+            <% warnings.each do |w| %><li><%= w %></li><% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if @submission.pending? %>
+        <div class="actions">
+          <form method="post" action="<%= approve_admin_submission_path(@submission) %>">
+            <%= csrf_meta_tags %>
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <textarea name="notes" placeholder="Optional notes (visible only to you)"></textarea>
+            <button class="approve" type="submit">✓ Mark approved</button>
+          </form>
+          <form method="post" action="<%= reject_admin_submission_path(@submission) %>">
+            <%= csrf_meta_tags %>
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            <textarea name="notes" placeholder="Reason for rejection (will be sent to submitter)"></textarea>
+            <button class="reject" type="submit">✗ Mark rejected</button>
+          </form>
+        </div>
+      <% else %>
+        <div style="margin-top: 16px;">
+          <strong>Reviewed <%= @submission.reviewed_at&.strftime("%b %-d, %Y") %></strong>
+          <% if @submission.reviewer_notes.present? %>
+            <div class="reviewer-notes"><%= @submission.reviewer_notes %></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<h2>New game submission for EZ-AZ</h2>
+
+<p><strong><%= @submission.title %></strong> by <%= @submission.creators %></p>
+
+<p><em><%= @submission.tagline %></em></p>
+
+<table style="border-collapse: collapse; margin: 16px 0;">
+  <tr><td style="padding: 4px 12px 4px 0; color: #555;">Slug</td><td style="padding: 4px 0;"><code><%= @submission.slug %></code></td></tr>
+  <tr><td style="padding: 4px 12px 4px 0; color: #555;">Score direction</td><td style="padding: 4px 0;"><%= @submission.score_direction %></td></tr>
+  <tr><td style="padding: 4px 12px 4px 0; color: #555;">Chill game</td><td style="padding: 4px 0;"><%= @submission.is_chill ? "yes" : "no" %></td></tr>
+  <tr><td style="padding: 4px 12px 4px 0; color: #555;">HTML size</td><td style="padding: 4px 0;"><%= @submission.game_html.bytesize %> bytes</td></tr>
+  <tr><td style="padding: 4px 12px 4px 0; color: #555;">Contact email</td><td style="padding: 4px 0;"><%= @submission.contact_email %></td></tr>
+</table>
+
+<% if @submission.notes.present? %>
+  <p><strong>Notes:</strong><br><%= simple_format(@submission.notes) %></p>
+<% end %>
+
+<% if (warnings = @submission.html_warnings).any? %>
+  <p><strong>Warnings:</strong></p>
+  <ul>
+    <% warnings.each do |w| %><li><%= w %></li><% end %>
+  </ul>
+<% end %>
+
+<p><a href="<%= @admin_url %>">Review in queue →</a></p>

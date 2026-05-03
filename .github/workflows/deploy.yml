@@ -45,6 +45,8 @@ jobs:
           KAMAL_REGISTRY_PASSWORD=${{ secrets.KAMAL_REGISTRY_PASSWORD }}
           SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
           HONEYBADGER_API_KEY=${{ secrets.HONEYBADGER_API_KEY }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
           EOF
 
       - name: Deploy

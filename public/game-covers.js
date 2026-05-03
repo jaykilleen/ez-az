@@ -988,3 +988,350 @@
   ctx.lineWidth = 1.5;
   ctx.strokeRect(6, 12, 20, 20);
 })();
+
+// Draw the Spotlight cover art on the canvas
+(function () {
+  var canvas = document.getElementById('spotlightCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Stage backdrop — deep curtain
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0a0610');
+  bg.addColorStop(0.5, '#1a0820');
+  bg.addColorStop(1, '#0a0610');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Spotlight cone from top centre
+  var coneTopX = W / 2;
+  var coneTopY = -10;
+  var coneBaseY = H * 0.72;
+  var coneHalfWidth = W * 0.46;
+  var cone = ctx.createLinearGradient(coneTopX, coneTopY, coneTopX, coneBaseY);
+  cone.addColorStop(0, 'rgba(255, 220, 80, 0.55)');
+  cone.addColorStop(0.5, 'rgba(255, 200, 60, 0.18)');
+  cone.addColorStop(1, 'rgba(255, 200, 60, 0)');
+  ctx.fillStyle = cone;
+  ctx.beginPath();
+  ctx.moveTo(coneTopX - 14, coneTopY);
+  ctx.lineTo(coneTopX + 14, coneTopY);
+  ctx.lineTo(coneTopX + coneHalfWidth, coneBaseY);
+  ctx.lineTo(coneTopX - coneHalfWidth, coneBaseY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lamp at top
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 22;
+  var lampGrad = ctx.createRadialGradient(coneTopX, 8, 2, coneTopX, 8, 16);
+  lampGrad.addColorStop(0, '#fff6b0');
+  lampGrad.addColorStop(0.6, '#ffd84d');
+  lampGrad.addColorStop(1, '#cc8a00');
+  ctx.fillStyle = lampGrad;
+  ctx.beginPath();
+  ctx.arc(coneTopX, 8, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Floor glow where the spotlight lands
+  var floor = ctx.createRadialGradient(W / 2, coneBaseY + 6, 6, W / 2, coneBaseY + 6, coneHalfWidth);
+  floor.addColorStop(0, 'rgba(255, 220, 80, 0.4)');
+  floor.addColorStop(1, 'rgba(255, 220, 80, 0)');
+  ctx.fillStyle = floor;
+  ctx.beginPath();
+  ctx.ellipse(W / 2, coneBaseY + 6, coneHalfWidth, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Star at centre stage
+  function drawStar(cx, cy, outer, inner, points, fill, glow) {
+    ctx.save();
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 24; }
+    ctx.beginPath();
+    var rot = -Math.PI / 2;
+    var step = Math.PI / points;
+    ctx.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+    for (var i = 0; i < points; i++) {
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  var starX = W / 2;
+  var starY = H * 0.46;
+  drawStar(starX, starY, 56, 24, 5, '#ffd84d', '#ffd84d');
+  drawStar(starX, starY, 38, 15, 5, '#fff6b0');
+
+  // Audience silhouettes
+  var audience = [
+    { x: W * 0.18, y: H - 56, scale: 1.0 },
+    { x: W * 0.82, y: H - 56, scale: 1.0 },
+    { x: W * 0.5,  y: H - 50, scale: 1.15 }
+  ];
+  audience.forEach(function (a) {
+    ctx.save();
+    ctx.fillStyle = '#000814';
+    ctx.shadowColor = 'rgba(255, 220, 80, 0.4)';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(a.x, a.y - 18 * a.scale, 9 * a.scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(a.x - 20 * a.scale, H - 28);
+    ctx.quadraticCurveTo(a.x, a.y - 8 * a.scale, a.x + 20 * a.scale, H - 28);
+    ctx.lineTo(a.x - 20 * a.scale, H - 28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = '#fff6b0';
+  ctx.font = 'bold 18px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SPOTLIGHT', W / 2, H - 22);
+  ctx.restore();
+
+  // Tagline
+  ctx.fillStyle = '#cc9933';
+  ctx.font = '8px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('YOUR TURN TO SHINE', W / 2, H - 8);
+})();
+
+// Draw the Treasure Hunt cover art
+(function () {
+  var canvas = document.getElementById('treasureCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Velvet backdrop
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#08081a');
+  bg.addColorStop(0.6, '#1a0d2c');
+  bg.addColorStop(1, '#08081a');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gold radial glow behind cards
+  var glow = ctx.createRadialGradient(W / 2, H * 0.42, 10, W / 2, H * 0.42, W * 0.55);
+  glow.addColorStop(0, 'rgba(255, 200, 60, 0.22)');
+  glow.addColorStop(1, 'rgba(255, 200, 60, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Three fanned cards — yellow, red, blue
+  var cards = [
+    { x: W / 2 - 56, y: H * 0.28, rot: -0.34, fill: '#ffe9b0', border: '#caa14a', value: 7,  colour: '#bf7d12', suit: '♦' },
+    { x: W / 2,      y: H * 0.22, rot: 0,     fill: '#ffd9dc', border: '#a93140', value: 13, colour: '#7a1228', suit: '♥' },
+    { x: W / 2 + 56, y: H * 0.28, rot: 0.34,  fill: '#d6dcff', border: '#3742a8', value: 9,  colour: '#1a2070', suit: '♠' }
+  ];
+  cards.forEach(function (card) {
+    ctx.save();
+    ctx.translate(card.x, card.y);
+    ctx.rotate(card.rot);
+
+    // shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 6;
+
+    // body
+    var grad = ctx.createLinearGradient(0, -76, 0, 76);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(1, card.fill);
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = card.border;
+    ctx.lineWidth = 3;
+    roundRect(ctx, -52, -76, 104, 152, 14);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // top corner number + suit
+    ctx.fillStyle = card.colour;
+    ctx.font = 'bold 18px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(String(card.value), -42, -64);
+    ctx.font = 'bold 16px serif';
+    ctx.fillText(card.suit, -42, -42);
+
+    // big centre number
+    ctx.font = 'bold 56px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(card.value), 0, 0);
+
+    // bottom corner (rotated)
+    ctx.save();
+    ctx.translate(42, 64);
+    ctx.rotate(Math.PI);
+    ctx.font = 'bold 18px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(String(card.value), 0, 0);
+    ctx.font = 'bold 16px serif';
+    ctx.fillText(card.suit, 0, 22);
+    ctx.restore();
+
+    ctx.restore();
+  });
+
+  // Treasure pile — a row of coins below the cards
+  ctx.save();
+  var coinY = H * 0.7;
+  var coins = [-44, -22, 0, 22, 44, -33, -11, 11, 33];
+  coins.forEach(function (dx, i) {
+    var cy = coinY + (i < 5 ? 0 : -10);
+    var cx = W / 2 + dx;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+    var coinGrad = ctx.createRadialGradient(cx - 3, cy - 3, 1, cx, cy, 12);
+    coinGrad.addColorStop(0, '#fff2b3');
+    coinGrad.addColorStop(0.5, '#ffd84d');
+    coinGrad.addColorStop(1, '#a37a00');
+    ctx.fillStyle = coinGrad;
+    ctx.shadowColor = 'rgba(255,200,60,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#7a5800';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#7a5800';
+    ctx.font = 'bold 9px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('$', cx, cy);
+  });
+  ctx.restore();
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#ffd84d';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#fff2b3';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TREASURE', W / 2, H - 30);
+  ctx.fillText('HUNT', W / 2, H - 10);
+  ctx.restore();
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+})();
+
+// ── Hacker Pro cover ──────────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('hackerCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // CRT-black background with green tint
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#020806');
+  bg.addColorStop(0.5, '#062012');
+  bg.addColorStop(1, '#020806');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Faint scanlines
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#00ff66';
+  for (var y = 0; y < H; y += 4) {
+    ctx.fillRect(0, y, W, 1);
+  }
+  ctx.restore();
+
+  // Glow halo behind slots
+  var glow = ctx.createRadialGradient(W / 2, H * 0.5, 8, W / 2, H * 0.5, W * 0.6);
+  glow.addColorStop(0, 'rgba(0, 255, 102, 0.28)');
+  glow.addColorStop(1, 'rgba(0, 255, 102, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Code slots: █ █ ✓ █  (one cracked)
+  ctx.font = 'bold 38px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  var slotW = 36;
+  var slotH = 50;
+  var gap = 10;
+  var totalW = 4 * slotW + 3 * gap;
+  var startX = (W - totalW) / 2 + slotW / 2;
+  var slotY = H * 0.46;
+  var values = ['█', '7', '█', '█'];
+  var locked = [false, true, false, false];
+
+  for (var i = 0; i < 4; i++) {
+    var cx = startX + i * (slotW + gap);
+    ctx.save();
+    ctx.shadowColor = locked[i] ? '#00ff66' : 'transparent';
+    ctx.shadowBlur = locked[i] ? 14 : 0;
+    ctx.strokeStyle = locked[i] ? '#00ff66' : '#008833';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = locked[i] ? 'rgba(0, 255, 102, 0.18)' : 'rgba(0, 255, 102, 0.04)';
+    ctx.beginPath();
+    ctx.rect(cx - slotW / 2, slotY - slotH / 2, slotW, slotH);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = locked[i] ? '#aaffcc' : '#00ff66';
+    ctx.fillText(values[i], cx, slotY + 2);
+    ctx.restore();
+  }
+
+  // Top status line
+  ctx.fillStyle = '#ffb300';
+  ctx.font = 'bold 11px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('> ATTEMPTS: 042', 14, 28);
+
+  // Bottom title
+  ctx.save();
+  ctx.shadowColor = '#00ff66';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#aaffcc';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('HACKER', W / 2, H - 30);
+  ctx.fillText('PRO', W / 2, H - 10);
+  ctx.restore();
+
+  // Blinking cursor accent in the corner
+  ctx.fillStyle = '#00ff66';
+  ctx.fillRect(W - 22, H - 24, 8, 12);
+})();

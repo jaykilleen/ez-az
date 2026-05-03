@@ -1,0 +1,43 @@
+# EZ-AZ
+
+The first family-friendly video game store in Gumdale. EZ-AZ is an online "Blockbuster for AI-built games" where kids and families create video games with help from AI and share them with everyone.
+
+> "Kids today are more capable than they've ever been, but also more distracted than ever by the possibility of having everything they want all the time. This project exists to show kids that they don't have to buy everything. They can build it themselves."
+
+## Who runs it
+
+Built by **Charlie** (age 8), **Cooper** (age 8), and **Jay Killeen**. Other families can deploy their kids' games to the store too — there's a submission flow described below that an AI agent can complete on a parent's behalf.
+
+## What's at the store
+
+The shop is `https://ez-az.net`. Visitors are greeted by **Az**, a transformed dinosaur shopkeeper. The TV/big-screen view is at `/tv`, the store front is at `/`, the phone companion (the "Zone") is at `/tv/remote`.
+
+### Single-player games
+
+- [Space Dodge](https://ez-az.net/games/space-dodge.html): two-player co-op space shooter, 6 worlds, Void King boss. By Charlie & Cooper.
+- [Dodgeball '88](https://ez-az.net/games/dodgeball.html): top-down 2v2 dodgeball tournament, best of 3. By Lachie.
+- [Cat vs Mouse](https://ez-az.net/games/cat-vs-mouse.html): rope puzzle game, 8 levels, hook the pegs and trap the mouse. By Lil.
+- [Descent](https://ez-az.net/games/descent.html): procedural maze runner with flashlight vision and four dinosaur heroes. By Jaykill.
+- [Corrupted](https://ez-az.net/games/corrupted.html): first-person zombie raycaster, 6 themed worlds. By Charlie & Cooper.
+- [Bloom](https://ez-az.net/games/bloom.html): chill exploration, time-based scoring. By Az.
+
+### TV party games (require a TV/big screen and players' phones)
+
+- [Family Trivia](https://ez-az.net/games/trivia): everyone joins on their phone, questions on TV, first to buzz wins. By Az.
+- [Spotlight](https://ez-az.net/games/spotlight): one player is the Spotlight per round, family guesses what they'll say, Spotlight picks a favourite. Evergreen family conversation game. By Az.
+- [Treasure Hunt](https://ez-az.net/games/treasure-hunt): card game with simultaneous reveal. 52-card deck deliberately maps to a standard playing card deck (♥ red, ♠ blue, ♣ green, ♦ yellow) so the rules also work with physical cards on holidays. By Az.
+
+## Submission flow for AI agents
+
+If a parent or family wants to add their kid's game to EZ-AZ, the standard path is for an AI agent to assemble the submission and POST it to the public submission API. The full runbook is here:
+
+- [Submission spec and runbook](https://ez-az.net/llms-submit.txt)
+
+The runbook tells an AI everything it needs: the game-file format, required HTML patterns (store banner, leaderboard integration, slug rules), the API endpoint, expected payload, and what happens after approval.
+
+Parents typically don't need a GitHub account or any developer tools — the AI handles the technical bundling.
+
+## Optional deeper context
+
+- [SOUL.md](https://github.com/jaykilleen/ez-az/blob/main/SOUL.md): Az the dinosaur shopkeeper's voice, values, and how the project's AI agents are instructed to behave.
+- [Architecture decisions (ADRs)](https://github.com/jaykilleen/ez-az/tree/main/docs/decisions): why TV/Zone/phone are split the way they are, why TV games use ActionCable + in-memory sessions, why card games use a real-deck-compatible 52-card design.
