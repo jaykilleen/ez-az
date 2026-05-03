@@ -10,6 +10,7 @@
     grid-template-columns: minmax(0, 1fr);
     padding: 3vh 4vw;
     gap: 2vh;
+    position: relative;
     background:
       radial-gradient(ellipse at top right, rgba(0, 255, 200, 0.08), transparent 50%),
       radial-gradient(ellipse at bottom left, rgba(255, 0, 170, 0.06), transparent 50%),
@@ -68,7 +69,10 @@
   }
 
   .tv-qr {
-    flex: 0 0 auto;
+    position: absolute;
+    bottom: 2vh;
+    right: 2vw;
+    z-index: 5;
   }
 
   .tv-qr-code {
@@ -322,9 +326,6 @@
       <div class="tv-tagline">Welcome to the Family Video Game Store</div>
       <div class="tv-version">v<%= @version %></div>
     </div>
-    <div class="tv-qr">
-      <div class="tv-qr-code"><%= @qr_code_svg %></div>
-    </div>
   </header>
 
   <section class="tv-main" aria-label="Game shelf">
@@ -358,6 +359,7 @@
   <footer class="tv-footer">
     <div class="tv-footer-left">
       <a href="/learn" class="tv-learn-btn" id="tv-learn-btn">📚 Learning Center</a>
+      <a href="/watch" class="tv-cast-btn">📺 Watch</a>
       <a href="/scan" class="tv-cast-btn">Scan for Party</a>
       <button class="tv-cast-btn" id="tv-cast-btn" hidden title="Cast to TV">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -366,12 +368,16 @@
         Cast
       </button>
       <button class="tv-reload-btn" onclick="window.location.reload()" title="Reload page">&#8635; Reload</button>
-    </div>
-    <div class="tv-status">
-      <span class="dot"></span>
-      <span>Room <strong style="color:#fff;letter-spacing:0.12em;font-family:'Courier New',monospace"><%= @room.code %></strong></span>
+      <div class="tv-status">
+        <span class="dot"></span>
+        <span>Room <strong style="color:#fff;letter-spacing:0.12em;font-family:'Courier New',monospace"><%= @room.code %></strong></span>
+      </div>
     </div>
   </footer>
+
+  <div class="tv-qr">
+    <div class="tv-qr-code"><%= @qr_code_svg %></div>
+  </div>
 </div>
 
 <script>

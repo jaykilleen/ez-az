@@ -15,6 +15,21 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = (project.findProperty("EZAZ_KEYSTORE_FILE") as String?)
+            val keystorePassword = (project.findProperty("EZAZ_KEYSTORE_PASSWORD") as String?)
+            val keyAliasProp = (project.findProperty("EZAZ_KEY_ALIAS") as String?)
+            val keyPasswordProp = (project.findProperty("EZAZ_KEY_PASSWORD") as String?)
+            if (keystoreFile != null && keystorePassword != null && keyAliasProp != null && keyPasswordProp != null) {
+                storeFile = file(keystoreFile)
+                storePassword = keystorePassword
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -22,7 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
