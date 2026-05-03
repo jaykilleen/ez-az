@@ -172,6 +172,7 @@ class TreasureChannel < ApplicationCable::Channel
       total_rounds: TOTAL_ROUNDS,
       challenge_order: challenge_order,
       hands: hands,
+      deck: deck,
       pots: Hash.new { |h, k| h[k] = [] }.merge(player_slots.to_h { |s| [s.to_s, []] }),
       played: {},
       player_slots: player_slots,
@@ -179,6 +180,16 @@ class TreasureChannel < ApplicationCable::Channel
     }
     save_session(s)
     s
+  end
+
+  # Top each player's hand back up to HAND_SIZE from the shared deck.
+  # No-op if the deck is empty or a player is already at full hand.
+  def refill_hands(s)
+    s[:hands].each_value do |hand|
+      while hand.length < HAND_SIZE && !s[:deck].empty?
+        hand << s[:deck].shift
+      end
+    end
   end
 
   def build_deck
@@ -249,7 +260,6 @@ class TreasureChannel < ApplicationCable::Channel
     candidates = filter_for(challenge, s[:played])
     winners = candidates.empty? ? [] : pick_winners(challenge, candidates)
 
-    returned_to_hand = []
     if winners.empty?
       # No one matched — discard everything
       s[:played].each_value { |c| s[:discard] << c }
@@ -263,24 +273,27 @@ class TreasureChannel < ApplicationCable::Channel
         if winners.include?(slot_s)
           s[:hands][slot_s] ||= []
           s[:hands][slot_s] << card
-          returned_to_hand << slot_s
         else
           s[:discard] << card
         end
       end
     end
 
+    # Refill hands from the deck (skip on the final round — no point drawing
+    # cards that won't be played).
+    refill_hands(s) if s[:round] < s[:total_rounds] - 1
+
     s[:phase] = "revealed"
     s[:last_winners] = winners
     save_session(s)
     ActionCable.server.broadcast(stream_key, revealed_payload(s))
 
-    # Tied players get their card back: send them an updated hand so their
-    # phone replaces what it removed on play_card.
-    returned_to_hand.each do |slot_s|
+    # Send each player their updated hand on their per-slot stream so the
+    # phone UI re-syncs (covers tied cards returned + cards drawn from deck).
+    s[:hands].each do |slot_s, hand|
       ActionCable.server.broadcast(
         "#{stream_key}:p#{slot_s}",
-        { type: "deal", slot: slot_s.to_i, hand: s[:hands][slot_s] }
+        { type: "deal", slot: slot_s.to_i, hand: hand }
       )
     end
   end
