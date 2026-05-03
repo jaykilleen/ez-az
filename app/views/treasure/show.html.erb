@@ -648,10 +648,11 @@
       textEl.innerHTML = 'No-one matched the challenge. <strong>All cards discarded.</strong>';
     } else if (winnerPlays.length === 1) {
       var w = winnerPlays[0];
-      var pot = data.plays.reduce(function(sum, p) { return sum + (p.card ? p.card.value : 0); }, 0);
+      var cardCount = data.plays.length;
+      var potValue = data.plays.reduce(function(sum, p) { return sum + (p.card ? p.card.value : 0); }, 0);
       bannerEl.classList.add('is-win');
       iconEl.textContent = '👑';
-      textEl.innerHTML = '<strong style="color:' + w.slot_color + '">' + esc(w.name) + '</strong> takes the pot · <strong>+' + pot + ' pts</strong>';
+      textEl.innerHTML = '<strong style="color:' + w.slot_color + '">' + esc(w.name) + '</strong> takes the pot · <strong>+' + cardCount + ' cards</strong> <span style="color:#c8b48a;font-size:0.8em">(worth ' + potValue + ')</span>';
     } else {
       var names = winnerPlays.map(function(p) {
         return '<strong style="color:' + p.slot_color + '">' + esc(p.name) + '</strong>';
@@ -660,7 +661,7 @@
       var nameStr = names.length ? names.join(', ') + ' & ' + lastName : lastName;
       bannerEl.classList.add('is-tie');
       iconEl.textContent = '🤝';
-      textEl.innerHTML = nameStr + ' tied! Each keeps their own card.';
+      textEl.innerHTML = nameStr + ' tied! Each gets their card back in hand.';
     }
     bannerEl.hidden = false;
   }
@@ -685,8 +686,8 @@
       div.innerHTML =
         (idx === 0 ? '<div class="th-crown">👑</div>' : '') +
         '<div class="th-final-name">' + esc(p.name) + '</div>' +
-        '<div class="th-final-pts">' + p.points + '</div>' +
-        '<div class="th-final-cards">' + p.cards_won + ' card' + (p.cards_won === 1 ? '' : 's') + '</div>';
+        '<div class="th-final-pts">' + p.cards_won + '</div>' +
+        '<div class="th-final-cards">card' + (p.cards_won === 1 ? '' : 's') + ' · worth ' + (p.total_value || 0) + '</div>';
       finalEl.appendChild(div);
     });
   }
@@ -770,7 +771,7 @@
           '<div class="th-pname">' + esc(m.name) + '</div>' +
           '<div class="th-pmeta">' +
             '<div class="th-pts" style="color:' + color + '">0</div>' +
-            '<div class="th-cards">pts</div>' +
+            '<div class="th-cards">cards</div>' +
           '</div>';
       }
     });

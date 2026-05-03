@@ -21,18 +21,15 @@ class TreasureChannel < ApplicationCable::Channel
   HAND_SIZE    = 5
   MIN_PLAYERS  = 2
 
-  CHALLENGES = [
-    { kind: "highest",     label: "HIGHEST WINS",       hint: "Play your strongest card." },
-    { kind: "lowest",      label: "LOWEST WINS",        hint: "The smallest number takes the pot." },
-    { kind: "closest_to",  label: "CLOSEST TO 4",       hint: "Get as close to 4 as you can.", target: 4 },
-    { kind: "closest_to",  label: "CLOSEST TO 7",       hint: "Aim for 7. Over or under, doesn't matter.", target: 7 },
-    { kind: "closest_to",  label: "CLOSEST TO 10",      hint: "10 is the target.", target: 10 },
-    { kind: "colour_rules", label: "REDS RULE",         hint: "Only RED cards count. Highest red wins.", colour: "red" },
-    { kind: "colour_rules", label: "BLUES RULE",        hint: "Only BLUE cards count. Highest blue wins.", colour: "blue" },
-    { kind: "colour_rules", label: "GREENS RULE",       hint: "Only GREEN cards count. Highest green wins.", colour: "green" },
-    { kind: "colour_rules", label: "YELLOWS RULE",      hint: "Only YELLOW cards count. Highest yellow wins.", colour: "yellow" },
-    { kind: "evens_rule",  label: "EVENS RULE",         hint: "Only even numbers count. Highest even wins." },
-    { kind: "odds_rule",   label: "ODDS RULE",          hint: "Only odd numbers count. Highest odd wins." }
+  COLOUR_LABEL = { "red" => "REDS RULE", "blue" => "BLUES RULE", "green" => "GREENS RULE", "yellow" => "YELLOWS RULE" }.freeze
+
+  # The challenge pool is generated per-game (in build_challenge_pool) so the
+  # Closest-To targets are randomised each session instead of a fixed 4/7/10.
+  STATIC_CHALLENGES = [
+    { kind: "highest",     label: "HIGHEST WINS", hint: "Play your strongest card." },
+    { kind: "lowest",      label: "LOWEST WINS",  hint: "The smallest number takes the pot." },
+    { kind: "evens_rule",  label: "EVENS RULE",   hint: "Only even numbers count. Highest even wins." },
+    { kind: "odds_rule",   label: "ODDS RULE",    hint: "Only odd numbers count. Highest odd wins." }
   ].freeze
 
   def subscribed
@@ -40,6 +37,13 @@ class TreasureChannel < ApplicationCable::Channel
     return reject unless @room
 
     stream_from stream_key
+
+    # Per-slot stream so we can send a phone its updated hand without
+    # broadcasting it to other players.
+    if !tv? && (slot = params[:slot].to_i) > 0
+      stream_from "#{stream_key}:p#{slot}"
+    end
+
     s = get_session
     return unless s
 
@@ -160,7 +164,7 @@ class TreasureChannel < ApplicationCable::Channel
     deck = build_deck.shuffle
     hands = {}
     player_slots.each { |slot| hands[slot.to_s] = deck.shift(HAND_SIZE) }
-    challenge_order = CHALLENGES.sample(TOTAL_ROUNDS)
+    challenge_order = build_challenge_pool.sample(TOTAL_ROUNDS)
 
     s = {
       phase: "reading",
@@ -181,6 +185,24 @@ class TreasureChannel < ApplicationCable::Channel
     COLOURS.flat_map do |colour|
       (1..13).map { |value| { id: "#{colour[0]}#{value}", value: value, colour: colour } }
     end
+  end
+
+  # Build a fresh pool per-session so Closest-To targets vary game to game.
+  def build_challenge_pool
+    pool = STATIC_CHALLENGES.dup
+    # 3 random "Closest to N" targets pulled from 3..11
+    (3..11).to_a.sample(3).each do |target|
+      pool << { kind: "closest_to", label: "CLOSEST TO #{target}", hint: "Aim for #{target}. Over or under, doesn't matter.", target: target }
+    end
+    COLOURS.each do |colour|
+      pool << {
+        kind: "colour_rules",
+        label: COLOUR_LABEL[colour],
+        hint: "Only #{colour.upcase} cards count. Highest #{colour} wins.",
+        colour: colour
+      }
+    end
+    pool
   end
 
   def deal_to_players(s)
@@ -227,18 +249,21 @@ class TreasureChannel < ApplicationCable::Channel
     candidates = filter_for(challenge, s[:played])
     winners = candidates.empty? ? [] : pick_winners(challenge, candidates)
 
+    returned_to_hand = []
     if winners.empty?
       # No one matched — discard everything
       s[:played].each_value { |c| s[:discard] << c }
     elsif winners.length == 1
-      # Single winner takes all played cards
+      # Single winner takes all played cards into their pot
       winner = winners.first
       s[:played].each_value { |c| s[:pots][winner] << c }
     else
-      # Tie — each tied winner keeps their own card; others discarded
+      # Tie — each tied player gets their card back in hand; others discarded
       s[:played].each do |slot_s, card|
         if winners.include?(slot_s)
-          s[:pots][slot_s] << card
+          s[:hands][slot_s] ||= []
+          s[:hands][slot_s] << card
+          returned_to_hand << slot_s
         else
           s[:discard] << card
         end
@@ -249,6 +274,15 @@ class TreasureChannel < ApplicationCable::Channel
     s[:last_winners] = winners
     save_session(s)
     ActionCable.server.broadcast(stream_key, revealed_payload(s))
+
+    # Tied players get their card back: send them an updated hand so their
+    # phone replaces what it removed on play_card.
+    returned_to_hand.each do |slot_s|
+      ActionCable.server.broadcast(
+        "#{stream_key}:p#{slot_s}",
+        { type: "deal", slot: slot_s.to_i, hand: s[:hands][slot_s] }
+      )
+    end
   end
 
   def filter_for(challenge, played)
@@ -340,10 +374,11 @@ class TreasureChannel < ApplicationCable::Channel
         slot: slot,
         name: player_name(slot),
         slot_color: SLOT_COLORS[slot],
-        points: pot.sum { |c| c[:value] },
-        cards_won: pot.length
+        points: pot.length,
+        cards_won: pot.length,
+        total_value: pot.sum { |c| c[:value] }
       }
-    end.sort_by { |e| -e[:points] }
+    end.sort_by { |e| [-e[:points], -e[:total_value]] }
     { type: "game_over", scores: scoreboard }
   end
 
@@ -375,7 +410,13 @@ class TreasureChannel < ApplicationCable::Channel
     { id: c[:id], value: c[:value], colour: c[:colour], hex: COLOUR_HEX[c[:colour]] }
   end
 
+  # Primary score is card count (every round won is equally rewarding,
+  # regardless of whether the challenge made you play high or low cards).
   def pot_scores(s)
+    s[:pots].transform_values(&:length)
+  end
+
+  def pot_values(s)
     s[:pots].transform_values { |pot| pot.sum { |c| c[:value] } }
   end
 end
