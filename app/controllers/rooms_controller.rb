@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class RoomsController < ApplicationController
+  include RespectsStoreHours
   # The TV view (show, new) uses the dedicated tv layout; the phone
   # views (join, play) use the controller layout. before_action
   # resolves the layout per action.

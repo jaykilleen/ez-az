@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class SpotlightController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def new

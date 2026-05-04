@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class TriviaController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def new

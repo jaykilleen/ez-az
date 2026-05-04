@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class TvController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def show

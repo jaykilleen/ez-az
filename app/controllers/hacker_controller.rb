@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class HackerController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def new

@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class WatchController < ApplicationController
+  include RespectsStoreHours
   layout false
 
   def show

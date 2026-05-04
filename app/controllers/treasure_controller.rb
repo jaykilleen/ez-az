@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class TreasureController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def new

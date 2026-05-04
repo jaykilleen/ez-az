@@ -1,4 +1,5 @@
 class TvRemoteController < ApplicationController
+  include RespectsStoreHours
   layout "controller"
 
   def show

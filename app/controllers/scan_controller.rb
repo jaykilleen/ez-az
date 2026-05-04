@@ -1,4 +1,5 @@
 class ScanController < ApplicationController
+  include RespectsStoreHours
   layout "controller"
 
   def show

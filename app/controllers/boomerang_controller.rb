@@ -1,6 +1,7 @@
 require "rqrcode"
 
 class BoomerangController < ApplicationController
+  include RespectsStoreHours
   layout "tv"
 
   def new
