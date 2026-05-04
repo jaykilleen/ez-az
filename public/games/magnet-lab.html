@@ -77,20 +77,75 @@
     background: rgba(0, 100, 180, 0.12);
     border: 1px solid rgba(0, 200, 255, 0.2);
     padding: 0.9rem 1.6rem; border-radius: 8px;
-    max-width: 520px;
+    max-width: 540px;
   }
   #overlay .instructions b { color: #00ccff; }
-  #overlay .instructions .p2 { color: #ff7799; }
-  #startBtn {
-    background: linear-gradient(135deg, #00ccff, #0077cc);
-    color: #fff; border: none;
-    padding: 0.85rem 2.5rem; font-size: 1.1rem;
+  #overlay .instructions .p2 { color: #ff4477; display: inline-block; }
+  #overlay .instructions .p2 b { color: #ff4477; }
+  #overlay button {
     font-family: 'Press Start 2P', monospace;
-    cursor: pointer; letter-spacing: 2px; border-radius: 6px;
-    transition: transform 0.1s, box-shadow 0.1s;
-    box-shadow: 0 0 24px rgba(0, 204, 255, 0.4);
+    font-size: 0.9rem;
+    padding: 14px 32px;
+    background: #00ccff;
+    color: #001020;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 0 20px rgba(0, 204, 255, 0.5);
+    transition: transform 0.12s;
   }
-  #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 36px rgba(0, 204, 255, 0.7); }
+  #overlay button:hover { transform: scale(1.04); }
+  #overlay .scoreFinal {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 2.4rem;
+    color: #ffee50;
+    margin-bottom: 0.6rem;
+    text-shadow: 0 0 18px rgba(255, 238, 80, 0.5);
+  }
+  #overlay .scoreLabel {
+    font-size: 0.75rem; color: #88bbff;
+    margin-bottom: 1.5rem;
+    font-family: 'Press Start 2P', monospace;
+    letter-spacing: 2px;
+  }
+  #overlay input[type="text"] {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.5);
+    border: 2px solid #00ccff;
+    border-radius: 6px;
+    color: #fff;
+    text-align: center;
+    width: 220px;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+  #overlay input[type="text"]:focus { outline: none; border-color: #ffee50; }
+  #overlay .lb {
+    width: 100%; max-width: 420px;
+    margin-top: 14px;
+    border: 1px solid rgba(0, 200, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: rgba(0, 100, 180, 0.06);
+  }
+  #overlay .lb-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: #00ccff;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  #overlay .lb-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem; color: #ccd;
+    padding: 4px 6px;
+  }
+  #overlay .lb-row.is-me { color: #ffee50; }
+  #overlay .lb-empty { color: #557; text-align: center; font-size: 0.8rem; }
 </style>
 </head>
 <body>
@@ -101,17 +156,17 @@
   <h1>MAGNET LAB</h1>
   <div class="subtitle">Co-op physics puzzle — sit at opposite ends of the table</div>
   <div class="byline">by JAYKILL</div>
-  <div class="instructions">
+  <div class="instructions" id="instructions">
     Two robot scientists work together to guide energy balls to the target.<br>
     <br>
-    <b>Player 1</b> (bottom of table): <b>ARROW KEYS</b> to move, <b>SPACE</b> to place magnet<br>
-    <span class="p2"><b>Player 2</b> (top of table): <b>WASD</b> to move, <b>SHIFT</b> to place magnet</span><br>
+    <b>Player 1</b> (bottom): <b>ARROW KEYS</b> to move, <b>SPACE</b> to drop a <b>PULL</b> magnet (blue)<br>
+    <span class="p2"><b>Player 2</b> (top): <b>WASD</b> to move, <b>SHIFT</b> to drop a <b>PUSH</b> magnet (red)</span><br>
     <br>
-    Take turns placing magnets. Push and pull the ball to the target.<br>
-    More accurate = more points. Score as many puzzles as you can in 2 minutes.<br>
+    Pull and push the energy ball into the bullseye. Magnets fade after 5 seconds. You can have 3 active at a time. Score as much as you can in <b>2 minutes</b>.<br>
     <br>
     <b>ESC</b> to pause.
   </div>
+  <div id="leaderboardWrap"></div>
   <button id="startBtn">START</button>
 </div>
 
@@ -128,83 +183,251 @@
 
   var overlay = document.getElementById('overlay');
   var startBtn = document.getElementById('startBtn');
+  var instructions = document.getElementById('instructions');
+  var leaderboardWrap = document.getElementById('leaderboardWrap');
 
-  // Game state
-  var state = 'title'; // 'title', 'playing', 'paused', 'over'
+  // ── Game state ──
+  var state = 'title';
   var keys = {};
 
-  // Board layout: centre arena, player strips at top and bottom
-  var STRIP = 80; // height of each player's UI strip
+  var STRIP = 80;
   var boardTop = STRIP;
   var boardBottom = H - STRIP;
   var boardHeight = boardBottom - boardTop;
 
-  // Two cursors - one for each player
-  var p1 = {
-    x: W * 0.35,
-    y: H - 150,
-    color: '#00ccff',
-    label: 'P1'
-  };
-  var p2 = {
-    x: W * 0.65,
-    y: 150,
-    color: '#ff4477',
-    label: 'P2'
-  };
+  var GAME_DURATION_MS = 120000;
+  var MAGNET_LIFETIME_MS = 5000;
+  var MAX_MAGNETS_PER_PLAYER = 3;
+  var MAGNET_FORCE = 32000;
+  var MAGNET_MIN_R = 30;
+  var BALL_RADIUS = 12;
+  var BALL_DAMPING = 0.992;
+  var BALL_MAX_SPEED = 9;
+  var TARGET_RADIUS = 36;
+  var TARGET_BULLSEYE = 12;
+  var COOLDOWN_MS = 220;
+  var PUZZLE_RESET_PAUSE_MS = 800;
 
+  var p1 = { x: W * 0.35, y: H - 150, color: '#00ccff', label: 'P1', lastDropAt: 0 };
+  var p2 = { x: W * 0.65, y: 150,     color: '#ff4477', label: 'P2', lastDropAt: 0 };
   var CURSOR_SPEED = 4;
 
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+  var magnets = [];
+  var ball = null;
+  var target = null;
+  var puzzleIndex = 0;
+  var nextSpawnAt = 0;
 
-  // Input
+  var score = 0;
+  var goals = 0;
+  var startedAt = 0;
+  var endsAt = 0;
+  var lastFrameAt = 0;
+
+  var toasts = [];
+
+  // Each puzzle: ball spawn position + target position. Coordinates are
+  // ratios (0..1) within the arena (between the two player strips).
+  var PUZZLES = [
+    { ball: [0.10, 0.50], target: [0.90, 0.50] },
+    { ball: [0.10, 0.20], target: [0.90, 0.80] },
+    { ball: [0.50, 0.10], target: [0.50, 0.90] },
+    { ball: [0.10, 0.85], target: [0.90, 0.15] },
+    { ball: [0.85, 0.50], target: [0.15, 0.50] },
+    { ball: [0.20, 0.50], target: [0.80, 0.20] },
+    { ball: [0.20, 0.30], target: [0.80, 0.70] }
+  ];
+
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+  function now() { return performance.now(); }
+
+  // ── Input ──
   window.addEventListener('keydown', function (e) {
     keys[e.key] = true;
     keys[e.code] = true;
-    if (e.key === 'Escape' && state === 'playing') {
-      state = 'paused';
-    } else if (e.key === 'Escape' && state === 'paused') {
-      state = 'playing';
+
+    if (e.key === 'Escape') {
+      if (state === 'playing') state = 'paused';
+      else if (state === 'paused') state = 'playing';
     }
-    // Prevent page scroll on arrows/space
+
+    if (state === 'playing') {
+      if (e.code === 'Space' && !e.repeat) tryDrop(p1, 'pull');
+      if (e.key === 'Shift' && !e.repeat) tryDrop(p2, 'push');
+    }
+
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Space'].indexOf(e.key) !== -1) {
       e.preventDefault();
     }
+    if (e.code === 'Space') e.preventDefault();
   });
   window.addEventListener('keyup', function (e) {
     keys[e.key] = false;
     keys[e.code] = false;
   });
 
-  startBtn.addEventListener('click', function () {
+  startBtn.addEventListener('click', startGame);
+
+  function startGame() {
     overlay.classList.add('hidden');
     state = 'playing';
-  });
+    score = 0;
+    goals = 0;
+    magnets.length = 0;
+    toasts.length = 0;
+    puzzleIndex = 0;
+    p1.x = W * 0.35; p1.y = H - 150;
+    p2.x = W * 0.65; p2.y = 150;
+    spawnPuzzle(0);
+    startedAt = now();
+    endsAt = startedAt + GAME_DURATION_MS;
+    lastFrameAt = startedAt;
+  }
 
+  function spawnPuzzle(i) {
+    var p = PUZZLES[i % PUZZLES.length];
+    var arenaH = boardBottom - boardTop;
+    ball = {
+      x: p.ball[0] * W,
+      y: boardTop + p.ball[1] * arenaH,
+      vx: 0,
+      vy: 0,
+      alive: true,
+      spawnedAt: now()
+    };
+    target = {
+      x: p.target[0] * W,
+      y: boardTop + p.target[1] * arenaH
+    };
+  }
+
+  function endGame() {
+    state = 'over';
+    overlay.classList.remove('hidden');
+    showGameOver();
+  }
+
+  function tryDrop(player, type) {
+    if (now() - player.lastDropAt < COOLDOWN_MS) return;
+    player.lastDropAt = now();
+
+    var owner = player === p1 ? 'p1' : 'p2';
+    var mine = magnets.filter(function (m) { return m.owner === owner; });
+    if (mine.length >= MAX_MAGNETS_PER_PLAYER) {
+      var oldest = mine[0];
+      var idx = magnets.indexOf(oldest);
+      if (idx !== -1) magnets.splice(idx, 1);
+    }
+    magnets.push({
+      x: player.x,
+      y: player.y,
+      type: type,
+      owner: owner,
+      bornAt: now()
+    });
+  }
+
+  // ── Update ──
   function update() {
     if (state !== 'playing') return;
 
-    // P1 controls: Arrow keys
+    var t = now();
+    var dt = Math.min(40, t - lastFrameAt);
+    lastFrameAt = t;
+
+    if (t >= endsAt) { endGame(); return; }
+
     if (keys['ArrowLeft'])  p1.x -= CURSOR_SPEED;
     if (keys['ArrowRight']) p1.x += CURSOR_SPEED;
     if (keys['ArrowUp'])    p1.y -= CURSOR_SPEED;
     if (keys['ArrowDown'])  p1.y += CURSOR_SPEED;
-
-    // P2 controls: WASD
     if (keys['a'] || keys['A']) p2.x -= CURSOR_SPEED;
     if (keys['d'] || keys['D']) p2.x += CURSOR_SPEED;
     if (keys['w'] || keys['W']) p2.y -= CURSOR_SPEED;
     if (keys['s'] || keys['S']) p2.y += CURSOR_SPEED;
-
-    // Keep cursors inside the board
     p1.x = clamp(p1.x, 20, W - 20);
     p1.y = clamp(p1.y, boardTop + 20, boardBottom - 20);
     p2.x = clamp(p2.x, 20, W - 20);
     p2.y = clamp(p2.y, boardTop + 20, boardBottom - 20);
+
+    for (var mi = magnets.length - 1; mi >= 0; mi--) {
+      if (t - magnets[mi].bornAt > MAGNET_LIFETIME_MS) magnets.splice(mi, 1);
+    }
+
+    if (ball && ball.alive) {
+      var ax = 0, ay = 0;
+      for (var i = 0; i < magnets.length; i++) {
+        var m = magnets[i];
+        var dx = m.x - ball.x;
+        var dy = m.y - ball.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < MAGNET_MIN_R) d = MAGNET_MIN_R;
+        var f = MAGNET_FORCE / (d * d);
+        var age = (t - m.bornAt) / MAGNET_LIFETIME_MS;
+        f *= (1 - age * 0.5);
+        var sign = m.type === 'pull' ? 1 : -1;
+        ax += sign * f * (dx / d);
+        ay += sign * f * (dy / d);
+      }
+
+      var step = dt / 16;
+      ball.vx = (ball.vx + ax * step) * BALL_DAMPING;
+      ball.vy = (ball.vy + ay * step) * BALL_DAMPING;
+
+      var speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+      if (speed > BALL_MAX_SPEED) {
+        ball.vx = (ball.vx / speed) * BALL_MAX_SPEED;
+        ball.vy = (ball.vy / speed) * BALL_MAX_SPEED;
+      }
+
+      ball.x += ball.vx * step;
+      ball.y += ball.vy * step;
+
+      if (ball.x - BALL_RADIUS < 0) {
+        ball.x = BALL_RADIUS;
+        ball.vx = Math.abs(ball.vx) * 0.6;
+      } else if (ball.x + BALL_RADIUS > W) {
+        ball.x = W - BALL_RADIUS;
+        ball.vx = -Math.abs(ball.vx) * 0.6;
+      }
+      if (ball.y - BALL_RADIUS < boardTop) {
+        ball.y = boardTop + BALL_RADIUS;
+        ball.vy = Math.abs(ball.vy) * 0.6;
+      } else if (ball.y + BALL_RADIUS > boardBottom) {
+        ball.y = boardBottom - BALL_RADIUS;
+        ball.vy = -Math.abs(ball.vy) * 0.6;
+      }
+
+      var tdx = target.x - ball.x;
+      var tdy = target.y - ball.y;
+      var td = Math.sqrt(tdx * tdx + tdy * tdy);
+      if (td < TARGET_RADIUS) {
+        ball.alive = false;
+        var bonus = td < TARGET_BULLSEYE ? 200 : (td < TARGET_RADIUS * 0.5 ? 150 : 100);
+        if (t - ball.spawnedAt < 4000) bonus += 50;
+        score += bonus;
+        goals += 1;
+        toasts.push({
+          x: target.x,
+          y: target.y - 30,
+          text: '+' + bonus,
+          color: bonus >= 200 ? '#ffee50' : '#aaffcc',
+          bornAt: t
+        });
+        nextSpawnAt = t + PUZZLE_RESET_PAUSE_MS;
+        puzzleIndex++;
+      }
+    } else if (ball && !ball.alive) {
+      if (t >= nextSpawnAt) spawnPuzzle(puzzleIndex);
+    }
+
+    for (var ti = toasts.length - 1; ti >= 0; ti--) {
+      if (t - toasts[ti].bornAt > 1000) toasts.splice(ti, 1);
+    }
   }
 
+  // ── Draw ──
   function drawBoard() {
-    // Background grid on the play area
     ctx.fillStyle = '#050a14';
     ctx.fillRect(0, boardTop, W, boardHeight);
 
@@ -212,24 +435,22 @@
     ctx.lineWidth = 1;
     var g = 40;
     for (var x = 0; x < W; x += g) {
-      ctx.beginPath();
-      ctx.moveTo(x, boardTop); ctx.lineTo(x, boardBottom);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, boardTop); ctx.lineTo(x, boardBottom); ctx.stroke();
     }
     for (var y = boardTop; y < boardBottom; y += g) {
-      ctx.beginPath();
-      ctx.moveTo(0, y); ctx.lineTo(W, y);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
 
-    // Board frame
     ctx.strokeStyle = '#244';
     ctx.lineWidth = 2;
     ctx.strokeRect(0, boardTop, W, boardHeight);
   }
 
   function drawStrips() {
-    // P1 strip (bottom - reads right side up)
+    var t = now();
+    var remaining = Math.max(0, endsAt - t);
+    var timerStr = Math.floor(remaining / 1000) + 's';
+
     ctx.fillStyle = '#080010';
     ctx.fillRect(0, boardBottom, W, STRIP);
     ctx.strokeStyle = p1.color;
@@ -238,11 +459,19 @@
 
     ctx.fillStyle = p1.color;
     ctx.font = '14px "Press Start 2P", monospace';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('P1 ROBOT', 16, boardBottom + STRIP / 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('P1 PULL', 16, boardBottom + STRIP / 2);
 
-    // P2 strip (top - upside down so P2 reads right side up from the other end)
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SCORE  ' + score, W / 2, boardBottom + STRIP / 2);
+
+    ctx.fillStyle = '#ffee50';
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(timerStr, W - 16, boardBottom + STRIP / 2);
+
     ctx.fillStyle = '#080010';
     ctx.fillRect(0, 0, W, STRIP);
     ctx.strokeStyle = p2.color;
@@ -251,11 +480,21 @@
     ctx.save();
     ctx.translate(W, STRIP);
     ctx.rotate(Math.PI);
+
     ctx.fillStyle = p2.color;
     ctx.font = '14px "Press Start 2P", monospace';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('P2 ROBOT', 16, STRIP / 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('P2 PUSH', 16, STRIP / 2);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SCORE  ' + score, W / 2, STRIP / 2);
+
+    ctx.fillStyle = '#ffee50';
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(timerStr, W - 16, STRIP / 2);
     ctx.restore();
   }
 
@@ -263,31 +502,109 @@
     ctx.save();
     ctx.translate(p.x, p.y);
     if (!pointingUp) ctx.rotate(Math.PI);
-
-    // Crosshair
     ctx.strokeStyle = p.color;
     ctx.lineWidth = 2;
     ctx.shadowColor = p.color;
     ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.arc(0, 0, 14, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(-20, 0); ctx.lineTo(-10, 0);
     ctx.moveTo(10, 0);  ctx.lineTo(20, 0);
     ctx.moveTo(0, -20); ctx.lineTo(0, -10);
     ctx.moveTo(0, 10);  ctx.lineTo(0, 20);
     ctx.stroke();
-
     ctx.shadowBlur = 0;
-    // Label
     ctx.fillStyle = p.color;
     ctx.font = '10px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(p.label, 0, 22);
-
     ctx.restore();
+  }
+
+  function drawMagnets() {
+    var t = now();
+    for (var i = 0; i < magnets.length; i++) {
+      var m = magnets[i];
+      var age = (t - m.bornAt) / MAGNET_LIFETIME_MS;
+      var alpha = 1 - age;
+      var radius = 16 + Math.sin((t - m.bornAt) / 120) * 2;
+      var color = m.type === 'pull' ? '#00ccff' : '#ff4477';
+
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      for (var r = 18; r <= 70; r += 14) {
+        ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#001020';
+      ctx.font = 'bold 14px "Press Start 2P", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(m.type === 'pull' ? '+' : '−', m.x, m.y + 1);
+      ctx.restore();
+    }
+  }
+
+  function drawTarget() {
+    if (!target) return;
+    var t = now();
+    var pulse = 1 + Math.sin(t / 240) * 0.06;
+    ctx.save();
+    ctx.translate(target.x, target.y);
+    ctx.scale(pulse, pulse);
+    ['#ff4477', '#ffffff', '#ff4477', '#ffffff', '#ffee50'].forEach(function (c, i, arr) {
+      ctx.fillStyle = c;
+      ctx.shadowColor = i === arr.length - 1 ? '#ffee50' : 'transparent';
+      ctx.shadowBlur = i === arr.length - 1 ? 20 : 0;
+      ctx.beginPath();
+      ctx.arc(0, 0, (arr.length - i) * (TARGET_RADIUS / arr.length), 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawBall() {
+    if (!ball || !ball.alive) return;
+    ctx.save();
+    ctx.shadowColor = '#ffee50';
+    ctx.shadowBlur = 24;
+    var grad = ctx.createRadialGradient(ball.x, ball.y, 1, ball.x, ball.y, BALL_RADIUS);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.55, '#ffee50');
+    grad.addColorStop(1, '#ff8800');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawToasts() {
+    var t = now();
+    for (var i = 0; i < toasts.length; i++) {
+      var to = toasts[i];
+      var age = (t - to.bornAt) / 1000;
+      ctx.save();
+      ctx.globalAlpha = 1 - age;
+      ctx.fillStyle = to.color;
+      ctx.font = 'bold 22px "Press Start 2P", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = to.color;
+      ctx.shadowBlur = 12;
+      ctx.fillText(to.text, to.x, to.y - age * 30);
+      ctx.restore();
+    }
   }
 
   function drawPaused() {
@@ -295,8 +612,7 @@
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#00ccff';
     ctx.font = '28px "Press Start 2P", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('PAUSED', W / 2, H / 2 - 20);
     ctx.fillStyle = '#88bbff';
     ctx.font = '12px "Press Start 2P", monospace';
@@ -309,10 +625,12 @@
 
     drawBoard();
     drawStrips();
-
-    // Cursors - P1 right-side up, P2 upside down
+    drawTarget();
+    drawMagnets();
+    drawBall();
     drawCursor(p1, true);
     drawCursor(p2, false);
+    drawToasts();
 
     if (state === 'paused') drawPaused();
   }
@@ -322,8 +640,101 @@
     draw();
     requestAnimationFrame(loop);
   }
-
   loop();
+
+  // ── Game over + leaderboard ──
+  function loadLeaderboard() {
+    return fetch('/api/scores?game=magnet-lab')
+      .then(function (r) { return r.ok ? r.json() : { scores: [] }; })
+      .catch(function () { return { scores: [] }; });
+  }
+
+  function renderLB(scores, myBest) {
+    if (!scores.length) return '<div class="lb-empty">No scores yet. Be the first!</div>';
+    return scores.slice(0, 10).map(function (s, i) {
+      var isMe = myBest && s.name === myBest.name && s.value === myBest.value;
+      return '<div class="lb-row' + (isMe ? ' is-me' : '') + '">' +
+             '<span>' + (i + 1) + '. ' + escape(s.name) + '</span>' +
+             '<span>' + s.value + '</span></div>';
+    }).join('');
+  }
+
+  function escape(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function showGameOver() {
+    var qualifies = score > 0;
+    instructions.style.display = 'none';
+
+    var html =
+      '<div class="scoreFinal">' + score + '</div>' +
+      '<div class="scoreLabel">' + goals + ' goal' + (goals === 1 ? '' : 's') + ' · time up</div>';
+    if (qualifies) {
+      html += '<input type="text" id="lbName" placeholder="ENTER NAME" maxlength="12" />';
+    }
+    html += '<div class="lb"><div class="lb-title">High Scores</div><div id="lbBody">Loading…</div></div>';
+
+    var existingExtra = document.getElementById('overlayExtra');
+    if (existingExtra) existingExtra.remove();
+    var extra = document.createElement('div');
+    extra.id = 'overlayExtra';
+    extra.innerHTML = html;
+    leaderboardWrap.parentNode.insertBefore(extra, leaderboardWrap);
+
+    startBtn.textContent = 'PLAY AGAIN';
+    startBtn.removeEventListener('click', startGame);
+    startBtn.addEventListener('click', restartGame);
+
+    loadLeaderboard().then(function (data) {
+      document.getElementById('lbBody').innerHTML = renderLB(data.scores || []);
+    });
+
+    if (qualifies) {
+      var nameInput = document.getElementById('lbName');
+      if (nameInput) {
+        nameInput.focus();
+        var posted = false;
+        function maybePost() {
+          if (posted) return;
+          var name = (nameInput.value || '').trim().toUpperCase().slice(0, 12);
+          if (!name) return;
+          posted = true;
+          fetch('/api/scores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game: 'magnet-lab', name: name, value: score })
+          }).then(function () {
+            return loadLeaderboard();
+          }).then(function (data) {
+            document.getElementById('lbBody').innerHTML = renderLB(data.scores || [], { name: name, value: score });
+          }).catch(function () {});
+        }
+        nameInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') maybePost();
+        });
+        nameInput.addEventListener('blur', maybePost);
+      }
+    }
+  }
+
+  function restartGame() {
+    var extra = document.getElementById('overlayExtra');
+    if (extra) extra.remove();
+    instructions.style.display = '';
+    startBtn.textContent = 'START';
+    startBtn.removeEventListener('click', restartGame);
+    startBtn.addEventListener('click', startGame);
+    startGame();
+  }
+
+  loadLeaderboard().then(function (data) {
+    if (state !== 'title') return;
+    var titleLB = document.createElement('div');
+    titleLB.className = 'lb';
+    titleLB.innerHTML = '<div class="lb-title">High Scores</div>' + renderLB(data.scores || []);
+    leaderboardWrap.appendChild(titleLB);
+  });
 })();
 </script>
 </body>

@@ -13,7 +13,8 @@ class Score < ApplicationRecord
     "treasure-hunt" => :desc,
     "hacker-pro" => :asc,
     "boomerang-brawl" => :desc,
-    "letterbox" => :desc
+    "letterbox" => :desc,
+    "magnet-lab" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -24,7 +25,8 @@ class Score < ApplicationRecord
     "descent" => "ANON",
     "corrupted" => "COOPER",
     "az-cipher" => "JAYKILL",
-    "letterbox" => "JAYKILL"
+    "letterbox" => "JAYKILL",
+    "magnet-lab" => "JAYKILL"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

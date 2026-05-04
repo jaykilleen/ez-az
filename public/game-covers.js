@@ -1539,3 +1539,141 @@
   ctx.lineWidth = 1.5;
   ctx.strokeRect(6, 12, 20, 20);
 })();
+
+// ── Magnet Lab cover ──────────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('magnetLabCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#020610');
+  bg.addColorStop(0.5, '#050f20');
+  bg.addColorStop(1, '#020610');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Magnetic field rings
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = '#00ccff';
+  ctx.lineWidth = 1;
+  for (var ring = 30; ring < 120; ring += 20) {
+    ctx.beginPath();
+    ctx.arc(W / 2, H / 2, ring, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Lab grid
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  ctx.strokeStyle = '#0088cc';
+  ctx.lineWidth = 1;
+  for (var gx = 30; gx < W; gx += 22) {
+    ctx.beginPath(); ctx.moveTo(gx, 50); ctx.lineTo(gx, H - 60); ctx.stroke();
+  }
+  for (var gy = 56; gy < H - 60; gy += 22) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.strokeStyle = '#244';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(2, 50, W - 4, H - 110);
+
+  function magnet(cx, cy, color, label) {
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, Math.PI * 0.15, Math.PI * 0.85, true);
+    ctx.lineTo(cx + 12, cy - 4);
+    ctx.arc(cx, cy, 8, Math.PI * 0.85, Math.PI * 0.15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, cx, cy + 14);
+    ctx.restore();
+  }
+  magnet(60, H * 0.42, '#00ccff', 'PULL');
+  magnet(W - 60, H * 0.55, '#ff4477', 'PUSH');
+
+  // Energy ball trajectory
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,238,80,0.35)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([5, 6]);
+  ctx.beginPath();
+  ctx.moveTo(W * 0.18, H * 0.65);
+  ctx.bezierCurveTo(W * 0.35, H * 0.30, W * 0.65, H * 0.72, W * 0.82, H * 0.45);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Energy ball
+  ctx.save();
+  ctx.shadowColor = '#ffee50';
+  ctx.shadowBlur = 22;
+  var ballGrad = ctx.createRadialGradient(W * 0.50, H * 0.50, 2, W * 0.50, H * 0.50, 12);
+  ballGrad.addColorStop(0, '#ffffff');
+  ballGrad.addColorStop(0.6, '#ffee50');
+  ballGrad.addColorStop(1, '#ff8800');
+  ctx.fillStyle = ballGrad;
+  ctx.beginPath();
+  ctx.arc(W * 0.50, H * 0.50, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Target bullseye
+  ctx.save();
+  var bx = W * 0.80, by = H * 0.40;
+  ['#ff4477', '#ffffff', '#ff4477', '#ffffff', '#ffee50'].forEach(function (c, i, arr) {
+    ctx.fillStyle = c;
+    ctx.beginPath();
+    ctx.arc(bx, by, (arr.length - i) * 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  // Player cursors
+  function cursor(cx, cy, color, rotated) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    if (rotated) ctx.rotate(Math.PI);
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-12, 0); ctx.lineTo(-5, 0);
+    ctx.moveTo(5, 0); ctx.lineTo(12, 0);
+    ctx.moveTo(0, -12); ctx.lineTo(0, -5);
+    ctx.moveTo(0, 5); ctx.lineTo(0, 12);
+    ctx.stroke();
+    ctx.restore();
+  }
+  cursor(W * 0.30, H - 80, '#00ccff', false);
+  cursor(W * 0.70, 80, '#ff4477', true);
+
+  // Title
+  ctx.save();
+  ctx.shadowColor = '#00ccff';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = '#aaeeff';
+  ctx.font = 'bold 16px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('MAGNET', W / 2, H - 32);
+  ctx.fillStyle = '#ff77aa';
+  ctx.fillText('LAB', W / 2, H - 12);
+  ctx.restore();
+})();

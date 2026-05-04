@@ -108,6 +108,15 @@ class Game
       path: "/games/letterbox/",
       icon: "letterbox",
       tv_optimised: true
+    },
+    {
+      slug: "magnet-lab",
+      title: "Magnet Lab",
+      creators: "Jaykill",
+      tagline: "Two robot scientists, opposite ends of the table. Place magnets to push and pull the energy ball into the target. Co-op physics, 2 players, one keyboard.",
+      path: "/games/magnet-lab.html",
+      icon: "magnet",
+      tv_optimised: false
     }
   ].freeze
 

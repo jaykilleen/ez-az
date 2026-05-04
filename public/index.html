@@ -1234,6 +1234,21 @@
         </div>
       </a>
 
+      <a href="/games/magnet-lab.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="magnetLabCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Magnet Lab</div>
+          <div class="game-box-creators">By Jaykill</div>
+          <div class="game-box-desc">
+            Sit at opposite ends of the table. Drop magnets on the board, push and pull the energy ball into the target. Pure co-op physics.
+          </div>
+          <span class="game-box-badge">2 PLAYERS</span><br>
+          <span class="game-box-scores" data-game="magnet-lab">High Scores</span>
+        </div>
+      </a>
+
       <a href="/games/corrupted.html" class="game-box">
         <div class="game-box-art">
           <canvas id="corruptedCover" width="220" height="280"></canvas>
@@ -2253,6 +2268,154 @@
       ctx.strokeRect(6, 12, 20, 20);
     })();
 
+    // Draw the Magnet Lab cover art
+    (function () {
+      var canvas = document.getElementById('magnetLabCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width;
+      var H = canvas.height;
+
+      // Lab vacuum-blue background
+      var bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#020610');
+      bg.addColorStop(0.5, '#050f20');
+      bg.addColorStop(1, '#020610');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Magnetic field rings centred on the ball
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = '#00ccff';
+      ctx.lineWidth = 1;
+      for (var ring = 30; ring < 120; ring += 20) {
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, ring, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Lab grid
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = '#0088cc';
+      ctx.lineWidth = 1;
+      for (var gx = 30; gx < W; gx += 22) {
+        ctx.beginPath(); ctx.moveTo(gx, 50); ctx.lineTo(gx, H - 60); ctx.stroke();
+      }
+      for (var gy = 56; gy < H - 60; gy += 22) {
+        ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Frame around the play area
+      ctx.strokeStyle = '#244';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2, 50, W - 4, H - 110);
+
+      // Pull / push magnets
+      function magnet(cx, cy, color, label) {
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#001020';
+        ctx.font = 'bold 14px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, cx, cy + 1);
+        ctx.restore();
+      }
+      magnet(60, H * 0.42, '#00ccff', '+');
+      magnet(W - 60, H * 0.55, '#ff4477', '−');
+
+      // Energy ball trajectory
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,238,80,0.35)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 6]);
+      ctx.beginPath();
+      ctx.moveTo(W * 0.18, H * 0.65);
+      ctx.bezierCurveTo(W * 0.35, H * 0.30, W * 0.65, H * 0.72, W * 0.82, H * 0.45);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      // Energy ball mid-flight
+      ctx.save();
+      ctx.shadowColor = '#ffee50';
+      ctx.shadowBlur = 22;
+      var ballGrad = ctx.createRadialGradient(W * 0.50, H * 0.50, 2, W * 0.50, H * 0.50, 12);
+      ballGrad.addColorStop(0, '#ffffff');
+      ballGrad.addColorStop(0.6, '#ffee50');
+      ballGrad.addColorStop(1, '#ff8800');
+      ctx.fillStyle = ballGrad;
+      ctx.beginPath();
+      ctx.arc(W * 0.50, H * 0.50, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Target bullseye
+      ctx.save();
+      var bx = W * 0.80, by = H * 0.40;
+      ['#ff4477', '#ffffff', '#ff4477', '#ffffff', '#ffee50'].forEach(function (c, i, arr) {
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(bx, by, (arr.length - i) * 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // Player cursors
+      function cursor(cx, cy, color, rotated) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        if (rotated) ctx.rotate(Math.PI);
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-12, 0); ctx.lineTo(-5, 0);
+        ctx.moveTo(5, 0); ctx.lineTo(12, 0);
+        ctx.moveTo(0, -12); ctx.lineTo(0, -5);
+        ctx.moveTo(0, 5); ctx.lineTo(0, 12);
+        ctx.stroke();
+        ctx.restore();
+      }
+      cursor(W * 0.30, H - 80, '#00ccff', false);
+      cursor(W * 0.70, 80, '#ff4477', true);
+
+      // Title banner
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, H - 38, W, 38);
+      ctx.save();
+      ctx.shadowColor = '#00ccff';
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = '#aaeeff';
+      ctx.font = 'bold 16px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('MAGNET', W / 2, H - 22);
+      ctx.fillStyle = '#ff77aa';
+      ctx.fillText('LAB', W / 2, H - 8);
+      ctx.restore();
+
+      // Rating badge
+      ctx.fillStyle = '#88bbff';
+      ctx.font = 'bold 10px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('E', 12, 26);
+      ctx.strokeStyle = '#88bbff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(6, 12, 20, 20);
+    })();
+
     // Draw the Corrupted cover art
     (function () {
       var canvas = document.getElementById('corruptedCover');
@@ -2593,7 +2756,9 @@
         'cat-vs-mouse': 'Cat vs Mouse',
         'dodgeball': 'Dodgeball',
         'descent': 'Descent',
-        'corrupted': 'Corrupted'
+        'corrupted': 'Corrupted',
+        'letterbox': 'Letterbox',
+        'magnet-lab': 'Magnet Lab'
       };
 
       var timeGames = { bloom: true, descent: true };
