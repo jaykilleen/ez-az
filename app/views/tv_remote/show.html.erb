@@ -683,18 +683,51 @@
   .options-exit-btn:active { background: rgba(255,71,87,0.25); }
   .options-hint { font-size: 12px; color: #334; text-align: center; line-height: 1.6; }
 
-  /* ── D-pad ── */
+  /* ── D-pad / Joystick ── */
   .zone-dpad {
     flex-shrink: 0; display: flex; flex-direction: column;
     align-items: center; gap: 18px;
     padding: 18px 20px max(env(safe-area-inset-bottom), 20px);
     border-top: 1px solid rgba(255,255,255,0.06);
   }
-  .dpad {
-    display: grid;
-    grid-template-columns: 72px 72px 72px;
-    grid-template-rows: 72px 72px 72px;
-    gap: 8px;
+  .zone-joy {
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,200,0.08), rgba(0,255,200,0.02));
+    border: 3px solid rgba(0,255,200,0.3);
+    position: relative;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.1s;
+  }
+  .zone-joy.active { border-color: #00ffc8; }
+  .zone-joy-knob {
+    position: absolute;
+    width: 40%; height: 40%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(0,255,200,0.25);
+    border: 3px solid rgba(0,255,200,0.5);
+    pointer-events: none;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  }
+  .zone-joy.active .zone-joy-knob {
+    background: rgba(0,255,200,0.5); border-color: #00ffc8;
+  }
+  .zone-joy-brawl {
+    border-color: rgba(255,136,0,0.4);
+    background: radial-gradient(circle, rgba(255,136,0,0.08), rgba(255,136,0,0.02));
+  }
+  .zone-joy-brawl .zone-joy-knob {
+    background: rgba(255,136,0,0.3); border-color: rgba(255,136,0,0.55);
+  }
+  .zone-joy-brawl.active { border-color: #ff8800; }
+  .zone-joy-brawl.active .zone-joy-knob {
+    background: rgba(255,136,0,0.55); border-color: #ff8800;
+  }
+  .zone-side-btns {
+    display: flex; flex-direction: column; gap: 14px; align-items: center;
   }
   .dpad-btn {
     border-radius: 14px; background: rgba(0,255,200,0.08);
@@ -707,11 +740,11 @@
     background: rgba(0,255,200,0.25); border-color: #00ffc8;
   }
   .dpad-center {
+    width: 84px; height: 84px;
     background: rgba(0,255,200,0.12); border-color: rgba(0,255,200,0.4);
-    font-size: 13px; font-weight: 800; letter-spacing: 0.06em;
+    font-size: 16px; font-weight: 800; letter-spacing: 0.06em;
   }
   .dpad-center.pressed { background: #00ffc8; color: #0a0a12; }
-  .dpad-empty { background: none !important; border: none !important; pointer-events: none; }
   .back-btn {
     padding: 12px 28px; border-radius: 10px;
     background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
@@ -720,7 +753,7 @@
   }
   .back-btn:active { background: rgba(255,255,255,0.1); }
   .fire-btn {
-    width: 88px; height: 88px; border-radius: 50%;
+    width: 84px; height: 84px; border-radius: 50%;
     background: rgba(255, 71, 87, 0.15); border: 3px solid rgba(255, 71, 87, 0.5);
     color: #ff4757; font-size: 13px; font-weight: 900; letter-spacing: 0.06em;
     display: flex; align-items: center; justify-content: center;
@@ -729,7 +762,7 @@
   }
   .fire-btn.pressed { background: rgba(255, 71, 87, 0.4); border-color: #ff4757; }
   .zone-game-controls {
-    display: flex; align-items: center; gap: 28px;
+    display: flex; align-items: center; gap: 22px;
   }
 </style>
 
@@ -999,18 +1032,8 @@
       </div>
 
       <div class="br-zone-controls" id="br-zone-controls">
-        <div class="br-zone-dpad">
-          <div class="br-zone-dpad-empty"></div>
-          <div class="br-zone-dpad-btn" data-br-dir="up">▲</div>
-          <div class="br-zone-dpad-empty"></div>
-
-          <div class="br-zone-dpad-btn" data-br-dir="left">◀</div>
-          <div class="br-zone-dpad-empty"></div>
-          <div class="br-zone-dpad-btn" data-br-dir="right">▶</div>
-
-          <div class="br-zone-dpad-empty"></div>
-          <div class="br-zone-dpad-btn" data-br-dir="down">▼</div>
-          <div class="br-zone-dpad-empty"></div>
+        <div class="zone-joy zone-joy-brawl" id="br-zone-joy" data-joy="brawl">
+          <div class="zone-joy-knob"></div>
         </div>
         <div class="br-zone-attack" id="br-zone-attack">THROW</div>
       </div>
@@ -1080,23 +1103,16 @@
     <a href="/" class="options-exit-btn">← Exit to Store</a>
   </div>
 
-  <!-- D-pad — shown when browsing non-game screens, or Remote tab active -->
+  <!-- Joystick — shown when browsing non-game screens, or Remote tab active -->
   <div class="zone-dpad" id="zone-dpad" hidden>
     <div class="zone-game-controls">
-      <div class="dpad">
-        <div class="dpad-empty"></div>
-        <div class="dpad-btn" data-dir="up">&#9650;</div>
-        <div class="dpad-empty"></div>
-
-        <div class="dpad-btn" data-dir="left">&#9664;</div>
-        <div class="dpad-btn dpad-center" data-dir="select">OK</div>
-        <div class="dpad-btn" data-dir="right">&#9654;</div>
-
-        <div class="dpad-empty"></div>
-        <div class="dpad-btn" data-dir="down">&#9660;</div>
-        <div class="dpad-empty"></div>
+      <div class="zone-joy" id="zone-joy" data-joy="general">
+        <div class="zone-joy-knob"></div>
       </div>
-      <div class="fire-btn" id="fire-btn" data-dir="action" hidden>FIRE</div>
+      <div class="zone-side-btns">
+        <div class="dpad-btn dpad-center" data-dir="select">OK</div>
+        <div class="fire-btn" id="fire-btn" data-dir="action" hidden>FIRE</div>
+      </div>
     </div>
     <button class="back-btn" data-dir="back">← BACK</button>
   </div>
@@ -2365,27 +2381,9 @@
     if (navigator.vibrate) navigator.vibrate(30);
   }
 
-  // Wire D-pad direction buttons (touch + mouse, with explicit press/release).
-  document.querySelectorAll('[data-br-dir]').forEach(function(btn) {
-    var dir = btn.dataset.brDir;
-    function press(e) {
-      e.preventDefault();
-      btn.classList.add('pressed');
-      brSendInput(dir, true);
-    }
-    function release(e) {
-      if (e) e.preventDefault();
-      btn.classList.remove('pressed');
-      brSendInput(dir, false);
-    }
-    btn.addEventListener('touchstart', press, { passive: false });
-    btn.addEventListener('touchend', release);
-    btn.addEventListener('touchcancel', release);
-    btn.addEventListener('mousedown', press);
-    btn.addEventListener('mouseup', release);
-    btn.addEventListener('mouseleave', function(e) {
-      if (btn.classList.contains('pressed')) release(e);
-    });
+  // Boomerang Brawl joystick — diagonals supported (e.g. up + right held).
+  attachJoystick(document.getElementById('br-zone-joy'), function(dir, pressed) {
+    brSendInput(dir, pressed);
   });
 
   (function() {
@@ -2511,13 +2509,14 @@
     showBuzzerPhase('result');
   }
 
-  // ── D-pad ─────────────────────────────────────────────────────────────
+  // ── D-pad / Joystick ──────────────────────────────────────────────────
   function sendNav(dir, navType) {
     if (!remote) return;
     remote.perform('navigate', { direction: dir, nav_type: navType, phone_id: deviceToken });
     if (navType === 'press' && navigator.vibrate) navigator.vibrate(18);
   }
 
+  // OK / BACK / FIRE buttons stay as discrete press/release controls.
   document.querySelectorAll('[data-dir]').forEach(function(btn) {
     var dir = btn.dataset.dir;
     btn.addEventListener('touchstart', function(e) {
@@ -2531,6 +2530,110 @@
     });
     btn.addEventListener('mousedown', function() { btn.classList.add('pressed'); sendNav(dir, 'press'); });
     btn.addEventListener('mouseup',   function() { btn.classList.remove('pressed'); sendNav(dir, 'release'); });
+  });
+
+  // Virtual joystick — attaches to a circular base + knob and emits
+  // up/down/left/right press/release transitions, including diagonals
+  // (multiple directions held simultaneously). One change applied
+  // anywhere a Zone game wants analog-style movement.
+  function attachJoystick(baseEl, onDirChange) {
+    if (!baseEl) return;
+    var knob = baseEl.querySelector('.zone-joy-knob');
+    var touchId = null;
+    var center  = { x: 0, y: 0 };
+    var radius  = 0;
+    var dirs    = { up: false, down: false, left: false, right: false };
+
+    function setKnob(dx, dy) {
+      knob.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+    }
+
+    function update(tx, ty) {
+      var dx = tx - center.x;
+      var dy = ty - center.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > radius) { dx = dx / dist * radius; dy = dy / dist * radius; }
+      setKnob(dx, dy);
+
+      var deadZone = radius * 0.3;
+      var newDirs = { up: false, down: false, left: false, right: false };
+      if (dist > deadZone) {
+        var angle = Math.atan2(dy, dx);
+        if (angle > -2.749 && angle < -0.393) newDirs.up    = true;
+        if (angle > 0.393  && angle < 2.749)  newDirs.down  = true;
+        if (angle > 1.963  || angle < -1.963) newDirs.left  = true;
+        if (angle > -1.178 && angle < 1.178)  newDirs.right = true;
+      }
+      for (var d in dirs) {
+        if (dirs[d] && !newDirs[d]) onDirChange(d, false);
+        if (!dirs[d] && newDirs[d]) onDirChange(d, true);
+      }
+      dirs = newDirs;
+    }
+
+    function release() {
+      setKnob(0, 0);
+      baseEl.classList.remove('active');
+      for (var d in dirs) if (dirs[d]) onDirChange(d, false);
+      dirs = { up: false, down: false, left: false, right: false };
+      touchId = null;
+    }
+
+    function calibrate() {
+      var rect = baseEl.getBoundingClientRect();
+      center.x = rect.left + rect.width / 2;
+      center.y = rect.top  + rect.height / 2;
+      radius   = rect.width / 2;
+    }
+
+    baseEl.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      if (touchId !== null) return;
+      var t = e.changedTouches[0];
+      touchId = t.identifier;
+      calibrate();
+      baseEl.classList.add('active');
+      if (navigator.vibrate) navigator.vibrate(10);
+      update(t.clientX, t.clientY);
+    }, { passive: false });
+
+    baseEl.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) {
+          update(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          return;
+        }
+      }
+    }, { passive: false });
+
+    function endTouch(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchId) { release(); return; }
+      }
+    }
+    baseEl.addEventListener('touchend',    endTouch);
+    baseEl.addEventListener('touchcancel', endTouch);
+
+    // Mouse fallback for desktop testing
+    var mouseDown = false;
+    baseEl.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      mouseDown = true;
+      calibrate();
+      baseEl.classList.add('active');
+      update(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (mouseDown) update(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseup', function() {
+      if (mouseDown) { mouseDown = false; release(); }
+    });
+  }
+
+  attachJoystick(document.getElementById('zone-joy'), function(dir, pressed) {
+    sendNav(dir, pressed ? 'press' : 'release');
   });
 
   function esc(str) {
