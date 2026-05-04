@@ -45,10 +45,26 @@
   .btn-small { margin-top: 10px; padding: 8px 20px; font-size: 12px; border: none; border-radius: 8px; cursor: pointer; background: #2a8a3a; color: #fff; font-weight: bold; transition: transform 0.1s; }
   .btn-small:hover { transform: scale(1.05); }
   .credit { font-size: 12px; color: #888; margin-top: 14px; font-style: italic; }
+
+  .tv-exit {
+    position: fixed; top: 10px; right: 10px; z-index: 50;
+    padding: 10px 16px; border-radius: 10px;
+    background: rgba(214, 63, 63, 0.92);
+    color: #fff; font-weight: 800; font-size: 14px;
+    text-decoration: none; font-family: 'Press Start 2P', monospace;
+    letter-spacing: 0.06em; border: 2px solid rgba(255,255,255,0.3);
+    transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
+  }
+  .tv-exit:focus, .tv-exit:hover {
+    outline: none; transform: scale(1.06);
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.35), 0 6px 0 #871515;
+  }
 </style>
 </head>
 <body>
 <div class="store-banner"><a href="/">EZ-AZ</a></div>
+<a class="tv-exit" href="/tv" tabindex="0" autofocus>✕ TV</a>
 
 <div id="wrap">
 <div id="titleScreen" class="overlay">
@@ -76,7 +92,7 @@
   <div class="leaderboard" id="leaderboardSection"></div>
   <p class="credit">Letterbox. Built at EZ-AZ.</p>
   <button class="btn" onclick="startGame()">Ride again</button>
-  <button class="btn-quit" onclick="window.location.href='/'">Back to the store</button>
+  <button class="btn-quit" onclick="window.location.href='/tv'">Back to the store</button>
 </div>
 
 <canvas id="game"></canvas>

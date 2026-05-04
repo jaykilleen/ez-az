@@ -261,7 +261,7 @@
   };
   function pauseGame() { state = 'paused'; document.getElementById('pauseScreen').style.display = 'flex'; stopMusic(); }
   window.resumeGame = function () { document.getElementById('pauseScreen').style.display = 'none'; state = 'playing'; startMusic(); };
-  window.quitGame = function () { window.location.href = '/'; };
+  window.quitGame = function () { window.location.href = '/tv'; };
   function gameOver(reason) {
     if (state === 'end') return;
     state = 'end';
