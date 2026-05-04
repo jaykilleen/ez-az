@@ -76,12 +76,13 @@
   }
 
   .tv-qr-code {
-    width: clamp(90px, 9vw, 150px);
-    height: clamp(90px, 9vw, 150px);
+    width: clamp(160px, 15vw, 260px);
+    height: clamp(160px, 15vw, 260px);
     background: #0a0a12;
-    padding: 0.5vw;
-    border-radius: 0.8vw;
-    border: 2px solid rgba(0, 255, 200, 0.3);
+    padding: 0.7vw;
+    border-radius: 1vw;
+    border: 3px solid rgba(0, 255, 200, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 200, 0.25);
   }
 
   .tv-qr-code svg {
@@ -92,16 +93,18 @@
 
   .tv-main {
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     scroll-behavior: smooth;
+    padding-right: 18vw; /* leave room for QR badge in bottom-right */
   }
 
   .tv-shelf {
     display: grid;
-    grid-template-columns: repeat(var(--tv-cols, 5), clamp(140px, 14vw, 220px));
-    justify-content: center;
-    gap: 1.5vw;
-    padding: 2vh 0 1vh;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 14vw, 220px), 1fr));
+    justify-content: stretch;
+    gap: 1.5vw 1.4vw;
+    padding: 2vh 0 6vh;
   }
 
   .tv-game {
@@ -499,7 +502,14 @@
     }
     var focusedIndex = 0;
     var learnFocused = false;
-    var COLS = parseInt(shelf.style.getPropertyValue('--tv-cols')) || 5;
+
+    // Columns are computed from the live grid (auto-fill responds to viewport).
+    function currentCols() {
+      var cs = window.getComputedStyle(shelf).gridTemplateColumns;
+      return Math.max(1, cs.split(' ').filter(Boolean).length);
+    }
+    var COLS = currentCols();
+    window.addEventListener('resize', function() { COLS = currentCols(); });
 
     function focusGame(index) {
       index = Math.max(0, Math.min(games.length - 1, index));
@@ -522,9 +532,10 @@
     }
 
     document.addEventListener('keydown', function(e) {
-      var col = focusedIndex % COLS;
-      var lastRow = Math.floor((games.length - 1) / COLS);
-      var row = Math.floor(focusedIndex / COLS);
+      var cols = currentCols();
+      var col = focusedIndex % cols;
+      var lastRow = Math.floor((games.length - 1) / cols);
+      var row = Math.floor(focusedIndex / cols);
 
       switch (e.key) {
         case 'ArrowLeft':
@@ -535,18 +546,18 @@
         case 'ArrowRight':
           e.preventDefault();
           if (learnFocused) break;
-          if (col < COLS - 1 && focusedIndex + 1 < games.length) focusGame(focusedIndex + 1);
+          if (col < cols - 1 && focusedIndex + 1 < games.length) focusGame(focusedIndex + 1);
           break;
         case 'ArrowDown':
           e.preventDefault();
           if (learnFocused) break;
-          if (row < lastRow) focusGame(Math.min(focusedIndex + COLS, games.length - 1));
+          if (row < lastRow) focusGame(Math.min(focusedIndex + cols, games.length - 1));
           else focusLearn();
           break;
         case 'ArrowUp':
           e.preventDefault();
           if (learnFocused) { focusGame(focusedIndex); break; }
-          if (row > 0) focusGame(focusedIndex - COLS);
+          if (row > 0) focusGame(focusedIndex - cols);
           break;
         case 'Enter':
         case ' ':
