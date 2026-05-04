@@ -257,6 +257,166 @@
     }
 
     .guide-ch.active .guide-ch-name { color: #fff; }
+
+    /* --- TV Guide overlay (full-screen schedule grid) --- */
+    .tv-guide {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(5, 5, 12, 0.97);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      padding: 32px 48px 32px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      overflow-y: auto;
+    }
+    .tv-guide.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .tv-guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .tv-guide-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(1rem, 2vw, 1.6rem);
+      color: #00ffc8;
+      letter-spacing: 0.06em;
+    }
+    .tv-guide-clock {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.8rem, 1.4vw, 1.1rem);
+      color: #fff;
+      letter-spacing: 0.06em;
+    }
+    .tv-guide-clock-label {
+      color: #555;
+      font-size: 0.7em;
+      margin-right: 8px;
+    }
+    .tv-guide-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+    .tv-guide-row {
+      display: grid;
+      grid-template-columns: clamp(140px, 16vw, 240px) 1fr;
+      gap: 18px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .tv-guide-row:hover { background: rgba(255,255,255,0.06); border-color: rgba(0,255,200,0.3); }
+    .tv-guide-row.active {
+      border-color: #00ffc8;
+      background: rgba(0,255,200,0.08);
+    }
+    .tv-guide-ch {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 4px;
+    }
+    .tv-guide-ch-num {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.6rem;
+      color: #555;
+    }
+    .tv-guide-row.active .tv-guide-ch-num { color: #00ffc8; }
+    .tv-guide-ch-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .tv-guide-ch-emoji { font-size: 1.6rem; line-height: 1; }
+    .tv-guide-ch-name {
+      font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+    .tv-guide-slots {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      min-width: 0;
+    }
+    .tv-guide-slot {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .tv-guide-slot.is-now {
+      background: rgba(0,255,200,0.1);
+      border-color: rgba(0,255,200,0.4);
+    }
+    .tv-guide-slot-time {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.55rem;
+      color: #888;
+      letter-spacing: 0.04em;
+    }
+    .tv-guide-slot.is-now .tv-guide-slot-time { color: #00ffc8; }
+    .tv-guide-slot-title {
+      font-size: clamp(0.75rem, 0.95vw, 0.95rem);
+      font-weight: 700;
+      color: #ddd;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .tv-guide-slot.is-now .tv-guide-slot-title { color: #fff; }
+    .tv-guide-slot-note {
+      font-size: 0.7rem;
+      color: #555;
+      letter-spacing: 0.02em;
+    }
+    .tv-guide-hint {
+      flex-shrink: 0;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: clamp(0.7rem, 1vw, 0.9rem);
+      color: #666;
+    }
+    .tv-guide-hint .k {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 22px;
+      padding: 0 6px;
+      margin-right: 6px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.08);
+      color: #ddd;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -285,8 +445,9 @@
     </div>
     <div class="nav-hint">
       <span class="nav-key k-channel"><span class="k">▲▼</span> Change Channel</span>
-      <span class="nav-key k-video"><span class="k">◀▶</span> Next Video</span>
+      <span class="nav-key k-video"><span class="k">◀▶</span> Skip Video</span>
       <span class="nav-key k-play"><span class="k">●</span> Play / Pause</span>
+      <span class="nav-key k-video"><span class="k">G</span> TV Guide</span>
       <span class="nav-key k-home"><span class="k">⌫</span> Go Home</span>
     </div>
   </div>
@@ -303,6 +464,23 @@
     </div>
   <% end %>
 </div>
+
+<!-- Full-screen TV Guide overlay -->
+<section class="tv-guide" id="tvGuide" aria-hidden="true">
+  <header class="tv-guide-header">
+    <div class="tv-guide-title">📺 TV GUIDE</div>
+    <div class="tv-guide-clock">
+      <span class="tv-guide-clock-label">NOW</span>
+      <span id="tvGuideClock">--:--</span>
+    </div>
+  </header>
+  <div class="tv-guide-rows" id="tvGuideRows"></div>
+  <div class="tv-guide-hint">
+    <span><span class="k">G</span> Close Guide</span>
+    <span><span class="k">▲▼</span> Highlight</span>
+    <span><span class="k">●</span> Tune to Channel</span>
+  </div>
+</section>
 
 <script>
   // Globals needed before YouTube IFrame API calls the callback
@@ -321,12 +499,120 @@
   var tracks       = <%= raw @tracks.to_json %>;
   var token        = <%= @room.tv_token.to_json.html_safe %>;
   var trackIdx     = 0;
-  var videoIdx     = 0;
+  var videoIdx     = 0;       // index into the channel's daily-shuffled schedule
   var player       = null;
   var syncTimer    = null;
   var guideTimer   = null;
   var hudTimer     = null;
+  var clockTimer   = null;
+  var guideHighlight = 0;     // which channel is currently highlighted in the TV Guide
   var footer       = document.querySelector('.watch-footer');
+
+  // ── Scheduler ────────────────────────────────────────────────────────────
+  // Each channel has a deterministic per-day shuffle of its videos. The
+  // schedule starts at local midnight and loops if total content < 24h. Two
+  // viewers tuning in at the same time on the same day always see the same
+  // thing. Tomorrow is a different shuffle.
+
+  function dayKey() {
+    var d = new Date();
+    var start = new Date(d.getFullYear(), 0, 0);
+    var diff  = d - start + (start.getTimezoneOffset() - d.getTimezoneOffset()) * 60 * 1000;
+    return d.getFullYear() * 1000 + Math.floor(diff / 86400000);
+  }
+
+  function strHash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return h;
+  }
+
+  function lcg(seed) {
+    var s = seed | 0;
+    return function() {
+      s = (Math.imul(s, 1664525) + 1013904223) | 0;
+      return ((s >>> 0) / 4294967296);
+    };
+  }
+
+  function dailyShuffle(videos, slug) {
+    var seed = (dayKey() ^ strHash(slug)) | 0;
+    var r    = lcg(seed);
+    var arr  = videos.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(r() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function durationOf(v) { return Math.max(60, v.duration_s || 600); }
+
+  function totalDuration(sched) {
+    return sched.reduce(function(s, v) { return s + durationOf(v); }, 0);
+  }
+
+  function secondsSinceMidnight() {
+    var n = new Date();
+    return n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds();
+  }
+
+  // For a channel + current local time, return the schedule + which video is
+  // playing now and how many seconds into it we are.
+  function nowPlaying(track) {
+    var sched = dailyShuffle(track.videos, track.slug);
+    var total = totalDuration(sched);
+    var t     = secondsSinceMidnight() % total;
+    var acc   = 0;
+    for (var i = 0; i < sched.length; i++) {
+      var d = durationOf(sched[i]);
+      if (t < acc + d) {
+        return {
+          schedule:    sched,
+          videoIndex:  i,
+          offsetS:     Math.floor(t - acc),
+          remainingS:  Math.floor(d - (t - acc)),
+          startsAtMin: minutesOfDay(acc, total)
+        };
+      }
+      acc += d;
+    }
+    return { schedule: sched, videoIndex: 0, offsetS: 0, remainingS: durationOf(sched[0]), startsAtMin: 0 };
+  }
+
+  // Wall-clock string for "this many seconds from now"
+  function clockStr(secsFromNow) {
+    var d = new Date(Date.now() + secsFromNow * 1000);
+    var h = d.getHours(), m = d.getMinutes();
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  }
+
+  function minutesOfDay(secs, total) {
+    return Math.floor(((secsForToday() - secsForToday() % total) + secs) / 60);
+  }
+  function secsForToday() { return secondsSinceMidnight(); }
+
+  function upcoming(track, count) {
+    var info  = nowPlaying(track);
+    var sched = info.schedule;
+    var out   = [];
+    var fromNow = info.remainingS;
+    var i = (info.videoIndex + 1) % sched.length;
+    while (out.length < count) {
+      out.push({
+        video: sched[i],
+        startsAtClock: clockStr(fromNow),
+        endsAtClock:   clockStr(fromNow + durationOf(sched[i]))
+      });
+      fromNow += durationOf(sched[i]);
+      i = (i + 1) % sched.length;
+    }
+    return out;
+  }
+
+  // The shuffled schedule we're playing through right now for the active channel.
+  // Recomputed on channel switch.
+  var activeSchedule = [];
 
   function showHud() {
     footer.classList.add('hud-visible');
@@ -338,12 +624,12 @@
 
   function updateDisplay() {
     var t = tracks[trackIdx];
-    var v = t.videos[videoIdx];
+    var v = activeSchedule[videoIdx] || t.videos[0];
     document.getElementById('chNum').textContent   = 'CH ' + String(trackIdx + 1).padStart(2, '0');
     document.getElementById('chEmoji').textContent = t.emoji;
     document.getElementById('chName').textContent  = t.title;
     document.getElementById('videoTitle').textContent = v.title;
-    document.getElementById('videoPos').textContent   = (videoIdx + 1) + ' / ' + t.videos.length;
+    document.getElementById('videoPos').textContent   = (videoIdx + 1) + ' / ' + activeSchedule.length;
     document.getElementById('videoNote').textContent  = v.note || '';
     document.querySelectorAll('.guide-ch').forEach(function(el, i) {
       el.classList.toggle('active', i === trackIdx);
@@ -360,14 +646,21 @@
 
   // ── Navigation ───────────────────────────────────────────────────────────
 
-  function loadVideo() {
-    if (player) player.loadVideoById(tracks[trackIdx].videos[videoIdx].youtube_id);
+  function loadVideoAt(startSeconds) {
+    if (!player) return;
+    var v = activeSchedule[videoIdx];
+    if (!v) return;
+    player.loadVideoById({ videoId: v.youtube_id, startSeconds: Math.max(0, Math.floor(startSeconds || 0)) });
   }
 
+  // Tune to a channel — picks the video that should be playing right now and
+  // jumps to the correct offset, like switching channels on a real TV.
   window.selectChannel = function(idx) {
     trackIdx = idx;
-    videoIdx = 0;
-    loadVideo();
+    var info = nowPlaying(tracks[idx]);
+    activeSchedule = info.schedule;
+    videoIdx = info.videoIndex;
+    loadVideoAt(info.offsetS);
     updateDisplay();
     showGuide();
     savePosition();
@@ -377,10 +670,12 @@
     selectChannel((trackIdx + delta + tracks.length) % tracks.length);
   }
 
+  // Manual skip — moves through the daily-shuffled schedule, not the original
+  // track order. New video starts from 0.
   function advanceVideo(delta) {
-    var t = tracks[trackIdx];
-    videoIdx = (videoIdx + delta + t.videos.length) % t.videos.length;
-    loadVideo();
+    if (!activeSchedule.length) return;
+    videoIdx = (videoIdx + delta + activeSchedule.length) % activeSchedule.length;
+    loadVideoAt(0);
     updateDisplay();
     savePosition();
   }
@@ -396,6 +691,15 @@
   }
 
   function handleNav(dir) {
+    if (isGuideOpen()) {
+      switch (dir) {
+        case 'up':     guideMove(-1);                                    break;
+        case 'down':   guideMove(1);                                     break;
+        case 'select': selectChannel(guideHighlight); closeTvGuide();    break;
+        case 'back':   closeTvGuide();                                   break;
+      }
+      return;
+    }
     showHud();
     switch (dir) {
       case 'up':     changeChannel(-1);    break;
@@ -408,6 +712,21 @@
   }
 
   document.addEventListener('keydown', function(e) {
+    // Guide-open keys take precedence
+    if (isGuideOpen()) {
+      switch (e.key) {
+        case 'g': case 'G':
+        case 'Escape':
+          e.preventDefault(); closeTvGuide();                            return;
+        case 'ArrowUp':
+          e.preventDefault(); guideMove(-1);                             return;
+        case 'ArrowDown':
+          e.preventDefault(); guideMove(1);                              return;
+        case 'Enter': case ' ':
+          e.preventDefault(); selectChannel(guideHighlight); closeTvGuide(); return;
+      }
+      return;
+    }
     showHud();
     switch (e.key) {
       case 'ArrowUp':                      e.preventDefault(); changeChannel(-1); break;
@@ -415,9 +734,97 @@
       case 'ArrowLeft':                    e.preventDefault(); advanceVideo(-1);  break;
       case 'ArrowRight':                   e.preventDefault(); advanceVideo(1);   break;
       case 'Enter': case ' ':              e.preventDefault(); togglePlayPause(); break;
+      case 'g': case 'G':                  e.preventDefault(); openTvGuide();     break;
       case 'Escape': case 'Backspace':     window.location.href = '/';            break;
     }
   });
+
+  // ── TV Guide overlay ─────────────────────────────────────────────────────
+
+  function isGuideOpen() {
+    return document.getElementById('tvGuide').classList.contains('visible');
+  }
+
+  function openTvGuide() {
+    guideHighlight = trackIdx;
+    renderTvGuide();
+    document.getElementById('tvGuide').classList.add('visible');
+    document.getElementById('tvGuide').setAttribute('aria-hidden', 'false');
+    if (clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(renderTvGuide, 30000);  // refresh every 30s
+  }
+
+  function closeTvGuide() {
+    document.getElementById('tvGuide').classList.remove('visible');
+    document.getElementById('tvGuide').setAttribute('aria-hidden', 'true');
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+  }
+
+  function guideMove(delta) {
+    guideHighlight = (guideHighlight + delta + tracks.length) % tracks.length;
+    document.querySelectorAll('.tv-guide-row').forEach(function(el, i) {
+      el.classList.toggle('active', i === guideHighlight);
+    });
+    var el = document.querySelectorAll('.tv-guide-row')[guideHighlight];
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderTvGuide() {
+    var clockEl = document.getElementById('tvGuideClock');
+    if (clockEl) clockEl.textContent = clockStr(0);
+
+    var rowsEl = document.getElementById('tvGuideRows');
+    rowsEl.innerHTML = '';
+    tracks.forEach(function(track, i) {
+      var info  = nowPlaying(track);
+      var nowV  = info.schedule[info.videoIndex];
+      var nowEnds = clockStr(info.remainingS);
+      var slots = [{
+        when: clockStr(0) + '–' + nowEnds,
+        title: nowV.title,
+        note: nowV.note || '',
+        isNow: true
+      }];
+      upcoming(track, 3).forEach(function(u) {
+        slots.push({
+          when:  u.startsAtClock + '–' + u.endsAtClock,
+          title: u.video.title,
+          note:  u.video.note || '',
+          isNow: false
+        });
+      });
+
+      var slotsHtml = slots.map(function(s) {
+        return '<div class="tv-guide-slot' + (s.isNow ? ' is-now' : '') + '">' +
+                 '<div class="tv-guide-slot-time">' + escapeHtml(s.when) + '</div>' +
+                 '<div class="tv-guide-slot-title">' + escapeHtml(s.title) + '</div>' +
+                 (s.note ? '<div class="tv-guide-slot-note">' + escapeHtml(s.note) + '</div>' : '') +
+               '</div>';
+      }).join('');
+
+      var row = document.createElement('div');
+      row.className = 'tv-guide-row' + (i === guideHighlight ? ' active' : '');
+      row.setAttribute('data-idx', i);
+      row.innerHTML =
+        '<div class="tv-guide-ch">' +
+          '<div class="tv-guide-ch-num">CH ' + String(i + 1).padStart(2, '0') + '</div>' +
+          '<div class="tv-guide-ch-row">' +
+            '<span class="tv-guide-ch-emoji">' + track.emoji + '</span>' +
+            '<span class="tv-guide-ch-name">' + escapeHtml(track.title) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tv-guide-slots">' + slotsHtml + '</div>';
+      row.addEventListener('click', function() {
+        selectChannel(i);
+        closeTvGuide();
+      });
+      rowsEl.appendChild(row);
+    });
+  }
 
   // ── Position persistence ─────────────────────────────────────────────────
 
@@ -438,14 +845,13 @@
     }
   }
 
-  function applyPosition(slug, vidIdx) {
+  function applyPosition(slug, _ignored) {
+    // We honour the saved channel choice (so kids return to the channel they
+    // last watched) but always join at the schedule's current position — never
+    // resume from a stale video index. That's the whole point of broadcast feel.
     var idx = tracks.findIndex(function(t) { return t.slug === slug; });
     if (idx < 0) return;
-    var t = tracks[idx];
-    trackIdx = idx;
-    videoIdx = Math.min(vidIdx || 0, t.videos.length - 1);
-    updateDisplay();
-    if (player) player.loadVideoById(t.videos[videoIdx].youtube_id);
+    selectChannel(idx);
   }
 
   function loadSavedPosition() {
@@ -465,8 +871,13 @@
   // ── YouTube player ────────────────────────────────────────────────────────
 
   function initPlayer() {
+    // Initial schedule for the default channel
+    var info = nowPlaying(tracks[trackIdx]);
+    activeSchedule = info.schedule;
+    videoIdx = info.videoIndex;
+
     player = new YT.Player('yt-player', {
-      videoId: tracks[trackIdx].videos[videoIdx].youtube_id,
+      videoId: activeSchedule[videoIdx].youtube_id,
       playerVars: {
         autoplay:       1,
         controls:       0,
@@ -474,10 +885,15 @@
         modestbranding: 1,
         iv_load_policy: 3,
         fs:             0,
-        playsinline:    1
+        playsinline:    1,
+        start:          info.offsetS
       },
       events: {
-        onReady: function(e) { e.target.playVideo(); },
+        onReady: function(e) {
+          if (info.offsetS > 0) { try { e.target.seekTo(info.offsetS, true); } catch (_) {} }
+          e.target.playVideo();
+          updateDisplay();
+        },
         onStateChange: function(e) {
           if (e.data === YT.PlayerState.PLAYING) savePosition();
           if (e.data === YT.PlayerState.ENDED)   advanceVideo(1);
