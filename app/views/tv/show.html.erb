@@ -8,7 +8,7 @@
     display: grid;
     grid-template-rows: auto auto 1fr auto;
     grid-template-columns: minmax(0, 1fr);
-    padding: 3vh 4vw;
+    padding: 3vh 19vw 3vh 2vw;
     gap: 2vh;
     position: relative;
     background:
@@ -70,19 +70,29 @@
 
   .tv-qr {
     position: absolute;
-    bottom: 2vh;
+    top: 50%;
     right: 2vw;
+    transform: translateY(-50%);
     z-index: 5;
+    display: flex; flex-direction: column; align-items: center; gap: 1vh;
+  }
+  .tv-qr-caption {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.55rem, 0.8vw, 0.95rem);
+    color: #00ffc8;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0,255,200,0.4);
   }
 
   .tv-qr-code {
-    width: clamp(160px, 15vw, 260px);
-    height: clamp(160px, 15vw, 260px);
+    width: clamp(180px, 16vw, 280px);
+    height: clamp(180px, 16vw, 280px);
     background: #0a0a12;
-    padding: 0.7vw;
+    padding: 0.8vw;
     border-radius: 1vw;
     border: 3px solid rgba(0, 255, 200, 0.5);
-    box-shadow: 0 0 20px rgba(0, 255, 200, 0.25);
+    box-shadow: 0 0 24px rgba(0, 255, 200, 0.3);
   }
 
   .tv-qr-code svg {
@@ -96,15 +106,17 @@
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
-    padding-right: 18vw; /* leave room for QR badge in bottom-right */
+    scrollbar-width: none;            /* Firefox: hide scrollbar */
+    -ms-overflow-style: none;         /* old Edge */
   }
+  .tv-main::-webkit-scrollbar { display: none; }  /* Chromium/Safari */
 
   .tv-shelf {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 14vw, 220px), 1fr));
     justify-content: stretch;
     gap: 1.5vw 1.4vw;
-    padding: 2vh 0 6vh;
+    padding: 1vh 0 6vh;
   }
 
   .tv-game {
@@ -421,9 +433,27 @@
 
   <section class="tv-main" aria-label="Game shelf">
     <div class="tv-shelf" id="tv-shelf" role="list" style="--tv-cols: <%= @tv_cols %>">
+      <a class="tv-game tv-utility-tile" role="listitem" href="#" data-utility="reload" tabindex="-1">
+        <div class="tv-game-icon tv-utility-icon">
+          <div class="tv-utility-glyph">↻</div>
+        </div>
+        <div class="tv-game-title">Reload</div>
+        <div class="tv-game-creators">Refresh the page</div>
+        <div class="tv-game-tagline">Pick this if the TV is showing an old version after a deploy.</div>
+      </a>
+
+      <a class="tv-game tv-utility-tile" role="listitem" href="/watch" data-utility="watch" tabindex="-1">
+        <div class="tv-game-icon tv-utility-icon">
+          <div class="tv-utility-glyph">📺</div>
+        </div>
+        <div class="tv-game-title">Watch TV</div>
+        <div class="tv-game-creators">Az's picks</div>
+        <div class="tv-game-tagline">Lean back. Az picks the videos.</div>
+      </a>
+
       <% @games.each_with_index do |game, i| %>
         <% canvas_id = cover_ids[game[:slug]] %>
-        <a class="tv-game" role="listitem" href="<%= game[:path] %>" data-index="<%= i %>" tabindex="<%= i == 0 ? 0 : -1 %>">
+        <a class="tv-game" role="listitem" href="<%= game[:path] %>" data-index="<%= i %>" tabindex="-1">
           <div class="tv-game-icon">
             <% if canvas_id %>
               <canvas id="<%= canvas_id %>" width="220" height="280" style="width:100%;height:100%;display:block;"></canvas>
@@ -434,23 +464,6 @@
           <div class="tv-game-tagline"><%= game[:tagline] %></div>
         </a>
       <% end %>
-      <a class="tv-game tv-utility-tile" role="listitem" href="/watch" data-utility="watch">
-        <div class="tv-game-icon tv-utility-icon">
-          <div class="tv-utility-glyph">📺</div>
-        </div>
-        <div class="tv-game-title">Watch TV</div>
-        <div class="tv-game-creators">Az's picks</div>
-        <div class="tv-game-tagline">Lean back. Az picks the videos.</div>
-      </a>
-
-      <a class="tv-game tv-utility-tile" role="listitem" href="#" data-utility="reload">
-        <div class="tv-game-icon tv-utility-icon">
-          <div class="tv-utility-glyph">↻</div>
-        </div>
-        <div class="tv-game-title">Reload</div>
-        <div class="tv-game-creators">Refresh the page</div>
-        <div class="tv-game-tagline">Pick this if the TV is showing an old version after a deploy.</div>
-      </a>
 
       <% @coming_to_tv.each do |game| %>
         <div class="tv-game coming-soon" role="listitem" aria-hidden="true">
@@ -568,9 +581,11 @@
       }
     });
 
-    // Initialize focus
+    // Initialize focus on the first actual game tile, skipping utility
+    // tiles like Reload so an accidental OK press doesn't trigger a refresh.
     learnBtn.tabIndex = -1;
-    focusGame(0);
+    var firstGameIndex = games.findIndex(function(g) { return !g.classList.contains('tv-utility-tile'); });
+    focusGame(firstGameIndex >= 0 ? firstGameIndex : 0);
   })();
 
   // ── Resume in-progress game ────────────────────────────────────────────
