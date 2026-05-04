@@ -685,11 +685,18 @@
 
   /* ── D-pad / Joystick ── */
   .zone-dpad {
-    flex-shrink: 0; display: flex; flex-direction: column;
-    align-items: center; gap: 18px;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 22px;
     padding: 18px 20px max(env(safe-area-inset-bottom), 20px);
     border-top: 1px solid rgba(255,255,255,0.06);
   }
+  .dpad {
+    display: grid;
+    grid-template-columns: 72px 72px 72px;
+    grid-template-rows: 72px 72px 72px;
+    gap: 8px;
+  }
+  .dpad-empty { background: none !important; border: none !important; pointer-events: none; }
   .zone-joy {
     width: 200px; height: 200px; border-radius: 50%;
     background: radial-gradient(circle, rgba(0,255,200,0.08), rgba(0,255,200,0.02));
@@ -1054,20 +1061,6 @@
 
   </div>
 
-  <!-- Party tab bar — shown during game sessions -->
-  <div class="zone-tabs" id="zone-tabs" hidden>
-    <button class="zone-tab active" data-tab="game">
-      <span class="tab-icon">🎮</span>Game
-    </button>
-    <button class="zone-tab" data-tab="remote" style="position:relative">
-      <span class="tab-icon">🕹️</span>Remote
-      <span class="zone-tab-dot" id="remote-dot" hidden></span>
-    </button>
-    <button class="zone-tab" data-tab="options">
-      <span class="tab-icon">⚙️</span>Options
-    </button>
-  </div>
-
   <!-- Options panel content -->
   <div class="zone-options-panel" id="zone-options-panel" hidden>
     <div class="options-section">
@@ -1103,18 +1096,53 @@
     <a href="/" class="options-exit-btn">← Exit to Store</a>
   </div>
 
-  <!-- Joystick — shown when browsing non-game screens, or Remote tab active -->
+  <!-- Movement input — shown when browsing non-game screens, or Remote tab active.
+       Two widgets, one visible at a time. Default is the D-pad (cardinal-only).
+       Games can request the joystick (analog, supports diagonals) by sending
+       set_state with controller: 'joystick' from their TV view. -->
   <div class="zone-dpad" id="zone-dpad" hidden>
     <div class="zone-game-controls">
-      <div class="zone-joy" id="zone-joy" data-joy="general">
+
+      <!-- D-pad (default — cardinal directions only, like menu / TV nav / Letterbox) -->
+      <div class="dpad" data-controller-widget="dpad">
+        <div class="dpad-empty"></div>
+        <div class="dpad-btn" data-dir="up">&#9650;</div>
+        <div class="dpad-empty"></div>
+
+        <div class="dpad-btn" data-dir="left">&#9664;</div>
+        <div class="dpad-btn dpad-center" data-dir="select">OK</div>
+        <div class="dpad-btn" data-dir="right">&#9654;</div>
+
+        <div class="dpad-empty"></div>
+        <div class="dpad-btn" data-dir="down">&#9660;</div>
+        <div class="dpad-empty"></div>
+      </div>
+
+      <!-- Joystick (analog — for free-movement games like Boomerang, Space Dodge) -->
+      <div class="zone-joy" id="zone-joy" data-joy="general" data-controller-widget="joystick" hidden>
         <div class="zone-joy-knob"></div>
       </div>
-      <div class="zone-side-btns">
-        <div class="dpad-btn dpad-center" data-dir="select">OK</div>
+
+      <div class="zone-side-btns" id="zone-side-btns" hidden>
+        <div class="dpad-btn dpad-center" data-dir="select" data-side-ok>OK</div>
         <div class="fire-btn" id="fire-btn" data-dir="action" hidden>FIRE</div>
       </div>
     </div>
     <button class="back-btn" data-dir="back">← BACK</button>
+  </div>
+
+  <!-- Tabs pinned to the bottom — switch between Game (status), Remote (controls), Options (settings) -->
+  <div class="zone-tabs" id="zone-tabs" hidden>
+    <button class="zone-tab active" data-tab="game">
+      <span class="tab-icon">🎮</span>Game
+    </button>
+    <button class="zone-tab" data-tab="remote" style="position:relative">
+      <span class="tab-icon">🕹️</span>Remote
+      <span class="zone-tab-dot" id="remote-dot" hidden></span>
+    </button>
+    <button class="zone-tab" data-tab="options">
+      <span class="tab-icon">⚙️</span>Options
+    </button>
   </div>
 
 </div>
@@ -1193,8 +1221,6 @@
 
   function showScreen(name) {
     currentScreen = name;
-    var isParty = PARTY_SCREENS.has(name);
-    var isDpad  = DPAD_SCREENS.has(name);
 
     document.querySelectorAll('.zone-content').forEach(function(el) {
       el.hidden = el.dataset.screen !== name;
@@ -1202,35 +1228,37 @@
 
     zoneTabs.hidden = !TABBED_SCREENS.has(name);
 
-    if (isParty) {
-      applyTab(activeTab);
-    } else {
-      zoneDpad.hidden = !isDpad;
+    // Identity-only screens (claim, disconnected) skip tab layout entirely.
+    if (!TABBED_SCREENS.has(name)) {
+      zoneDpad.hidden = true;
       zoneOptionsPanel.hidden = true;
-      document.querySelectorAll('.zone-tab').forEach(function(btn) {
-        btn.classList.toggle('active', btn.dataset.tab === 'game');
-      });
-      activeTab = 'game';
+      return;
     }
+
+    applyTab(activeTab);
   }
 
+  // Tabs are exclusive: each tab owns the entire content area.
+  // - game:    only the per-screen zone-content (status / lobby / game UI)
+  // - remote:  only the dpad / joystick controls
+  // - options: only the settings / active games panel
   function applyTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.zone-tab').forEach(function(btn) {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
 
-    if (PARTY_SCREENS.has(currentScreen)) {
-      document.querySelectorAll('.zone-content').forEach(function(el) {
-        el.hidden = el.dataset.screen !== currentScreen || tab === 'options';
-      });
-      zoneDpad.hidden         = tab !== 'remote';
-      zoneOptionsPanel.hidden = tab !== 'options';
-    } else {
-      var isDpad = DPAD_SCREENS.has(currentScreen);
-      zoneOptionsPanel.hidden = tab !== 'options';
-      zoneDpad.hidden         = !isDpad || tab === 'options';
-    }
+    var showContent = (tab === 'game');
+    var showRemote  = (tab === 'remote');
+    var showOptions = (tab === 'options');
+
+    document.querySelectorAll('.zone-content').forEach(function(el) {
+      el.hidden = el.dataset.screen !== currentScreen || !showContent;
+    });
+    var zoneMain = document.querySelector('.zone-main');
+    if (zoneMain) zoneMain.hidden = !showContent;
+    zoneDpad.hidden         = !showRemote;
+    zoneOptionsPanel.hidden = !showOptions;
 
     if (tab === 'game') remoteDot.hidden = true;
   }
@@ -1554,6 +1582,8 @@
   function handleTvState(data) {
     if (data.room_code)  { roomCode = data.room_code; lobbyRoomCode.textContent = 'Room ' + data.room_code; }
     if (data.game_title) { lobbyGameName.textContent = data.game_title; }
+    if (data.controller) setControllerWidget(data.controller);
+    else if (data.state === 'shelf' || data.state === 'lobby') setControllerWidget('dpad');
 
     if (data.state === 'shelf') {
       fireBtn.hidden = true;
@@ -2635,6 +2665,26 @@
   attachJoystick(document.getElementById('zone-joy'), function(dir, pressed) {
     sendNav(dir, pressed ? 'press' : 'release');
   });
+
+  // ── Controller widget switcher ────────────────────────────────────────
+  // Each TV game declares which controller it wants by passing a
+  // `controller` field in its set_state broadcast ('dpad' | 'joystick').
+  // 'dpad' (default): four cardinal buttons + centre OK. Best for menus
+  //   and cardinal-only games like Letterbox.
+  // 'joystick': analog thumbstick + side OK button. Best for free-move
+  //   games like Boomerang Brawl or Space Dodge.
+  var currentController = 'dpad';
+  function setControllerWidget(type) {
+    if (type !== 'joystick') type = 'dpad';
+    if (currentController === type) return;
+    currentController = type;
+    document.querySelectorAll('[data-controller-widget]').forEach(function(el) {
+      el.hidden = el.dataset.controllerWidget !== type;
+    });
+    var sideBtns = document.getElementById('zone-side-btns');
+    if (sideBtns) sideBtns.hidden = type !== 'joystick';
+  }
+  setControllerWidget('dpad');
 
   function esc(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

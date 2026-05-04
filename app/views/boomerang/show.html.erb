@@ -752,7 +752,7 @@
     if (stageEl.hidden) {
       showPhase('stage');
       if (tvRemoteSub) {
-        tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Boomerang Brawl' });
+        tvRemoteSub.perform('set_state', { state: 'game', room_code: code, game_title: 'Boomerang Brawl', controller: 'joystick' });
       }
     }
   }
@@ -775,7 +775,7 @@
       { channel: 'TvRemoteChannel', token: remoteToken },
       {
         connected: function() {
-          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Boomerang Brawl' });
+          this.perform('set_state', { state: 'lobby', room_code: code, game_title: 'Boomerang Brawl', controller: 'joystick' });
         },
         received: function(data) {
           if (data.type !== 'navigate') return;

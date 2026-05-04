@@ -97,7 +97,8 @@ class Game
       tagline: "Top-down arena brawl. Throw your boomerang, dodge theirs. Last one standing wins the round. Best of 3.",
       path: "/games/boomerang-brawl",
       icon: "boomerang",
-      tv_optimised: true
+      tv_optimised: true,
+      controller: :joystick
     },
     {
       slug: "letterbox",

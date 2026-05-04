@@ -70,12 +70,17 @@ class TvRemoteChannel < ApplicationCable::Channel
     ActionCable.server.broadcast("tv_remote:#{clean_token}", { type: "tv_home" })
   end
 
+  ALLOWED_CONTROLLERS = %w[dpad joystick].freeze
+
   def set_state(data)
     state = data["state"].to_s
     return unless ALLOWED_STATES.include?(state)
     payload = { type: "tv_state", state: state }
     payload[:room_code]  = data["room_code"].to_s.upcase.slice(0, 8)  if data["room_code"].present?
     payload[:game_title] = data["game_title"].to_s.slice(0, 40)       if data["game_title"].present?
+    if data["controller"].present? && ALLOWED_CONTROLLERS.include?(data["controller"].to_s)
+      payload[:controller] = data["controller"].to_s
+    end
     STATES_MUTEX.synchronize { STATES[clean_token] = payload }
     ActionCable.server.broadcast("tv_remote:#{clean_token}", payload)
   end
