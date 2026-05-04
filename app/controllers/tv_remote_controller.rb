@@ -4,6 +4,7 @@ class TvRemoteController < ApplicationController
 
   def show
     response.headers["Cache-Control"] = "no-store"
+    @version = EzAz::Version::STRING
     if params[:code].present? && params[:token].blank?
       code  = params[:code].to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 4]
       @room = Room.active.find_by(code: code)
