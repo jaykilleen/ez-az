@@ -190,7 +190,10 @@
         e.preventDefault();
       }
     }
-    if ((e.code === 'Space' || e.code === 'Enter') && state === 'title') startGame();
+    if (e.code === 'Space' || e.code === 'Enter') {
+      if (state === 'title' || state === 'end') startGame();
+      else if (state === 'paused') resumeGame();
+    }
   });
   document.addEventListener('keyup', function (e) { keys[e.code] = false; });
 

@@ -84,5 +84,48 @@
 
 <script src="game.js"></script>
 <script src="/controls.js" data-buttons="none"></script>
+
+<script type="module">
+(function() {
+  var token  = sessionStorage.getItem('tvRemoteToken');
+  var acPath = sessionStorage.getItem('tvAcPath');
+  if (!token || !acPath) return;
+
+  var KEYS = {
+    up:     { key: 'ArrowUp',    code: 'ArrowUp',    keyCode: 38 },
+    down:   { key: 'ArrowDown',  code: 'ArrowDown',  keyCode: 40 },
+    left:   { key: 'ArrowLeft',  code: 'ArrowLeft',  keyCode: 37 },
+    right:  { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39 },
+    select: { key: 'Enter',      code: 'Enter',      keyCode: 13 },
+    back:   { key: 'Escape',     code: 'Escape',     keyCode: 27 },
+    action: { key: ' ',          code: 'Space',      keyCode: 32 }
+  };
+
+  function fire(type, entry) {
+    document.dispatchEvent(new KeyboardEvent(type, {
+      key: entry.key, code: entry.code, keyCode: entry.keyCode,
+      bubbles: true, cancelable: true
+    }));
+  }
+
+  import(acPath).then(function(m) {
+    var consumer = m.createConsumer();
+    consumer.subscriptions.create(
+      { channel: 'TvRemoteChannel', token: token },
+      {
+        connected: function() {
+          this.perform('set_state', { state: 'game', game_title: 'Letterbox' });
+        },
+        received: function(data) {
+          if (data.type !== 'navigate') return;
+          var entry = KEYS[data.direction];
+          if (!entry) return;
+          fire(data.nav_type === 'release' ? 'keyup' : 'keydown', entry);
+        }
+      }
+    );
+  });
+})();
+</script>
 </body>
 </html>

@@ -1424,3 +1424,118 @@
   ctx.fillText('BRAWL', W / 2, H - 12);
   ctx.restore();
 })();
+
+// ── Letterbox cover ────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('letterboxCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  ctx.fillStyle = '#8dd66a';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  for (var i = 0; i < 80; i++) ctx.fillRect((i * 37) % W, (i * 53) % H, 2, 2);
+
+  ctx.fillStyle = '#cfcfcf';
+  ctx.fillRect(70, 0, 14, H);
+  ctx.fillRect(136, 0, 14, H);
+
+  ctx.fillStyle = '#3a3a44';
+  ctx.fillRect(84, 0, 52, H);
+  ctx.fillStyle = '#ffe44d';
+  for (var y = 8; y < H; y += 24) ctx.fillRect(108, y, 4, 14);
+
+  function roof(x, y, w, h, c1, c2) {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x + 4, y + 4, w, h);
+    ctx.fillStyle = c1; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = c2; ctx.fillRect(x, y + h / 2 - 2, w, 4);
+  }
+  roof(4, 20, 56, 44, '#9a4a2a', '#6a2818');
+  roof(156, 20, 54, 44, '#3f6e8a', '#244555');
+  roof(4, 140, 56, 44, '#7a2828', '#5a1818');
+  roof(156, 140, 54, 44, '#5a7a3a', '#385020');
+
+  function tree(x, y) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x + 4, y + 4, 12, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3a7a3a';
+    ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4ea84e';
+    ctx.beginPath(); ctx.arc(x - 2, y - 2, 8, 0, Math.PI * 2); ctx.fill();
+  }
+  tree(50, 100); tree(170, 105); tree(45, 220);
+
+  function lbox(x, y, hit) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + 4, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#5a3018'; ctx.fillRect(x - 1, y - 1, 2, 6);
+    ctx.fillStyle = hit ? '#2a8a3a' : '#d63f3f'; ctx.fillRect(x - 8, y - 8, 16, 10);
+    ctx.fillStyle = hit ? '#1f6628' : '#a02828'; ctx.fillRect(x - 8, y - 8, 16, 2);
+    ctx.fillStyle = '#ffe44d';
+    ctx.beginPath();
+    ctx.moveTo(x + 7, y - 8); ctx.lineTo(x + 13, y - 6); ctx.lineTo(x + 7, y - 4);
+    ctx.closePath(); ctx.fill();
+  }
+  lbox(72, 50, false); lbox(148, 56, true);
+  lbox(72, 174, false); lbox(148, 174, false);
+
+  ctx.save();
+  ctx.translate(110, 130);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(2, 2, 16, 10, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#d63f3f'; ctx.fillRect(-12, -3, 24, 6);
+  ctx.fillStyle = '#222'; ctx.fillRect(-16, -2, 6, 4); ctx.fillRect(10, -2, 6, 4);
+  ctx.fillStyle = '#4ea84e';
+  ctx.beginPath(); ctx.ellipse(-1, 0, 9, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#3a8a3a';
+  ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-15, -3); ctx.lineTo(-15, 3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#4ea84e';
+  ctx.beginPath(); ctx.arc(6, 0, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#3a8a3a'; ctx.fillRect(8, -3, 6, 6);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(8, -3, 1.4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(8.4, -3, 0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.setLineDash([2, 3]);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(110, 130);
+  ctx.bezierCurveTo(130, 110, 145, 80, 148, 60);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(140, 88, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.save();
+  ctx.translate(138, 80); ctx.rotate(0.3);
+  ctx.fillStyle = '#fff'; ctx.fillRect(-6, -4, 12, 8);
+  ctx.strokeStyle = '#aaa'; ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-4, -2); ctx.lineTo(4, -2);
+  ctx.moveTo(-4, 0);  ctx.lineTo(4, 0);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, H - 38, W, 38);
+  ctx.fillStyle = '#d63f3f';
+  ctx.shadowColor = '#ffd24d';
+  ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+  ctx.font = 'bold 18px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('LETTERBOX', W / 2, H - 14);
+  ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+  ctx.fillStyle = '#2a8a3a';
+  ctx.font = 'bold 10px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('E', 12, 26);
+  ctx.strokeStyle = '#2a8a3a';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(6, 12, 20, 20);
+})();
