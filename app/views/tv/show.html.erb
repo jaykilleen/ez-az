@@ -168,6 +168,22 @@
     flex: 1;
   }
 
+  .tv-utility-tile {
+    background: linear-gradient(135deg, #0d1a26, #1a0f26);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .tv-utility-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(0, 255, 200, 0.18), transparent 60%), #0a0f18;
+  }
+  .tv-utility-glyph {
+    font-size: clamp(3rem, 6vw, 6rem);
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(0, 255, 200, 0.5);
+  }
+
   .tv-game.coming-soon {
     cursor: default;
     border-style: dashed;
@@ -414,6 +430,24 @@
           <div class="tv-game-tagline"><%= game[:tagline] %></div>
         </a>
       <% end %>
+      <a class="tv-game tv-utility-tile" role="listitem" href="/watch" data-utility="watch">
+        <div class="tv-game-icon tv-utility-icon">
+          <div class="tv-utility-glyph">📺</div>
+        </div>
+        <div class="tv-game-title">Watch TV</div>
+        <div class="tv-game-creators">Az's picks</div>
+        <div class="tv-game-tagline">Lean back. Az picks the videos.</div>
+      </a>
+
+      <a class="tv-game tv-utility-tile" role="listitem" href="#" data-utility="reload">
+        <div class="tv-game-icon tv-utility-icon">
+          <div class="tv-utility-glyph">↻</div>
+        </div>
+        <div class="tv-game-title">Reload</div>
+        <div class="tv-game-creators">Refresh the page</div>
+        <div class="tv-game-tagline">Pick this if the TV is showing an old version after a deploy.</div>
+      </a>
+
       <% @coming_to_tv.each do |game| %>
         <div class="tv-game coming-soon" role="listitem" aria-hidden="true">
           <div class="tv-game-icon placeholder">
@@ -430,7 +464,6 @@
   <footer class="tv-footer">
     <div class="tv-footer-left">
       <a href="/learn" class="tv-learn-btn" id="tv-learn-btn">📚 Learning Center</a>
-      <a href="/watch" class="tv-cast-btn">📺 Watch</a>
       <a href="/scan" class="tv-cast-btn">Scan for Party</a>
       <button class="tv-cast-btn" id="tv-cast-btn" hidden title="Cast to TV">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -438,7 +471,6 @@
         </svg>
         Cast
       </button>
-      <button class="tv-reload-btn" onclick="window.location.reload()" title="Reload page">&#8635; Reload</button>
       <div class="tv-status">
         <span class="dot"></span>
         <span>Room <strong style="color:#fff;letter-spacing:0.12em;font-family:'Courier New',monospace"><%= @room.code %></strong></span>
@@ -454,8 +486,16 @@
 <script>
   (function() {
     var shelf    = document.getElementById('tv-shelf');
-    var games    = Array.prototype.slice.call(shelf.querySelectorAll('.tv-game'));
+    var games    = Array.prototype.slice.call(shelf.querySelectorAll('.tv-game:not(.coming-soon)'));
     var learnBtn = document.getElementById('tv-learn-btn');
+
+    var reloadTile = shelf.querySelector('[data-utility="reload"]');
+    if (reloadTile) {
+      reloadTile.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.reload();
+      });
+    }
     var focusedIndex = 0;
     var learnFocused = false;
     var COLS = parseInt(shelf.style.getPropertyValue('--tv-cols')) || 5;
