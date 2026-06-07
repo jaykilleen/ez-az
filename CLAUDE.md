@@ -42,6 +42,10 @@ A maze runner by Jaykill (`public/games/descent.html`). 1-player, procedurally g
 
 A first-person raycaster zombie fighter by Charlie & Cooper (`public/games/corrupted.html`). 1 or 2 player split screen. Fight through 6 themed worlds (sewers, school, fairground, frozen lab, volcano, corruption core) with unique zombie types and bosses. Start with fists, loot armour, shields and swords from defeated zombies. Points-based scoring (DESC leaderboard).
 
+### Late Shift
+
+A single-player arcade sorter by Az (`public/games/late-shift.html`). The store's shut and the chute is spitting out returned cartridges. Move Az's cart to catch falling cartridges and drop each onto its matching coloured shelf (Action/red, Puzzle/blue, Sport/green, Chill/yellow). Correct drops build a combo; a missed catch smashes on the floor and three smashes ends the shift. Difficulty ramps with score and time. Points-based scoring (DESC leaderboard).
+
 ### Charlie & Cooper's Space Dodge
 
 The first game in the EZ-AZ collection. A two-player co-op space shooter with:
@@ -94,7 +98,7 @@ await fetch('/api/scores', {
 });
 ```
 
-The game slug must be registered in `config.ru` in the `GAME_SORT` and `DEFAULT_NAMES` hashes. Games sorted DESC rank highest scores first (points-based games). Games sorted ASC rank lowest scores first (time-based games like Bloom).
+The game slug must be registered in `app/models/score.rb` in the `GAME_SORT` and `DEFAULT_NAMES` hashes. Games sorted DESC rank highest scores first (points-based games). Games sorted ASC rank lowest scores first (time-based games like Bloom).
 
 On the title screen, fetch the leaderboard on page load and render it read-only (no name entry, no score display, just the ranked list).
 
@@ -201,13 +205,13 @@ Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `w
 
 - ADRs live in `docs/decisions/` -- read before touching TV, rooms, or player identity
 - API controllers live under `app/controllers/api/` and inherit from `Api::BaseController`
-- Game slugs must be registered in `config.ru` (`GAME_SORT` and `DEFAULT_NAMES` hashes)
-- Dev server runs on port 5001 (port 3000 is reserved for TXTavern)
+- Game slugs must be registered in `app/models/score.rb` (`GAME_SORT` and `DEFAULT_NAMES` hashes); also add the game to `app/models/game.rb` (`GAMES`), the shelf card and `gameTitles` map in `public/index.html`
+- Dev server runs on port 5003 (set by `config/puma.rb`; port 3000 is reserved for TXTavern)
 - No Turbo, no Stimulus -- this is not a standard Rails app; the frontend is vanilla JS and Canvas
 
 ## Development
 
-Start the server: `bin/rails server -p 5001`
+Start the server: `bin/rails server -p 5003`
 
 Games live in `public/games/`. The store front is `public/index.html`. Game files are self-contained with no external dependencies.
 
