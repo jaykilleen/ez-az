@@ -94,7 +94,7 @@ await fetch('/api/scores', {
 });
 ```
 
-The game slug must be registered in `config.ru` in the `GAME_SORT` and `DEFAULT_NAMES` hashes. Games sorted DESC rank highest scores first (points-based games). Games sorted ASC rank lowest scores first (time-based games like Bloom).
+The game slug must be registered in `app/models/score.rb` in the `GAME_SORT` and `DEFAULT_NAMES` hashes. Games sorted DESC rank highest scores first (points-based games). Games sorted ASC rank lowest scores first (time-based games like Bloom).
 
 On the title screen, fetch the leaderboard on page load and render it read-only (no name entry, no score display, just the ranked list).
 
@@ -201,13 +201,13 @@ Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `w
 
 - ADRs live in `docs/decisions/` -- read before touching TV, rooms, or player identity
 - API controllers live under `app/controllers/api/` and inherit from `Api::BaseController`
-- Game slugs must be registered in `config.ru` (`GAME_SORT` and `DEFAULT_NAMES` hashes)
-- Dev server runs on port 3001 (port 3000 is reserved for TXTavern)
+- Game slugs must be registered in `app/models/score.rb` (`GAME_SORT` and `DEFAULT_NAMES` hashes); also add the game to `app/models/game.rb` (`GAMES`), the shelf card and `gameTitles` map in `public/index.html`
+- Dev server runs on port 5003 (set by `config/puma.rb`; port 3000 is reserved for TXTavern)
 - No Turbo, no Stimulus -- this is not a standard Rails app; the frontend is vanilla JS and Canvas
 
 ## Development
 
-Start the server: `bin/rails server -p 3001`
+Start the server: `bin/rails server -p 5003`
 
 Games live in `public/games/`. The store front is `public/index.html`. Game files are self-contained with no external dependencies.
 
