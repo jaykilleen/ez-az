@@ -1,0 +1,853 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Jay Killeen -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
+<script src="/error-reporter.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Snake Pit Royale - EZ-AZ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #04070a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  #wrap { position: relative; }
+  canvas { display: block; }
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; z-index: 10; padding: 20px; overflow-y: auto; background: rgba(4,7,10,0.92); }
+  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
+  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #00ffaa, #3aa0ff, #ffd23b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
+  .store-banner a:hover { opacity: 1; }
+  .btn { margin-top: 14px; padding: 12px 36px; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #00cc88, #008f5e); color: #04140d; font-weight: bold; transition: transform 0.1s; font-family: 'Press Start 2P', monospace; }
+  .btn:hover { transform: scale(1.06); }
+  .btn-quit { margin-top: 8px; padding: 12px 36px; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #cc4444, #aa2222); color: white; font-weight: bold; transition: transform 0.1s; font-family: 'Press Start 2P', monospace; }
+  .btn-quit:hover { transform: scale(1.06); }
+  .join-box { background:rgba(0,255,170,0.06); border:1px solid rgba(0,255,170,0.25); border-radius:10px; padding:10px 18px; margin-bottom:14px; max-width:640px; width:100%; }
+  .join-label { font-family:'Press Start 2P',monospace; font-size:8px; color:#789; margin-bottom:5px; }
+  .join-url { font-family:'Press Start 2P',monospace; font-size:11px; color:#00ffaa; word-break:break-all; }
+  .join-code { font-family:'Press Start 2P',monospace; font-size:20px; color:#ffd23b; letter-spacing:3px; margin-top:6px; }
+  .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; max-width: 700px; width: 100%; }
+  .slot-card { border: 2px solid #222; border-radius: 10px; padding: 12px 8px; transition: border-color 0.2s; }
+  .slot-tag { font-family: 'Press Start 2P', monospace; font-size: 9px; margin-bottom: 6px; }
+  .slot-name { font-size: 11px; color: #444; line-height: 1.6; font-family: 'Press Start 2P', monospace; }
+  .lb-wrap { margin: 10px auto; max-width: 340px; width: 100%; text-align: left; }
+  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 9px; color: #ffd23b; margin-bottom: 8px; text-align: center; }
+  .lb-row { display: flex; justify-content: space-between; padding: 3px 8px; font-size: 10px; color: #9ab; font-family: 'Press Start 2P', monospace; }
+  .lb-row.highlight { color: #00ffaa; background: rgba(0,255,170,0.08); border-radius: 4px; }
+  .lb-empty { color: #456; font-size: 11px; text-align: center; padding: 8px; }
+  .score-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; max-width: 520px; width: 100%; }
+  .score-card { border: 2px solid #222; border-radius: 10px; padding: 12px 10px; }
+  .score-card.winner { border-color: #ffd23b; background: rgba(255,210,59,0.07); }
+  .score-tag { font-family: 'Press Start 2P', monospace; font-size: 10px; margin-bottom: 5px; }
+  .score-val { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #00ffaa; margin-bottom: 3px; }
+  .score-rank { font-size: 10px; color: #ffd23b; font-family: 'Press Start 2P', monospace; }
+  #nameEntry { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; }
+  .lb-name-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 10px; font-size: 12px; border-radius: 6px; width: 130px; font-family: 'Press Start 2P', monospace; text-transform: uppercase; }
+  .btn-small { padding: 6px 14px; font-size: 10px; border: none; border-radius: 6px; cursor: pointer; background: rgba(255,210,59,0.15); color: #ffd23b; font-weight: bold; font-family: 'Press Start 2P', monospace; }
+  .btn-small:hover { background: rgba(255,210,59,0.28); }
+  .hint { color: #456; font-size: 9px; margin-bottom: 10px; font-family: 'Press Start 2P', monospace; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div id="wrap">
+
+<div id="titleScreen" class="overlay">
+  <h1 style="font-family:'Press Start 2P',monospace; font-size:30px; color:#00ffaa; margin-bottom:4px; text-shadow:0 0 18px rgba(0,255,170,0.6);">SNAKE PIT ROYALE</h1>
+  <p style="color:#567; font-size:10px; margin-bottom:14px; font-style:italic;">Four snakes. One shrinking pit. Last one slithering wins.</p>
+
+  <div class="join-box">
+    <p class="join-label">GRAB YOUR PHONE — OPEN THIS PAGE</p>
+    <p id="joinUrl" class="join-url"></p>
+    <p class="join-code">CODE <span id="joinCode"></span></p>
+  </div>
+
+  <div class="slots-grid" id="slotsGrid">
+    <div class="slot-card" id="slot0"><div class="slot-tag" style="color:#00ffaa;">GREEN</div><div class="slot-name" id="slot0name">EMPTY</div></div>
+    <div class="slot-card" id="slot1"><div class="slot-tag" style="color:#ff3b6b;">PINK</div><div class="slot-name" id="slot1name">EMPTY</div></div>
+    <div class="slot-card" id="slot2"><div class="slot-tag" style="color:#3aa0ff;">BLUE</div><div class="slot-name" id="slot2name">EMPTY</div></div>
+    <div class="slot-card" id="slot3"><div class="slot-tag" style="color:#ffd23b;">GOLD</div><div class="slot-name" id="slot3name">EMPTY</div></div>
+  </div>
+
+  <p class="hint">Empty slots get an Az bot &nbsp;|&nbsp; Keyboard works too: P1 arrows &middot; P2 WASD &middot; P3 IJKL &middot; ESC pauses</p>
+  <button class="btn" onclick="tvStart()">START THE PIT</button>
+  <div class="lb-wrap" id="titleLb"></div>
+</div>
+
+<div id="pauseScreen" class="overlay" style="display:none;">
+  <h1 style="font-family:'Press Start 2P',monospace; font-size:22px; color:#fff; margin-bottom:20px;">PAUSED</h1>
+  <button class="btn" onclick="resumeGame()">RESUME</button>
+  <button class="btn-quit" onclick="quitGame()">QUIT</button>
+</div>
+
+<div id="endScreen" class="overlay" style="display:none;">
+  <h1 id="endTitle" style="font-family:'Press Start 2P',monospace; font-size:20px; color:#ffd23b; margin-bottom:10px;"></h1>
+  <div class="score-grid" id="scoreGrid"></div>
+  <div id="nameEntry" style="display:none;">
+    <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:#9ab;">CHAMPION NAME:</p>
+    <input type="text" id="nameInput" class="lb-name-input" maxlength="10" placeholder="NAME">
+    <button class="btn-small" onclick="saveScore()">SAVE</button>
+  </div>
+  <div class="lb-wrap" id="endLb"></div>
+  <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+  <button class="btn-quit" onclick="window.location.href='/'">BACK TO STORE</button>
+</div>
+
+<canvas id="game"></canvas>
+</div>
+
+<script>
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var TW = canvas.width  = 1280;
+var TH = canvas.height = 720;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
+
+var SLUG = 'snake-pit-royale';
+
+// ---- Arena geometry ----
+var COLS = 40, ROWS = 24, CELL = 26;
+var ARENA_W = COLS * CELL, ARENA_H = ROWS * CELL;
+var OX = Math.floor((TW - ARENA_W) / 2);
+var OY = Math.floor((TH - ARENA_H) / 2) + 8;
+
+// ---- Snake slots ----
+var SLOTS = [
+  { tag: 'GREEN', col: '#00ffaa', dim: '#0a3', start: { x: 6,        y: 5,        dir: { x: 1, y: 0 } } },
+  { tag: 'PINK',  col: '#ff3b6b', dim: '#a13', start: { x: COLS - 7, y: 5,        dir: { x: 0, y: 1 } } },
+  { tag: 'BLUE',  col: '#3aa0ff', dim: '#159', start: { x: 6,        y: ROWS - 6, dir: { x: 0, y: -1 } } },
+  { tag: 'GOLD',  col: '#ffd23b', dim: '#a82', start: { x: COLS - 7, y: ROWS - 6, dir: { x: -1, y: 0 } } }
+];
+var BOT_NAMES = ['REX-9', 'NIBBLES', 'FANG', 'COILBOT', 'HISS-X', 'SCALES', 'VIPER-2', 'ZIGZAG'];
+
+// ---- Match tuning ----
+var TICK_BASE   = 135;   // ms per grid step at the start
+var TICK_MIN    = 72;    // fastest
+var MATCH_SECS  = 120;   // hard cap
+var SHRINK_AT   = 40;    // seconds before the pit starts closing
+var SHRINK_EVERY = 5.5;  // seconds between each inward step
+var SHRINK_MAX  = 8;     // max cells inset per side
+var PELLET_TARGET = 5;
+var GOLDEN_CHANCE = 0.10; // chance a refill pellet is golden
+
+// ---- State ----
+var gameState = 'title';   // title | countdown | playing | paused | gameover
+var snakes = [];
+var pellets = [];
+var particles = [];
+var matchStart = 0, pausedAt = 0, pauseOffset = 0;
+var lastTick = 0, tickMs = TICK_BASE;
+var pitInset = 0, lastShrink = 0;
+var countdownEnd = 0;
+var azLine = '', azUntil = 0;
+var firstBlood = false, announcedTwo = false, announcedShrink = false;
+var shakeUntil = 0;
+
+// ---- Phone / keyboard input ----
+var phoneDir = [null, null, null, null];   // queued dir from a phone for each slot
+var keys = {};
+window.addEventListener('keydown', function(e) {
+  keys[e.code] = true;
+  if (e.code === 'Escape') togglePause();
+  if (e.code === 'Enter' && gameState === 'title') tvStart();
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyW','KeyA','KeyS','KeyD'].indexOf(e.code) >= 0) e.preventDefault();
+  applyKeyboard();
+});
+window.addEventListener('keyup', function(e) { keys[e.code] = false; });
+
+var KEYMAP = [
+  { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' },
+  { up: 'KeyW',    down: 'KeyS',      left: 'KeyA',      right: 'KeyD' },
+  { up: 'KeyI',    down: 'KeyK',      left: 'KeyJ',      right: 'KeyL' },
+  { up: 'Numpad8', down: 'Numpad5',   left: 'Numpad4',   right: 'Numpad6' }
+];
+function applyKeyboard() {
+  for (var i = 0; i < 4; i++) {
+    var k = KEYMAP[i];
+    if (keys[k.up])    queueDir(i, { x: 0, y: -1 });
+    else if (keys[k.down])  queueDir(i, { x: 0, y: 1 });
+    else if (keys[k.left])  queueDir(i, { x: -1, y: 0 });
+    else if (keys[k.right]) queueDir(i, { x: 1, y: 0 });
+  }
+}
+
+function queueDir(slot, d) {
+  var s = snakes[slot];
+  if (!s || !s.alive) return;
+  // no 180 reversal
+  if (s.body.length > 1 && d.x === -s.dir.x && d.y === -s.dir.y) return;
+  s.nextDir = d;
+}
+
+// ---- Audio ----
+var audioCtx = null;
+function getAC() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function blip(freq, endFreq, dur, vol, type) {
+  try {
+    var ac = getAC(), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.connect(g); g.connect(ac.destination);
+    o.frequency.setValueAtTime(freq, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), ac.currentTime + dur);
+    g.gain.setValueAtTime(vol, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch (e) {}
+}
+function sEat()   { blip(520, 760, 0.07, 0.09); }
+function sGold()  { blip(660, 1180, 0.16, 0.11, 'sawtooth'); }
+function sDeath() { blip(300, 60, 0.4, 0.14, 'sawtooth'); }
+function sCount() { blip(440, 440, 0.1, 0.10, 'triangle'); }
+function sGo()    { blip(660, 990, 0.22, 0.13, 'triangle'); }
+function sWin()   { blip(523, 523, 0.12, 0.12, 'triangle'); setTimeout(function(){ blip(784, 784, 0.18, 0.12, 'triangle'); }, 130); }
+
+// ---- Az commentary ----
+function az(line, ms) { azLine = line; azUntil = now() + (ms || 2600); }
+function now() { return Date.now(); }
+
+// ---- Pit bounds (accounting for the closing walls) ----
+function bounds() {
+  return { minX: pitInset, maxX: COLS - 1 - pitInset, minY: pitInset, maxY: ROWS - 1 - pitInset };
+}
+function inBounds(c) {
+  var b = bounds();
+  return c.x >= b.minX && c.x <= b.maxX && c.y >= b.minY && c.y <= b.maxY;
+}
+
+// ---- Pellets ----
+function cellFree(x, y) {
+  for (var i = 0; i < snakes.length; i++) {
+    var s = snakes[i];
+    if (!s.alive) continue;
+    for (var j = 0; j < s.body.length; j++) if (s.body[j].x === x && s.body[j].y === y) return false;
+  }
+  for (var p = 0; p < pellets.length; p++) if (pellets[p].x === x && pellets[p].y === y) return false;
+  return true;
+}
+function spawnPellet(golden) {
+  var b = bounds(), tries = 0;
+  while (tries++ < 200) {
+    var x = b.minX + Math.floor(Math.random() * (b.maxX - b.minX + 1));
+    var y = b.minY + Math.floor(Math.random() * (b.maxY - b.minY + 1));
+    if (cellFree(x, y)) { pellets.push({ x: x, y: y, golden: !!golden, value: golden ? 50 : 10, born: now() }); return; }
+  }
+}
+function pelletAt(x, y) {
+  for (var i = 0; i < pellets.length; i++) if (pellets[i].x === x && pellets[i].y === y) return i;
+  return -1;
+}
+function refillPellets() {
+  while (pellets.length < PELLET_TARGET) spawnPellet(Math.random() < GOLDEN_CHANCE);
+}
+
+// ---- Particles ----
+function burst(cx, cy, col, n) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 3.5;
+    particles.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, col: col });
+  }
+}
+
+// ---- Snake creation ----
+function makeSnake(slot, name, isBot) {
+  var st = SLOTS[slot].start;
+  var body = [];
+  for (var i = 0; i < 4; i++) {
+    var x = st.x - st.dir.x * i, y = st.y - st.dir.y * i;
+    body.push({ x: x, y: y, px: x, py: y });
+  }
+  return {
+    slot: slot, name: name, isBot: isBot, col: SLOTS[slot].col,
+    body: body, dir: { x: st.dir.x, y: st.dir.y }, nextDir: { x: st.dir.x, y: st.dir.y },
+    alive: true, score: 0, growLeft: 0, place: 0, deathFlash: 0
+  };
+}
+
+// ---- Tick (grid step) ----
+function tick() {
+  var alive = snakes.filter(function(s) { return s.alive; });
+
+  // 1. intentions
+  alive.forEach(function(s) {
+    s.dir = s.nextDir;
+    s.nh = { x: s.body[0].x + s.dir.x, y: s.body[0].y + s.dir.y };
+    var pi = pelletAt(s.nh.x, s.nh.y);
+    s.eatIdx = pi;
+    s.keepTail = pi >= 0 || s.growLeft > 0;
+  });
+
+  // 2. trailing occupancy (body cells that will still exist after the move)
+  alive.forEach(function(s) {
+    s.trail = s.keepTail ? s.body.slice() : s.body.slice(0, s.body.length - 1);
+  });
+
+  // 3. deaths (resolved simultaneously)
+  var dying = [];
+  alive.forEach(function(s) {
+    var dead = false;
+    if (!inBounds(s.nh)) dead = true;
+    if (!dead) {
+      for (var o = 0; o < alive.length; o++) {
+        var other = alive[o];
+        if (other !== s && other.nh.x === s.nh.x && other.nh.y === s.nh.y) { dead = true; break; } // head-on
+        for (var t = 0; t < other.trail.length; t++) {
+          if (other.trail[t].x === s.nh.x && other.trail[t].y === s.nh.y) { dead = true; break; }
+        }
+        if (dead) break;
+      }
+    }
+    if (dead) dying.push(s);
+  });
+
+  // 4. apply movement for survivors
+  alive.forEach(function(s) {
+    if (dying.indexOf(s) >= 0) return;
+    if (s.growLeft > 0) s.growLeft--;
+    stepSnake(s, s.keepTail);
+    if (s.eatIdx >= 0 && pellets[s.eatIdx]) {
+      var pel = pellets[s.eatIdx];
+      s.score += pel.value;
+      if (pel.golden) { s.growLeft += 3; sGold(); az(s.name + ' grabbed the GOLD!', 2200); burst(cellPx(pel.x), cellPy(pel.y), '#ffd700', 16); }
+      else { sEat(); burst(cellPx(pel.x), cellPy(pel.y), '#fff', 7); }
+      pellets.splice(s.eatIdx, 1);
+    }
+  });
+
+  // 5. kill the dying (their bodies scatter into pellets)
+  dying.forEach(function(s) { killSnake(s); });
+
+  refillPellets();
+  checkRoundState();
+}
+
+function stepSnake(s, keepTail) {
+  var old = s.body;
+  var nb = [{ x: old[0].x + s.dir.x, y: old[0].y + s.dir.y, px: old[0].x, py: old[0].y }];
+  for (var i = 1; i < old.length; i++) nb.push({ x: old[i - 1].x, y: old[i - 1].y, px: old[i].x, py: old[i].y });
+  if (keepTail) { var t = old[old.length - 1]; nb.push({ x: t.x, y: t.y, px: t.x, py: t.y }); }
+  s.body = nb;
+}
+
+function killSnake(s) {
+  s.alive = false;
+  s.deathFlash = now();
+  sDeath();
+  shakeUntil = now() + 280;
+  burst(cellPx(s.body[0].x), cellPy(s.body[0].y), s.col, 22);
+  // scatter every 2nd segment as a pellet (battle-royale snack drop)
+  for (var i = 0; i < s.body.length; i += 2) {
+    var c = s.body[i];
+    if (inBounds(c) && cellFree(c.x, c.y)) pellets.push({ x: c.x, y: c.y, golden: false, value: 10, born: now() });
+  }
+  if (!firstBlood) { firstBlood = true; az('Down goes ' + s.name + '! RAWR!', 2400); }
+  else az(s.name + ' is out!', 1800);
+}
+
+// ---- Round / match state ----
+function checkRoundState() {
+  var alive = snakes.filter(function(s) { return s.alive; });
+  if (!announcedTwo && alive.length === 2) { announcedTwo = true; az('Two snakes left. This is it!', 2400); }
+  if (alive.length <= 1 && snakes.length > 1) return endMatch();
+  if (alive.length === 0) return endMatch();
+}
+
+function elapsed() { return (now() - matchStart - pauseOffset) / 1000; }
+
+// ---- Pixel helpers (cell centre) ----
+function cellPx(cx) { return OX + cx * CELL + CELL / 2; }
+function cellPy(cy) { return OY + cy * CELL + CELL / 2; }
+
+// ---- Bots ----
+function botThink(s) {
+  var dirs = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
+  var head = s.body[0];
+  // nearest pellet
+  var target = null, best = 1e9;
+  for (var i = 0; i < pellets.length; i++) {
+    var d = Math.abs(pellets[i].x - head.x) + Math.abs(pellets[i].y - head.y);
+    if (pellets[i].golden) d -= 4;
+    if (d < best) { best = d; target = pellets[i]; }
+  }
+  var options = [];
+  for (var k = 0; k < dirs.length; k++) {
+    var d = dirs[k];
+    if (s.body.length > 1 && d.x === -s.dir.x && d.y === -s.dir.y) continue; // no reverse
+    var nx = head.x + d.x, ny = head.y + d.y;
+    if (!inBounds({ x: nx, y: ny })) continue;
+    if (!safeCell(nx, ny)) continue;
+    var space = floodScore(nx, ny);              // prefer open space (don't trap self)
+    var toward = target ? -(Math.abs(target.x - nx) + Math.abs(target.y - ny)) : 0;
+    options.push({ d: d, val: space * 2 + toward + Math.random() * 1.5 });
+  }
+  if (options.length) {
+    options.sort(function(a, b) { return b.val - a.val; });
+    queueDir(s.slot, options[0].d);
+  }
+}
+function safeCell(x, y) {
+  for (var i = 0; i < snakes.length; i++) {
+    var s = snakes[i];
+    if (!s.alive) continue;
+    // skip each snake's tail (it will move) unless it is growing
+    var lim = s.growLeft > 0 ? s.body.length : s.body.length - 1;
+    for (var j = 0; j < lim; j++) if (s.body[j].x === x && s.body[j].y === y) return false;
+  }
+  return true;
+}
+function floodScore(x, y) {
+  // cheap reachability estimate: count free cells in a small BFS, capped
+  var b = bounds(), seen = {}, q = [[x, y]], count = 0, cap = 36;
+  seen[x + ',' + y] = true;
+  while (q.length && count < cap) {
+    var c = q.shift(); count++;
+    var nbrs = [[c[0] + 1, c[1]], [c[0] - 1, c[1]], [c[0], c[1] + 1], [c[0], c[1] - 1]];
+    for (var i = 0; i < nbrs.length; i++) {
+      var nx = nbrs[i][0], ny = nbrs[i][1], key = nx + ',' + ny;
+      if (seen[key]) continue;
+      if (nx < b.minX || nx > b.maxX || ny < b.minY || ny > b.maxY) continue;
+      if (!safeCell(nx, ny)) continue;
+      seen[key] = true; q.push([nx, ny]);
+    }
+  }
+  return count;
+}
+
+// ---- Pit shrink ----
+function maybeShrink() {
+  var e = elapsed();
+  if (e < SHRINK_AT) return;
+  if (!announcedShrink) { announcedShrink = true; az('The pit is CLOSING IN!', 2600); }
+  if (e - lastShrink >= SHRINK_EVERY && pitInset < SHRINK_MAX) {
+    lastShrink = e;
+    pitInset++;
+    shakeUntil = now() + 200;
+    // anything caught in the new wall ring dies; stray pellets relocate
+    snakes.forEach(function(s) {
+      if (s.alive && s.body.some(function(c) { return !inBounds(c); })) killSnake(s);
+    });
+    pellets = pellets.filter(function(p) { return inBounds(p); });
+    refillPellets();
+  }
+}
+
+// ---- Leaderboard ----
+var lbData = [];
+async function fetchLb() {
+  try {
+    var r = await fetch('/api/scores?game=' + SLUG);
+    var d = await r.json();
+    lbData = d.scores || [];
+  } catch (e) {
+    try { lbData = JSON.parse(localStorage.getItem('lb_' + SLUG) || '[]'); } catch (e2) { lbData = []; }
+  }
+  renderLb('titleLb');
+}
+function renderLb(elId, hlName) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  if (!lbData.length) { el.innerHTML = '<div class="lb-title">HIGH SCORES</div><div class="lb-empty">No scores yet. Be the first!</div>'; return; }
+  var h = '<div class="lb-title">HIGH SCORES</div>';
+  lbData.slice(0, 10).forEach(function(row, i) {
+    var hl = hlName && row.name === hlName ? ' highlight' : '';
+    h += '<div class="lb-row' + hl + '"><span>#' + (i + 1) + ' ' + row.name + '</span><span>' + row.value + '</span></div>';
+  });
+  el.innerHTML = h;
+}
+var winnerScore = 0, winnerName = '';
+async function saveScore() {
+  var name = (document.getElementById('nameInput').value || '').trim().toUpperCase() || winnerName || 'AZ';
+  try {
+    var r = await fetch('/api/scores', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game: SLUG, name: name, value: winnerScore })
+    });
+    var d = await r.json();
+    lbData = d.scores || lbData;
+    localStorage.setItem('lb_' + SLUG, JSON.stringify(lbData));
+  } catch (e) {
+    lbData.push({ name: name, value: winnerScore });
+    lbData.sort(function(a, b) { return b.value - a.value; });
+    lbData = lbData.slice(0, 10);
+    localStorage.setItem('lb_' + SLUG, JSON.stringify(lbData));
+  }
+  document.getElementById('nameEntry').style.display = 'none';
+  renderLb('endLb', name);
+}
+
+// ---- ActionCable (minimal client, same pattern as Dino Jump) ----
+var CHARS_BC = 'BCDFGHJKLMNPQRSTVWXYZ23456789';
+var gameCode = Array.from({ length: 4 }, function() { return CHARS_BC[Math.floor(Math.random() * CHARS_BC.length)]; }).join('');
+var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
+var tvCable = null, tvSub = null;
+
+function initCable() {
+  try {
+    tvCable = { _ws: null, _connect: function() {
+      var self = tvCable;
+      self._ws = new WebSocket(wsBase);
+      self._ws.onopen = function() { if (tvSub) tvSub._subscribe(); };
+      self._ws.onmessage = function(e) {
+        var msg = JSON.parse(e.data);
+        if (msg.type === 'ping' || msg.type === 'welcome' || msg.type === 'confirm_subscription') return;
+        if (tvSub && tvSub._id === msg.identifier && msg.message) handleCable(msg.message);
+      };
+      self._ws.onclose = function() { setTimeout(function() { self._connect(); }, 2000); };
+    } };
+    tvCable._connect();
+
+    var params = { channel: 'SnakePitChannel', code: gameCode, role: 'tv' };
+    tvSub = {
+      _id: JSON.stringify(params),
+      _subscribe: function() { tvCable._ws.send(JSON.stringify({ command: 'subscribe', identifier: this._id })); },
+      send: function(action, data) {
+        if (tvCable._ws && tvCable._ws.readyState === WebSocket.OPEN) {
+          tvCable._ws.send(JSON.stringify({ command: 'message', identifier: this._id, data: JSON.stringify(Object.assign({ action: action }, data || {})) }));
+        }
+      }
+    };
+  } catch (e) {}
+}
+
+var lobby = [null, null, null, null]; // names by slot from phones
+function handleCable(msg) {
+  if (msg.type === 'lobby_update') {
+    lobby = [null, null, null, null];
+    (msg.players || []).forEach(function(p) { lobby[p.slot] = p.name; });
+    for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+  } else if (msg.type === 'input') {
+    var slot = msg.slot;
+    if (slot < 0 || slot > 3) return;
+    var d = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } }[msg.dir];
+    if (d) queueDir(slot, d);
+  }
+}
+function updateSlot(slot, name) {
+  var el = document.getElementById('slot' + slot);
+  var nm = document.getElementById('slot' + slot + 'name');
+  if (el) el.style.borderColor = name ? SLOTS[slot].col : '#222';
+  if (nm) { nm.textContent = name || 'EMPTY'; nm.style.color = name ? '#fff' : '#444'; }
+}
+
+// ---- Lifecycle ----
+function tvStart() {
+  if (tvSub) tvSub.send('start_game', {});
+  startGame();
+}
+function startGame() {
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'none';
+  snakes = [];
+  var botIdx = 0;
+  for (var i = 0; i < 4; i++) {
+    var isBot = !lobby[i];
+    var name = lobby[i] || BOT_NAMES[(botIdx++) % BOT_NAMES.length];
+    snakes.push(makeSnake(i, name, isBot));
+  }
+  pellets = []; particles = [];
+  pitInset = 0; lastShrink = 0;
+  firstBlood = false; announcedTwo = false; announcedShrink = false;
+  refillPellets();
+  pauseOffset = 0;
+  countdownEnd = now() + 3200;
+  gameState = 'countdown';
+  az('Into the pit!', 1200);
+}
+function beginPlay() {
+  matchStart = now();
+  lastTick = now();
+  tickMs = TICK_BASE;
+  gameState = 'playing';
+  sGo();
+}
+function togglePause() {
+  if (gameState === 'playing') { gameState = 'paused'; pausedAt = now(); document.getElementById('pauseScreen').style.display = 'flex'; }
+  else if (gameState === 'paused') resumeGame();
+}
+function resumeGame() {
+  if (gameState !== 'paused') return;
+  pauseOffset += now() - pausedAt;
+  lastTick = now();
+  gameState = 'playing';
+  document.getElementById('pauseScreen').style.display = 'none';
+}
+function quitGame() {
+  gameState = 'title';
+  document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('titleScreen').style.display = 'flex';
+}
+
+function endMatch() {
+  if (gameState === 'gameover') return;
+  gameState = 'gameover';
+
+  // rank: alive snake(s) first, then by score
+  var ranked = snakes.slice().sort(function(a, b) {
+    if (a.alive !== b.alive) return a.alive ? -1 : 1;
+    return b.score - a.score;
+  });
+  ranked.forEach(function(s, i) { s.place = i + 1; });
+  var champ = ranked[0];
+  // winner gets a survival bonus so the pit champ tops the board
+  if (champ.alive) champ.score += 100;
+  winnerScore = champ.score; winnerName = champ.name;
+  sWin(); az(champ.name + ' wins the pit! RAWR!', 4000);
+
+  var results = ranked.map(function(s) { return { slot: s.slot, score: s.score, rank: s.place }; });
+  if (tvSub) tvSub.send('game_ended', { results: results });
+
+  var endTitle = document.getElementById('endTitle');
+  endTitle.textContent = champ.name + ' WINS THE PIT!';
+  endTitle.style.color = champ.col;
+
+  var grid = '';
+  ranked.forEach(function(s, i) {
+    grid += '<div class="score-card' + (i === 0 ? ' winner' : '') + '">';
+    grid += '<div class="score-tag" style="color:' + s.col + '">' + s.name + (s.isBot ? ' (BOT)' : '') + '</div>';
+    grid += '<div class="score-val">' + s.score + ' pts</div>';
+    grid += '<div class="score-rank">' + (i === 0 ? 'CHAMPION' : '#' + (i + 1)) + '</div>';
+    grid += '</div>';
+  });
+  document.getElementById('scoreGrid').innerHTML = grid;
+
+  // only a human champion can claim a leaderboard spot -- a bot win is not saved
+  var qualifies = winnerScore > 0 && !champ.isBot &&
+                  (lbData.length < 10 || winnerScore > lbData[lbData.length - 1].value);
+  var ne = document.getElementById('nameEntry');
+  ne.style.display = qualifies ? 'flex' : 'none';
+  if (qualifies) document.getElementById('nameInput').value = champ.name;
+
+  renderLb('endLb');
+  document.getElementById('endScreen').style.display = 'flex';
+}
+
+// ---- Rendering ----
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function drawArena(t) {
+  ctx.fillStyle = '#04070a';
+  ctx.fillRect(0, 0, TW, TH);
+
+  // shake
+  var sh = 0;
+  if (now() < shakeUntil) sh = (Math.random() - 0.5) * 8;
+  ctx.save();
+  ctx.translate(sh, sh * 0.5);
+
+  var b = bounds();
+  var ix = OX + b.minX * CELL, iy = OY + b.minY * CELL;
+  var iw = (b.maxX - b.minX + 1) * CELL, ih = (b.maxY - b.minY + 1) * CELL;
+
+  // pit floor
+  ctx.fillStyle = '#070d0a';
+  ctx.fillRect(ix, iy, iw, ih);
+
+  // grid
+  ctx.strokeStyle = 'rgba(120,255,170,0.05)';
+  ctx.lineWidth = 1;
+  for (var gx = b.minX; gx <= b.maxX + 1; gx++) { ctx.beginPath(); ctx.moveTo(OX + gx * CELL, iy); ctx.lineTo(OX + gx * CELL, iy + ih); ctx.stroke(); }
+  for (var gy = b.minY; gy <= b.maxY + 1; gy++) { ctx.beginPath(); ctx.moveTo(ix, OY + gy * CELL); ctx.lineTo(ix + iw, OY + gy * CELL); ctx.stroke(); }
+
+  // closing walls (danger border) -- pulse when shrinking is active
+  var danger = elapsed() >= SHRINK_AT - 5;
+  var pulse = danger ? 0.4 + 0.3 * Math.sin(now() / 160) : 0.5;
+  ctx.strokeStyle = 'rgba(255,70,70,' + pulse + ')';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(ix - 2, iy - 2, iw + 4, ih + 4);
+  if (pitInset > 0) {
+    ctx.strokeStyle = 'rgba(255,70,70,0.10)';
+    ctx.lineWidth = pitInset * CELL;
+    ctx.strokeRect(OX - pitInset * CELL / 2, OY - pitInset * CELL / 2, ARENA_W + pitInset * CELL, ARENA_H + pitInset * CELL);
+  }
+
+  // pellets
+  for (var i = 0; i < pellets.length; i++) {
+    var p = pellets[i];
+    var px = cellPx(p.x), py = cellPy(p.y);
+    var r = p.golden ? 8 + Math.sin(now() / 120) * 1.5 : 6;
+    ctx.save();
+    ctx.shadowColor = p.golden ? '#ffd700' : '#ffffff';
+    ctx.shadowBlur = p.golden ? 16 : 8;
+    ctx.fillStyle = p.golden ? '#ffd700' : '#ffffff';
+    ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // snakes
+  for (var s = 0; s < snakes.length; s++) drawSnake(snakes[s], t);
+
+  // particles
+  for (var k = 0; k < particles.length; k++) {
+    var pt = particles[k];
+    ctx.globalAlpha = Math.max(0, pt.life);
+    ctx.fillStyle = pt.col;
+    ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+
+  drawHud();
+  drawAz();
+}
+
+function drawSnake(s, t) {
+  if (!s.alive) return;
+  var tt = gameState === 'playing' ? t : 1;
+  ctx.save();
+  ctx.shadowColor = s.col;
+  ctx.shadowBlur = 10;
+  for (var i = s.body.length - 1; i >= 0; i--) {
+    var seg = s.body[i];
+    var x = lerp(OX + seg.px * CELL, OX + seg.x * CELL, tt);
+    var y = lerp(OY + seg.py * CELL, OY + seg.y * CELL, tt);
+    var head = i === 0;
+    ctx.fillStyle = head ? '#ffffff' : s.col;
+    var pad = head ? 1 : 2.5;
+    roundRect(x + pad, y + pad, CELL - pad * 2, CELL - pad * 2, head ? 7 : 5);
+    ctx.fill();
+    if (head) {
+      // glowing collar + eyes
+      ctx.fillStyle = s.col;
+      roundRect(x + 4, y + 4, CELL - 8, CELL - 8, 5); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#04070a';
+      var ex = s.dir.x, ey = s.dir.y;
+      var cx = x + CELL / 2, cy = y + CELL / 2;
+      var ox = ey !== 0 ? 5 : 0, oy = ex !== 0 ? 5 : 0;
+      ctx.beginPath(); ctx.arc(cx - ox + ex * 4, cy - oy + ey * 4, 2.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + ox + ex * 4, cy + oy + ey * 4, 2.6, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 10;
+    }
+  }
+  ctx.restore();
+}
+function roundRect(x, y, w, h, r) {
+  if (w < 0) { x += w; w = -w; } if (h < 0) { y += h; h = -h; }
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawHud() {
+  // per-snake length/score chips along the top (two on the left, two on the right
+  // so the clock can own the centre without ever colliding)
+  ctx.textAlign = 'left';
+  ctx.font = '11px "Press Start 2P", monospace';
+  var positions = [OX, OX + 250, OX + ARENA_W - 480, OX + ARENA_W - 230];
+  for (var i = 0; i < snakes.length; i++) {
+    var s = snakes[i];
+    var x = positions[i];
+    ctx.globalAlpha = s.alive ? 1 : 0.35;
+    ctx.fillStyle = s.col;
+    ctx.fillRect(x, OY - 30, 12, 12);
+    ctx.fillStyle = s.alive ? '#fff' : '#667';
+    ctx.fillText(s.name.slice(0, 7) + ' ' + s.score, x + 18, OY - 19);
+    ctx.globalAlpha = 1;
+  }
+  // clock (top centre)
+  if (gameState === 'playing' || gameState === 'paused') {
+    var left = Math.max(0, Math.ceil(MATCH_SECS - elapsed()));
+    var urgent = left <= 15;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = urgent ? '#ff4444' : '#789';
+    ctx.font = (urgent ? 'bold ' : '') + '13px "Press Start 2P", monospace';
+    ctx.fillText(left + 's', TW / 2, OY - 19);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawAz() {
+  if (gameState === 'countdown') {
+    var remain = countdownEnd - now();
+    var n = Math.ceil(remain / 1000);
+    var label = n > 0 ? String(n) : 'GO';
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = n > 0 ? '#00ffaa' : '#ffd23b';
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 24;
+    ctx.font = 'bold 90px "Press Start 2P", monospace';
+    ctx.fillText(label, TW / 2, TH / 2 + 30);
+    ctx.restore();
+  }
+  if (azLine && now() < azUntil) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = Math.min(1, (azUntil - now()) / 400);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.font = '14px "Press Start 2P", monospace';
+    var tw = ctx.measureText(azLine).width + 36;
+    ctx.fillRect(TW / 2 - tw / 2, TH - 52, tw, 30);
+    ctx.fillStyle = '#ffd23b';
+    ctx.fillText(azLine, TW / 2, TH - 31);
+    ctx.restore();
+    ctx.textAlign = 'left';
+  }
+}
+
+// ---- Main loop ----
+function loop() {
+  requestAnimationFrame(loop);
+  var t = 0;
+
+  if (gameState === 'countdown') {
+    if (now() >= countdownEnd) { beginPlay(); }
+    else {
+      var n = Math.ceil((countdownEnd - now()) / 1000);
+      if (n !== loop._lastN) { loop._lastN = n; sCount(); }
+    }
+    t = 1;
+  } else if (gameState === 'playing') {
+    // hard time cap
+    if (elapsed() >= MATCH_SECS) { endMatch(); }
+    else {
+      maybeShrink();
+      // speed up with time and the longest snake
+      var maxLen = snakes.reduce(function(m, s) { return Math.max(m, s.body.length); }, 0);
+      tickMs = Math.max(TICK_MIN, TICK_BASE - elapsed() * 0.45 - maxLen * 0.7);
+      // Cap catch-up ticks so a backgrounded/janked tab can't fire dozens of
+      // steps in one frame (which would teleport snakes into instant deaths).
+      var catchUp = 0;
+      while (now() - lastTick >= tickMs && catchUp < 4) {
+        lastTick += tickMs;
+        catchUp++;
+        snakes.forEach(function(s) { if (s.alive && s.isBot) botThink(s); });
+        tick();
+        if (gameState !== 'playing') break;
+      }
+      if (now() - lastTick > tickMs * 4) lastTick = now(); // resync after a long stall
+      t = Math.min(1, (now() - lastTick) / tickMs);
+    }
+  } else if (gameState === 'paused') {
+    t = 1;
+  }
+
+  // particles update
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.035;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  if (gameState !== 'title') drawArena(t);
+}
+
+// ---- Boot ----
+(function() {
+  var url = (window.location.origin + '/snake-pit/join?code=' + gameCode).replace(/^https?:\/\//, '');
+  var el = document.getElementById('joinUrl');
+  if (el) el.textContent = url;
+  document.getElementById('joinCode').textContent = gameCode;
+})();
+initCable();
+fetchLb();
+loop();
+</script>
+</body>
+</html>

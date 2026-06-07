@@ -128,6 +128,15 @@ class Game
       tv_optimised: true
     },
     {
+      slug: "snake-pit-royale",
+      title: "Snake Pit Royale",
+      creators: "Az",
+      tagline: "Four snakes, one shrinking pit. Phones are your controller. Eat, grow, dodge. Last snake slithering wins.",
+      path: "/games/snake-pit-royale.html",
+      icon: "snake-pit-royale",
+      tv_optimised: true
+    },
+    {
       slug: "late-shift",
       title: "Late Shift",
       creators: "Az",

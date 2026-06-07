@@ -29,6 +29,8 @@ Rails.application.routes.draw do
 
   get '/dino-jump/join', to: 'dino_jump#join'
 
+  get '/snake-pit/join', to: 'snake_pit#join'
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

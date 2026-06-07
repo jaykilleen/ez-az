@@ -1892,3 +1892,94 @@
   ctx.fillText('DINO JUMP', W / 2, GAME_H + TITLE_H / 2);
   ctx.restore();
 })();
+
+// ── Snake Pit Royale cover ─────────────────────────────────────────────────────
+(function () {
+  var canvas = document.getElementById('snakePitCover');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height; // 220 x 280
+
+  var TITLE_H = 44;
+  var GAME_H  = H - TITLE_H;
+
+  // Pit floor
+  ctx.fillStyle = '#070b08';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = 'rgba(120,255,160,0.05)';
+  ctx.lineWidth = 1;
+  for (var gx = 0; gx <= W; gx += 20) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, GAME_H); ctx.stroke(); }
+  for (var gy = 0; gy <= GAME_H; gy += 20) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+  // Closing-in pit walls (concentric inset rings)
+  ctx.strokeStyle = 'rgba(255,80,80,0.5)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(6, 6, W - 12, GAME_H - 12);
+  ctx.strokeStyle = 'rgba(255,80,80,0.22)';
+  ctx.strokeRect(20, 20, W - 40, GAME_H - 40);
+
+  // Four neon snakes coiling toward the centre
+  var snakes = [
+    { col: '#00ffaa', cells: [[1,1],[2,1],[3,1],[3,2],[3,3],[4,3]] },
+    { col: '#ff3b6b', cells: [[9,1],[8,1],[7,1],[7,2],[6,2],[6,3]] },
+    { col: '#3aa0ff', cells: [[1,11],[2,11],[2,10],[3,10],[3,9],[4,9]] },
+    { col: '#ffd23b', cells: [[9,11],[8,11],[8,10],[7,10],[7,9],[6,9]] }
+  ];
+  var CS = 20, OX = 10, OY = 14;
+  snakes.forEach(function (s) {
+    s.cells.forEach(function (c, i) {
+      var head = i === s.cells.length - 1;
+      ctx.save();
+      ctx.shadowColor = s.col;
+      ctx.shadowBlur = head ? 12 : 6;
+      ctx.fillStyle = s.col;
+      var pad = head ? 1 : 2;
+      ctx.fillRect(OX + c[0] * CS + pad, OY + c[1] * CS + pad, CS - pad * 2, CS - pad * 2);
+      ctx.restore();
+    });
+    // eye on the head
+    var hd = s.cells[s.cells.length - 1];
+    ctx.fillStyle = '#06140c';
+    ctx.fillRect(OX + hd[0] * CS + 11, OY + hd[1] * CS + 6, 4, 4);
+  });
+
+  // Pellets
+  var pellets = [[5,5],[5,6],[2,7],[8,5]];
+  pellets.forEach(function (p) {
+    ctx.save();
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(OX + p[0] * CS + CS / 2, OY + p[1] * CS + CS / 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+  // Golden pellet
+  ctx.save();
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(OX + 5 * CS + CS / 2, OY + 8 * CS + CS / 2, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Title bar
+  ctx.fillStyle = '#0a140d';
+  ctx.fillRect(0, GAME_H, W, TITLE_H);
+  ctx.fillStyle = 'rgba(0,255,170,0.14)';
+  ctx.fillRect(0, GAME_H, W, 2);
+
+  ctx.save();
+  ctx.shadowColor = '#00ffaa';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = '#00ffaa';
+  ctx.font = 'bold 13px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SNAKE PIT', W / 2, GAME_H + TITLE_H / 2);
+  ctx.restore();
+})();

@@ -46,6 +46,10 @@ A first-person raycaster zombie fighter by Charlie & Cooper (`public/games/corru
 
 A single-player arcade sorter by Az (`public/games/late-shift.html`). The store's shut and the chute is spitting out returned cartridges. Move Az's cart to catch falling cartridges and drop each onto its matching coloured shelf (Action/red, Puzzle/blue, Sport/green, Chill/yellow). Correct drops build a combo; a missed catch smashes on the floor and three smashes ends the shift. Difficulty ramps with score and time. Points-based scoring (DESC leaderboard).
 
+### Snake Pit Royale
+
+A TV party game by Az (`public/games/snake-pit-royale.html`, phone controller at `/snake-pit/join`). 1-4 players; phones become a 4-way D-pad over ActionCable (`SnakePitChannel`), empty slots fill with Az bots so a single player still gets a full arena. Four neon snakes share one shrinking pit: eat pellets (golden ones worth more) to grow and score, crash into a wall, another snake or yourself and you're out. After 40 seconds the pit walls close in to force an ending. Smooth interpolated grid motion, Az ringmaster commentary. The TV is authoritative; phones only send direction. Last snake standing is champion. Points-based scoring (DESC leaderboard). Follows the Dino Jump / Marble Run real-time arcade pattern (dedicated join page, not the unified Zone).
+
 ### Charlie & Cooper's Space Dodge
 
 The first game in the EZ-AZ collection. A two-player co-op space shooter with:
