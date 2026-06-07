@@ -21,7 +21,8 @@ class TvRemoteChannel < ApplicationCable::Channel
     if @current_room && @device_token.present?
       membership = @current_room.memberships.find_by(device_token: @device_token)
       if membership
-        membership.update_column(:connected, true)
+        was_connected = membership.connected
+        membership.update_columns(connected: true, disconnected_at: nil)
         transmit({
           type:       "rejoined",
           slot:       membership.slot,
@@ -32,6 +33,8 @@ class TvRemoteChannel < ApplicationCable::Channel
           game_slug:  @current_room.game_slug
         })
         @slot_claimed = true
+        # Tell the TV and other phones the dropped player is back.
+        RoomChannel.presence_changed(@current_room) unless was_connected
       end
     end
 
@@ -39,11 +42,13 @@ class TvRemoteChannel < ApplicationCable::Channel
   end
 
   def unsubscribed
-    if @current_room && @device_token.present?
-      @current_room.memberships
-                   .where(device_token: @device_token)
-                   .update_all(connected: false)
-    end
+    return unless @current_room && @device_token.present?
+
+    changed = @current_room.memberships
+                           .where(device_token: @device_token)
+                           .update_all(connected: false, disconnected_at: Time.current)
+    # Only announce a drop if this device actually held a slot.
+    RoomChannel.presence_changed(@current_room) if changed.positive?
   end
 
   def navigate(data)
@@ -104,10 +109,9 @@ class TvRemoteChannel < ApplicationCable::Channel
 
     room = Room.active.find_by(code: code)
     return transmit({ type: "join_error", message: "Room not found" }) unless room
-    return transmit({ type: "join_error", message: "Room is full" })   if room.full?
 
-    slot = room.next_available_slot
-    return transmit({ type: "join_error", message: "No slots available" }) unless slot
+    slot = acquire_slot(room)
+    return transmit({ type: "join_error", message: "Room is full" }) unless slot
 
     player = @device_token.present? ? Player.find_by(device_token: @device_token) : nil
 
@@ -144,8 +148,17 @@ class TvRemoteChannel < ApplicationCable::Channel
 
     player = Player.find_by(device_token: phone_id)
 
-    (1..Room::MAX_PLAYERS).each do |slot|
-      next if @current_room.memberships.exists?(slot: slot)
+    candidate_slots = (1..Room::MAX_PLAYERS).reject { |s| @current_room.memberships.exists?(slot: s) }
+    # All slots taken — reclaim the one held by the longest-gone player.
+    if candidate_slots.empty?
+      ghost = @current_room.reclaimable_membership
+      return unless ghost
+      ghost.destroy
+      RoomChannel.member_left(@current_room, ghost)
+      candidate_slots = [ghost.slot]
+    end
+
+    candidate_slots.each do |slot|
       name = player&.username || "P#{slot}"
       begin
         membership = @current_room.memberships.create!(
@@ -168,5 +181,21 @@ class TvRemoteChannel < ApplicationCable::Channel
         next
       end
     end
+  end
+
+  # Find a free slot, or reclaim one whose owner has been gone past the
+  # grace period. Returns nil only when the room is genuinely full of
+  # currently-present (or recently-dropped) players.
+  def acquire_slot(room)
+    slot = room.next_available_slot
+    return slot if slot
+
+    ghost = room.reclaimable_membership
+    return nil unless ghost
+
+    freed = ghost.slot
+    ghost.destroy
+    RoomChannel.member_left(room, ghost)
+    freed
   end
 end

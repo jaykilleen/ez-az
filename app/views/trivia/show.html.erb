@@ -104,6 +104,9 @@
     width: 1vw; height: 1vw; border-radius: 50%;
     box-shadow: 0 0 8px currentColor;
   }
+  .tq-joined-player.is-offline { opacity: 0.4; }
+  .tq-joined-player.is-offline .tq-joined-dot { background: #556 !important; color: #556 !important; box-shadow: none; }
+  .tq-joined-away { font-size: clamp(0.7rem, 0.9vw, 0.9rem); color: #889; letter-spacing: 0.06em; font-weight: 700; }
   .tq-no-players { color: #556; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
   .tq-start-btn {
     align-self: flex-start; margin-top: 2vh;
@@ -404,7 +407,7 @@
     {
       received: function(data) {
         if (!data) return;
-        if (data.type === 'member_joined') refreshLobbyPlayers(data.members);
+        if (data.type === 'member_joined' || data.type === 'presence') refreshLobbyPlayers(data.members);
       }
     }
   );
@@ -604,11 +607,13 @@
     lobbyPlayersEl.innerHTML = '';
     knownMembers.forEach(function(m) {
       var color = SLOT_COLORS[m.slot] || '#8ab4c8';
+      var offline = m.connected === false;
       var div = document.createElement('div');
-      div.className = 'tq-joined-player';
+      div.className = 'tq-joined-player' + (offline ? ' is-offline' : '');
       div.innerHTML =
         '<span class="tq-joined-dot" style="background:' + color + ';color:' + color + '"></span>' +
-        esc(m.name || ('Player ' + m.slot));
+        esc(m.name || ('Player ' + m.slot)) +
+        (offline ? ' <span class="tq-joined-away">away</span>' : '');
       lobbyPlayersEl.appendChild(div);
     });
     startBtn.disabled = false;

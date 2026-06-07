@@ -1,6 +1,10 @@
 class Room < ApplicationRecord
   MAX_PLAYERS     = 4
   DEFAULT_TTL     = 4.hours
+  # How long a dropped player keeps their slot before a new player may
+  # reclaim it. Long enough for a phone reboot or accidental swipe, short
+  # enough to free a seat when a full room has someone waiting to join.
+  RECLAIM_GRACE   = 90.seconds
   CODE_ALPHABET   = "BCDFGHJKLMNPQRSTVWXYZ23456789".chars.freeze  # no vowels, no 0/O/1/I
 
   enum :state, { lobby: 0, playing: 1, finished: 2 }
@@ -50,6 +54,16 @@ class Room < ApplicationRecord
   def next_available_slot
     used = memberships.pluck(:slot).to_set
     (1..MAX_PLAYERS).find { |s| !used.include?(s) }
+  end
+
+  # A membership whose owner has been gone past the grace period — its
+  # slot can be handed to a new player when the room is otherwise full.
+  # Stalest drop first, so the longest-absent player is reclaimed.
+  def reclaimable_membership
+    memberships.where(connected: false)
+               .where(disconnected_at: ..RECLAIM_GRACE.ago)
+               .order(:disconnected_at)
+               .first
   end
 
   # ActionCable broadcast identifier — both TV and phones stream this name.

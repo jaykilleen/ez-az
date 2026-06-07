@@ -83,6 +83,103 @@ class TvRemoteChannelTest < ActionCable::Channel::TestCase
     assert_empty transmissions.select { |t| t["type"] == "rejoined" }
   end
 
+  # ── Presence: connection status changes are broadcast to the room ────────
+
+  test "disconnect marks the member offline and broadcasts presence" do
+    player = Player.create!(username: "CHARLIE")
+    membership = @room.memberships.create!(
+      name: "CHARLIE", slot: 1, role: :player,
+      device_token: player.device_token, session_id: SecureRandom.hex(8)
+    )
+
+    subscribe token: @room.tv_token, device_token: player.device_token
+
+    assert_broadcasts(@room.channel_name, 1) { unsubscribe }
+    assert_not membership.reload.connected
+  end
+
+  test "reconnect of a dropped member broadcasts presence and marks online" do
+    player = Player.create!(username: "CHARLIE")
+    membership = @room.memberships.create!(
+      name: "CHARLIE", slot: 1, role: :player, connected: false,
+      device_token: player.device_token, session_id: SecureRandom.hex(8)
+    )
+
+    assert_broadcasts(@room.channel_name, 1) do
+      subscribe token: @room.tv_token, device_token: player.device_token
+    end
+    assert membership.reload.connected
+  end
+
+  test "no presence broadcast when an already-connected member subscribes" do
+    player = Player.create!(username: "CHARLIE")
+    @room.memberships.create!(
+      name: "CHARLIE", slot: 1, role: :player,
+      device_token: player.device_token, session_id: SecureRandom.hex(8)
+    )
+
+    assert_no_broadcasts(@room.channel_name) do
+      subscribe token: @room.tv_token, device_token: player.device_token
+    end
+  end
+
+  test "no presence broadcast on disconnect when the device held no slot" do
+    subscribe token: @room.tv_token, device_token: "GHOSTDEVICE"
+
+    assert_no_broadcasts(@room.channel_name) { unsubscribe }
+  end
+
+  # ── Ghost-slot reclaim: a full room frees a long-gone player's seat ──────
+
+  def fill_room!
+    4.times do |i|
+      @room.memberships.create!(name: "P#{i + 1}", slot: i + 1, role: :player,
+                                session_id: SecureRandom.hex(8))
+    end
+  end
+
+  test "join_room reclaims a slot from a player gone past the grace period" do
+    fill_room!
+    ghost = @room.memberships.find_by(slot: 2)
+    ghost.update_columns(connected: false, disconnected_at: 2.minutes.ago)
+
+    subscribe token: @room.tv_token
+    perform :join_room, code: @room.code, name: "NEWKID"
+
+    joined = transmissions.find { |t| t["type"] == "joined" }
+    assert_not_nil joined, "expected to join by reclaiming a ghost slot"
+    assert_equal 2, joined["slot"]
+    assert_nil RoomMembership.find_by(id: ghost.id), "ghost membership should be gone"
+    assert_equal "NEWKID", @room.memberships.find_by(slot: 2).name
+  end
+
+  test "join_room reports full when every slot is held by a present or recent player" do
+    fill_room!
+    # Dropped, but inside the grace period — still theirs.
+    @room.memberships.find_by(slot: 2).update_columns(connected: false, disconnected_at: 10.seconds.ago)
+
+    subscribe token: @room.tv_token
+    perform :join_room, code: @room.code, name: "NEWKID"
+
+    err = transmissions.find { |t| t["type"] == "join_error" }
+    assert_not_nil err
+    assert_equal "Room is full", err["message"]
+    assert_equal 4, @room.memberships.count
+  end
+
+  test "navigate reclaims a ghost slot for a fresh D-pad player when full" do
+    fill_room!
+    ghost = @room.memberships.find_by(slot: 3)
+    ghost.update_columns(connected: false, disconnected_at: 5.minutes.ago)
+
+    subscribe token: @room.tv_token, device_token: "FRESHDEVICE"
+    perform :navigate, direction: "left", phone_id: "FRESHDEVICE"
+
+    assert_nil RoomMembership.find_by(id: ghost.id)
+    reclaimed = @room.memberships.find_by(slot: 3)
+    assert_equal "FRESHDEVICE", reclaimed.device_token
+  end
+
   # ── set_state ────────────────────────────────────────────────────────────
 
   test "set_state broadcasts tv_state to the stream" do

@@ -36,6 +36,16 @@ class RoomChannel < ApplicationCable::Channel
       )
     end
 
+    # A member's connection status changed (dropped out or reconnected).
+    # The roster stays the same — only the `connected` flags move — so
+    # subscribers can grey out a dropped player and light them back up.
+    def presence_changed(room)
+      ActionCable.server.broadcast(
+        room.channel_name,
+        { type: "presence", members: current_members(room) }
+      )
+    end
+
     private
 
     def current_members(room)

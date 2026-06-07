@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_16_062146) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_002012) do
   create_table "announcements", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
@@ -82,6 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_16_062146) do
     t.boolean "connected", default: true, null: false
     t.datetime "created_at", null: false
     t.string "device_token"
+    t.datetime "disconnected_at"
     t.string "name", limit: 12, null: false
     t.integer "player_id"
     t.integer "role", default: 1, null: false

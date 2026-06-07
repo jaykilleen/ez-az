@@ -1,7 +1,7 @@
 # ADR 002 — Player Identity and Persistent Sessions
 
-**Status:** Proposed  
-**Date:** April 2026
+**Status:** Accepted  
+**Date:** April 2026 (proposed) · June 2026 (accepted, reconnect shipped)
 
 ---
 
@@ -145,6 +145,60 @@ The same infrastructure that lets a kid reconnect after their phone dies is the 
 6. **Code entry on `/scan`** — "Have a code?" fallback alongside the camera
 
 PIN and cross-device login are phase 2.
+
+---
+
+## Update — June 2026: reconnect shipped
+
+The reconnect half of this ADR is now built, tested, and verified end-to-end
+(TV lobby + phone Zone over ActionCable). Two notes on how reality differed
+from the proposal, plus two new decisions the build surfaced.
+
+### Reconnect keys off `device_token`, not `session_id`
+
+The proposal mentioned `session_id` "already exists, used for reconnect", but
+the implementation reconnects by **`device_token`**, which is the stable
+credential in `localStorage` (a `session_id` is minted fresh per membership).
+`TvRemoteChannel#subscribed` looks up the member by `device_token` + the room's
+`tv_token`, marks them connected, and transmits a `rejoined` event with their
+slot/name/colour. The phone never shows a disconnect — it just comes back. A
+dropped member keeps their slot (`#unsubscribed` sets `connected: false` rather
+than destroying the membership), so the seat is still theirs on return.
+
+### Decision: connection status is broadcast, not just stored
+
+`RoomMembership#connected` was being tracked server-side but never surfaced.
+That made reconnect invisible — nobody saw a player drop or return. We now
+broadcast presence on every connection change:
+
+- `RoomChannel.presence_changed(room)` emits `{ type: "presence", members: [...] }`
+  with each member's `connected` flag.
+- `TvRemoteChannel` fires it on disconnect (`#unsubscribed`) and on reconnect
+  (`#subscribed`), guarded so phones that never held a slot stay silent.
+- The Zone waiting list and the Trivia TV lobby grey out dropped players with an
+  "away" tag and re-light them on return.
+
+Presence is wired into the Zone (universal — every game's phone view) and the
+flagship Trivia TV lobby. Other party-game TV views already subscribe to
+`RoomChannel` and can opt in with a one-line `presence` handler.
+
+### Decision: full rooms reclaim a long-gone player's slot
+
+Because a dropped player keeps their slot, a 4-slot room could fill with ghosts
+and read `full?` to a new player who wants in. A `RoomMembership` now carries a
+`disconnected_at` timestamp, and `Room::RECLAIM_GRACE` (90 seconds) defines how
+long a seat is held. When a room is otherwise full, a new join (`join_room` or
+the D-pad auto-claim in `ensure_membership_for`) reclaims the **longest-gone**
+member whose `disconnected_at` is past the grace window — destroying that ghost
+membership (with a `member_left` broadcast) and handing over the slot. Reclaim
+only fires when the room is full and someone new wants in; free slots and
+recently-dropped players (inside the grace window) are never touched. The grace
+is deliberately short enough to free a seat during active play but long enough
+to survive a phone reboot or an accidental swipe.
+
+The older HTTP trivia-join path (`rooms_controller#add_member`, keyed off a
+cookie `session_id` with no live disconnect signal) does **not** get reclaim —
+it has no presence to reason about. That remains a separate, larger problem.
 
 ---
 

@@ -113,6 +113,9 @@
   }
   .waiting-player-name { font-size: 14px; font-weight: 700; color: #fff; flex: 1; }
   .waiting-player-you  { font-size: 11px; color: #00ffc8; letter-spacing: 0.06em; }
+  .waiting-player-row.is-offline { opacity: 0.4; }
+  .waiting-player-row.is-offline .waiting-player-dot { background: #556 !important; }
+  .waiting-player-away { font-size: 11px; color: #889; letter-spacing: 0.06em; }
   .waiting-host-note {
     font-size: 12px; color: #445; line-height: 1.5;
     padding: 0 4px;
@@ -1711,10 +1714,12 @@
     var rows = members.filter(function(m) { return m.role === 'player'; }).map(function(m) {
       var color = SLOT_COLORS[m.slot] || '#fff';
       var youTag = m.slot === mySlot ? '<span class="waiting-player-you">YOU</span>' : '';
-      return '<div class="waiting-player-row">' +
+      var offline = m.connected === false;
+      var awayTag = offline ? '<span class="waiting-player-away">away</span>' : '';
+      return '<div class="waiting-player-row' + (offline ? ' is-offline' : '') + '">' +
         '<div class="waiting-player-dot" style="background:' + color + '"></div>' +
         '<div class="waiting-player-name">' + esc(m.name) + '</div>' +
-        youTag +
+        youTag + awayTag +
         '</div>';
     });
     waitingPlayers.innerHTML =
@@ -1728,7 +1733,7 @@
       { channel: 'RoomChannel', code: code },
       {
         received: function(data) {
-          if (data.type === 'member_joined' || data.type === 'member_left') {
+          if (data.type === 'member_joined' || data.type === 'member_left' || data.type === 'presence') {
             if (data.members) renderPlayers(data.members);
           }
         }
