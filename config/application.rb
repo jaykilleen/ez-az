@@ -16,6 +16,10 @@ module EzAz
   class Application < Rails::Application
     config.load_defaults 8.0
 
+    # Gumdale is in Queensland (no daylight saving, always AEST +10).
+    # Timestamps are still stored in UTC; this only affects display and parsing.
+    config.time_zone = "Brisbane"
+
     config.secret_key_base = ENV.fetch("SECRET_KEY_BASE") { SecureRandom.hex(64) }
 
     # Serve static files from public/ (no Nginx in front of Puma)
