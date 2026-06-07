@@ -42,6 +42,10 @@ A maze runner by Jaykill (`public/games/descent.html`). 1-player, procedurally g
 
 A first-person raycaster zombie fighter by Charlie & Cooper (`public/games/corrupted.html`). 1 or 2 player split screen. Fight through 6 themed worlds (sewers, school, fairground, frozen lab, volcano, corruption core) with unique zombie types and bosses. Start with fists, loot armour, shields and swords from defeated zombies. Points-based scoring (DESC leaderboard).
 
+### Late Shift
+
+A single-player arcade sorter by Az (`public/games/late-shift.html`). The store's shut and the chute is spitting out returned cartridges. Move Az's cart to catch falling cartridges and drop each onto its matching coloured shelf (Action/red, Puzzle/blue, Sport/green, Chill/yellow). Correct drops build a combo; a missed catch smashes on the floor and three smashes ends the shift. Difficulty ramps with score and time. Points-based scoring (DESC leaderboard).
+
 ### Charlie & Cooper's Space Dodge
 
 The first game in the EZ-AZ collection. A two-player co-op space shooter with:

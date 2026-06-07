@@ -16,7 +16,8 @@ class Score < ApplicationRecord
     "letterbox" => :desc,
     "magnet-lab" => :desc,
     "marble-run" => :asc,
-    "dino-jump"  => :desc
+    "dino-jump"  => :desc,
+    "late-shift" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -28,7 +29,8 @@ class Score < ApplicationRecord
     "corrupted" => "COOPER",
     "az-cipher" => "JAYKILL",
     "letterbox" => "JAYKILL",
-    "magnet-lab" => "JAYKILL"
+    "magnet-lab" => "JAYKILL",
+    "late-shift" => "AZ"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

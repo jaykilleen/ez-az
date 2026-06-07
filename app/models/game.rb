@@ -128,6 +128,15 @@ class Game
       tv_optimised: true
     },
     {
+      slug: "late-shift",
+      title: "Late Shift",
+      creators: "Az",
+      tagline: "Store's shut, time to restock. Catch the falling cartridges and sort them onto the right shelves. Build a combo, dodge the smashes.",
+      path: "/games/late-shift.html",
+      icon: "late-shift",
+      tv_optimised: false
+    },
+    {
       slug: "magnet-lab",
       title: "Magnet Lab",
       creators: "Jaykill",
