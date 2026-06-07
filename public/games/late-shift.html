@@ -247,6 +247,7 @@
   var state = 'title';   // title | playing | paused | over
   var falling = [];
   var particles = [];
+  var popups = [];
   var binFlash = [0, 0, 0, 0];
   var score = 0, combo = 1, bestCombo = 1, strikes = 0;
   var MAX_STRIKES = 3;
@@ -255,11 +256,15 @@
   var shake = 0;
 
   function reset() {
-    falling = []; particles = [];
+    falling = []; particles = []; popups = [];
     binFlash = [0, 0, 0, 0];
     az.x = W / 2; az.held = [];
     score = 0; combo = 1; bestCombo = 1; strikes = 0;
-    elapsed = 0; spawnTimer = 0.6; shake = 0;
+    elapsed = 0; spawnTimer = 1.2; shake = 0;  // grace before the first cartridge
+  }
+
+  function popup(x, y, text, colour) {
+    popups.push({ x: x, y: y, vy: -70, life: 0.9, text: text, colour: colour });
   }
 
   function spawnInterval() {
@@ -373,12 +378,14 @@
       binFlash[idx] = 1;
       sfxGood();
       burst(bin.x + bin.w / 2, BIN_TOP, bin.genre.colour, 14);
+      popup(bin.x + bin.w / 2, BIN_TOP - 10, '+' + gain + (combo > 2 ? '  x' + (combo - 1) : ''), bin.genre.colour);
     } else {
       combo = 1;
       score = Math.max(0, score - 20);
       binFlash[idx] = -1;
       sfxBad();
       shake = 6;
+      popup(bin.x + bin.w / 2, BIN_TOP - 10, 'WRONG SHELF', '#ff3b3b');
     }
   }
 
@@ -443,6 +450,7 @@
         shake = 10;
         sfxSmash();
         burst(f.x + f.w / 2, FLOOR_Y, '#888', 16);
+        popup(f.x + f.w / 2, FLOOR_Y - 30, 'SMASH!', '#cccccc');
         if (strikes >= MAX_STRIKES) { gameOver(); return; }
       }
     }
@@ -454,6 +462,14 @@
       pt.vy += 420 * dt;
       pt.x += pt.vx * dt; pt.y += pt.vy * dt;
       if (pt.life <= 0) particles.splice(p, 1);
+    }
+
+    // floating popups
+    for (var u = popups.length - 1; u >= 0; u--) {
+      var pu = popups[u];
+      pu.life -= dt;
+      pu.y += pu.vy * dt;
+      if (pu.life <= 0) popups.splice(u, 1);
     }
 
     // bin flash decay
@@ -554,14 +570,25 @@
     ctx.fillStyle = '#2a2750';
     ctx.fillRect(W / 2 - 70, 16, 140, 8);
 
+    // which shelf does the carried (bottom) cartridge belong to?
+    var wantBin = az.held.length > 0 ? az.held[0] : -1;
+    var pulse = 0.5 + 0.5 * Math.sin(elapsed * 6);
+
     // bins / shelves
     for (var i = 0; i < bins.length; i++) {
       var bin = bins[i], g = bin.genre;
       var fl = binFlash[i];
       ctx.fillStyle = fl > 0 ? mix(g.colour, '#ffffff', fl * 0.5)
                     : fl < 0 ? mix('#3a1f1f', '#ff3b3b', -fl * 0.5)
-                    : '#13112a';
+                    : (i === wantBin ? mix('#13112a', g.colour, 0.18 + pulse * 0.12) : '#13112a');
       roundRect(bin.x, BIN_TOP, bin.w, BIN_H, 8); ctx.fill();
+      if (i === wantBin) {
+        ctx.save();
+        ctx.shadowColor = g.colour; ctx.shadowBlur = 18 + pulse * 14;
+        ctx.strokeStyle = g.colour; ctx.lineWidth = 4;
+        roundRect(bin.x, BIN_TOP, bin.w, BIN_H, 8); ctx.stroke();
+        ctx.restore();
+      }
       ctx.strokeStyle = g.colour; ctx.lineWidth = 3;
       roundRect(bin.x, BIN_TOP, bin.w, BIN_H, 8); ctx.stroke();
       // shelf label
@@ -597,6 +624,17 @@
     ctx.globalAlpha = 1;
 
     drawAz();
+
+    // floating popups
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 24px Courier New';
+    for (var u = 0; u < popups.length; u++) {
+      var pu = popups[u];
+      ctx.globalAlpha = Math.max(0, Math.min(1, pu.life * 1.5));
+      ctx.fillStyle = pu.colour;
+      ctx.fillText(pu.text, pu.x, pu.y);
+    }
+    ctx.globalAlpha = 1;
     ctx.restore();
 
     drawHUD();
@@ -786,7 +824,9 @@
       get score() { return score; },
       get combo() { return combo; },
       get state() { return state; },
-      deliver: deliver, start: startGame
+      deliver: deliver, start: startGame,
+      freeze: function () { state = 'paused'; },     // freeze without the pause overlay (test only)
+      setScore: function (n) { score = n; }
     };
   }
 })();
