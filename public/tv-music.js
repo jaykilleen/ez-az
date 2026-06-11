@@ -168,6 +168,31 @@
         // Sub pulse every 8 — adds urgency
         if (step === 0 || step === 8) pad(NF.C3, t, 0.6, 0.08);
       }
+    },
+
+    'golden-goal': {
+      tempo: 116,
+      gain: 0.16,
+      pattern: function (t, beat) {
+        // 16-beat stadium anthem loop in G major — terrace chant cadence
+        var step = beat % 16;
+        // Marching bass, four to the floor
+        var bassSeq = [NF.G2, NF.G2, NF.D3, NF.G2, NF.E2, NF.E2, NF.C3, NF.D3,
+                       NF.G2, NF.G2, NF.D3, NF.G2, NF.C3, NF.C3, NF.D3, NF.D3];
+        bass(bassSeq[step], t, 0.4, 0.3);
+        // Crowd clap on the backbeat (the "clap-clap" of a chant)
+        if (step % 4 === 2) tick(t, 0.12);
+        // Brass-ish chant melody — short call-and-response phrases
+        var melody = [NF.G4, NF.B4, NF.D5, null, NF.E5, NF.D5, NF.B4, null,
+                      NF.G4, NF.B4, NF.D5, null, NF.C5, NF.B4, NF.A4, NF.G4];
+        if (melody[step]) tone(melody[step], t, 0.4, 'sawtooth', 0.07, 0.02);
+        // Big anthem pad at the top of each phrase
+        if (step === 0) {
+          pad(NF.G3, t, 1.8, 0.14);
+          pad(NF.B3, t, 1.8, 0.1);
+          pad(NF.D4, t, 1.8, 0.08);
+        }
+      }
     }
   };
 

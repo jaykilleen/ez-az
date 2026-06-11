@@ -1,0 +1,813 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Jay Killeen -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
+<script src="/error-reporter.js"></script>
+<script src="/tv-music.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<title>Golden Goal - EZ-AZ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #04070a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  #wrap { position: relative; }
+  canvas { display: block; }
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; z-index: 10; padding: 20px; overflow-y: auto; background: rgba(4,7,10,0.92); }
+  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
+  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #00ffaa, #3aa0ff, #ffd23b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
+  .store-banner a:hover { opacity: 1; }
+  .btn { margin-top: 14px; padding: 12px 36px; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #ffd23b, #cc9a00); color: #141004; font-weight: bold; transition: transform 0.1s; font-family: 'Press Start 2P', monospace; }
+  .btn:hover { transform: scale(1.06); }
+  .btn-quit { margin-top: 8px; padding: 12px 36px; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #cc4444, #aa2222); color: white; font-weight: bold; transition: transform 0.1s; font-family: 'Press Start 2P', monospace; }
+  .btn-quit:hover { transform: scale(1.06); }
+  .join-box { background:rgba(255,210,59,0.06); border:1px solid rgba(255,210,59,0.25); border-radius:10px; padding:10px 18px; margin-bottom:14px; max-width:640px; width:100%; }
+  .join-label { font-family:'Press Start 2P',monospace; font-size:8px; color:#789; margin-bottom:5px; }
+  .join-url { font-family:'Press Start 2P',monospace; font-size:11px; color:#00ffaa; word-break:break-all; }
+  .join-code { font-family:'Press Start 2P',monospace; font-size:20px; color:#ffd23b; letter-spacing:3px; margin-top:6px; }
+  .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; max-width: 700px; width: 100%; }
+  .slot-card { border: 2px solid #222; border-radius: 10px; padding: 12px 8px; transition: border-color 0.2s; }
+  .slot-tag { font-family: 'Press Start 2P', monospace; font-size: 9px; margin-bottom: 6px; }
+  .slot-name { font-size: 11px; color: #444; line-height: 1.6; font-family: 'Press Start 2P', monospace; }
+  .lb-wrap { margin: 10px auto; max-width: 340px; width: 100%; text-align: left; }
+  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 9px; color: #ffd23b; margin-bottom: 8px; text-align: center; }
+  .lb-row { display: flex; justify-content: space-between; padding: 3px 8px; font-size: 10px; color: #9ab; font-family: 'Press Start 2P', monospace; }
+  .lb-row.highlight { color: #00ffaa; background: rgba(0,255,170,0.08); border-radius: 4px; }
+  .lb-empty { color: #456; font-size: 11px; text-align: center; padding: 8px; }
+  .score-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; max-width: 520px; width: 100%; }
+  .score-card { border: 2px solid #222; border-radius: 10px; padding: 12px 10px; }
+  .score-card.winner { border-color: #ffd23b; background: rgba(255,210,59,0.07); }
+  .score-tag { font-family: 'Press Start 2P', monospace; font-size: 10px; margin-bottom: 5px; }
+  .score-val { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #00ffaa; margin-bottom: 3px; }
+  .score-rank { font-size: 10px; color: #ffd23b; font-family: 'Press Start 2P', monospace; }
+  #nameEntry { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; }
+  .lb-name-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 10px; font-size: 12px; border-radius: 6px; width: 130px; font-family: 'Press Start 2P', monospace; text-transform: uppercase; }
+  .btn-small { padding: 6px 14px; font-size: 10px; border: none; border-radius: 6px; cursor: pointer; background: rgba(255,210,59,0.15); color: #ffd23b; font-weight: bold; font-family: 'Press Start 2P', monospace; }
+  .btn-small:hover { background: rgba(255,210,59,0.28); }
+  .hint { color: #456; font-size: 9px; margin-bottom: 10px; font-family: 'Press Start 2P', monospace; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div id="wrap">
+
+<div id="titleScreen" class="overlay">
+  <h1 style="font-family:'Press Start 2P',monospace; font-size:30px; color:#ffd23b; margin-bottom:4px; text-shadow:0 0 18px rgba(255,210,59,0.6);">GOLDEN GOAL</h1>
+  <p style="color:#567; font-size:10px; margin-bottom:14px; font-style:italic;">Step up to the spot. Pick your corner. Glory or heartbreak on one kick.</p>
+
+  <div class="join-box">
+    <p class="join-label">GRAB YOUR PHONE — SCAN TO JOIN</p>
+    <img id="joinQr" alt="Scan to join" style="width:180px;height:180px;background:#fff;border-radius:10px;padding:8px;margin:4px auto 8px;display:none;" />
+    <p id="joinUrl" class="join-url"></p>
+    <p class="join-code">CODE <span id="joinCode"></span></p>
+  </div>
+
+  <div class="slots-grid" id="slotsGrid">
+    <div class="slot-card" id="slot0"><div class="slot-tag" style="color:#00ffaa;">GREEN</div><div class="slot-name" id="slot0name">EMPTY</div></div>
+    <div class="slot-card" id="slot1"><div class="slot-tag" style="color:#ff3b6b;">PINK</div><div class="slot-name" id="slot1name">EMPTY</div></div>
+    <div class="slot-card" id="slot2"><div class="slot-tag" style="color:#3aa0ff;">BLUE</div><div class="slot-name" id="slot2name">EMPTY</div></div>
+    <div class="slot-card" id="slot3"><div class="slot-tag" style="color:#ffd23b;">GOLD</div><div class="slot-name" id="slot3name">EMPTY</div></div>
+  </div>
+
+  <p class="hint">Phones are the controllers — picks stay secret &nbsp;|&nbsp; Empty slots get an Az bot &nbsp;|&nbsp; 5 shots each &middot; ESC pauses</p>
+  <button class="btn" onclick="tvStart()">KICK OFF</button>
+  <div class="lb-wrap" id="titleLb"></div>
+</div>
+
+<div id="pauseScreen" class="overlay" style="display:none;">
+  <h1 style="font-family:'Press Start 2P',monospace; font-size:22px; color:#fff; margin-bottom:20px;">PAUSED</h1>
+  <button class="btn" onclick="resumeGame()">RESUME</button>
+  <button class="btn-quit" onclick="quitGame()">QUIT</button>
+</div>
+
+<div id="endScreen" class="overlay" style="display:none;">
+  <h1 id="endTitle" style="font-family:'Press Start 2P',monospace; font-size:20px; color:#ffd23b; margin-bottom:10px;"></h1>
+  <div class="score-grid" id="scoreGrid"></div>
+  <div id="nameEntry" style="display:none;">
+    <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:#9ab;">CHAMPION NAME:</p>
+    <input type="text" id="nameInput" class="lb-name-input" maxlength="10" placeholder="NAME">
+    <button class="btn-small" onclick="saveScore()">SAVE</button>
+  </div>
+  <div class="lb-wrap" id="endLb"></div>
+  <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+  <button class="btn-quit" onclick="window.location.href='/'">BACK TO STORE</button>
+</div>
+
+<canvas id="game"></canvas>
+</div>
+
+<script>
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var TW = canvas.width  = 1280;
+var TH = canvas.height = 720;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
+
+var SLUG = 'golden-goal';
+
+// ---- Player slots (kit colours) ----
+var SLOTS = [
+  { tag: 'GREEN', col: '#00ffaa', dim: '#0a3' },
+  { tag: 'PINK',  col: '#ff3b6b', dim: '#a13' },
+  { tag: 'BLUE',  col: '#3aa0ff', dim: '#159' },
+  { tag: 'GOLD',  col: '#ffd23b', dim: '#a82' }
+];
+var BOT_NAMES = ['AZ-10', 'BOOTSAUR', 'VOLLEYREX', 'CHOMPER', 'KEEPSAUR', 'TOEPOKE', 'REXIO', 'CROSSBAR'];
+
+// ---- Match tuning ----
+var SHOTS_EACH   = 5;                    // classic shootout length per striker
+var KEEPER_OFFS  = [1, 2, 3, 1, 2];      // keeper = (striker + offset) % 4 per shot round
+                                         // each offset is a permutation, so every player
+                                         // keeps exactly once per shot round = 5 keeper turns
+var PICK_MS      = 8000;                 // human pick window
+var BOT_PICK_MS  = 1500;                 // beat when both picker are bots
+var REVEAL_MS    = 3400;                 // run-up + flight + outcome
+var IMPACT_MS    = 1750;                 // moment the ball reaches the goal
+var INTER_MS     = 1900;                 // scoreboard beat between rounds
+
+// ---- Goal geometry (behind-the-striker penalty camera) ----
+var GOAL_W = 540, GOAL_H = 210;
+var GX = (TW - GOAL_W) / 2, GY = 150;            // goal mouth rect
+var SPOT = { x: TW / 2, y: 590 };                // penalty spot
+var AIM_IDX = { left: 0, centre: 1, right: 2 };
+function zoneCentre(aim, height) {
+  var cx = GX + (AIM_IDX[aim] + 0.5) * (GOAL_W / 3);
+  var cy = height === 'high' ? GY + GOAL_H * 0.27 : GY + GOAL_H * 0.78;
+  return { x: cx, y: cy };
+}
+
+// ---- State ----
+var gameState = 'title';   // title | pick | reveal | interlude | paused | gameover
+var players = [];          // { slot, name, isBot, col, score, goals, saves }
+var roundIdx = -1, totalRounds = SHOTS_EACH * 4;
+var striker = 0, keeper = 1;
+var picks = { shot: null, dive: null };  // secret until the reveal
+var pickDeadline = 0;
+var revealStart = 0, outcome = null, outcomeApplied = false;
+var interludeEnd = 0;
+var pausedAt = 0, prePauseState = null;
+var azLine = '', azUntil = 0;
+var shakeUntil = 0;
+var particles = [];
+var crowd = [];            // precomputed crowd dots
+
+function now() { return Date.now(); }
+function az(line, ms) { azLine = line; azUntil = now() + (ms || 2600); }
+
+// ---- Keyboard (trap game keys; Escape pauses, Enter starts) ----
+window.addEventListener('keydown', function(e) {
+  if (e.code === 'Escape') togglePause();
+  if (e.code === 'Enter' && gameState === 'title') tvStart();
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','ShiftLeft','ShiftRight'].indexOf(e.code) >= 0) e.preventDefault();
+});
+
+// ---- Audio ----
+var audioCtx = null;
+function getAC() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function blip(freq, endFreq, dur, vol, type) {
+  try {
+    var ac = getAC(), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.connect(g); g.connect(ac.destination);
+    o.frequency.setValueAtTime(freq, ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), ac.currentTime + dur);
+    g.gain.setValueAtTime(vol, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch (e) {}
+}
+function noiseBurst(dur, vol) {
+  try {
+    var ac = getAC();
+    var buf = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    var src = ac.createBufferSource(); src.buffer = buf;
+    var g = ac.createGain(); g.gain.value = vol;
+    var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+    src.connect(lp); lp.connect(g); g.connect(ac.destination);
+    src.start();
+  } catch (e) {}
+}
+function sWhistle() { blip(2200, 2200, 0.28, 0.07, 'sine'); }
+function sKick()    { blip(160, 50, 0.12, 0.16, 'sine'); noiseBurst(0.08, 0.08); }
+function sGoal()    { noiseBurst(1.4, 0.16); blip(523, 784, 0.3, 0.1, 'triangle'); }
+function sSave()    { blip(420, 120, 0.3, 0.14, 'sawtooth'); noiseBurst(0.5, 0.08); }
+function sLock()    { blip(880, 1175, 0.09, 0.07, 'triangle'); }
+function sWin()     { blip(523, 523, 0.12, 0.12, 'triangle'); setTimeout(function(){ blip(784, 784, 0.18, 0.12, 'triangle'); }, 130); setTimeout(function(){ blip(1046, 1046, 0.24, 0.12, 'triangle'); }, 280); }
+
+// ---- Particles ----
+function burst(cx, cy, col, n) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 3.5;
+    particles.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, col: col });
+  }
+}
+
+// ---- Bots ----
+var AIMS = ['left', 'centre', 'right'];
+function botShot() {
+  return { aim: AIMS[Math.floor(Math.random() * 3)], height: Math.random() < 0.5 ? 'high' : 'low' };
+}
+function botDive() {
+  // keeper bots guess centre slightly less often, so a solo human can win
+  var r = Math.random();
+  var aim = r < 0.4 ? 'left' : r < 0.6 ? 'centre' : 'right';
+  return { aim: aim, height: Math.random() < 0.5 ? 'high' : 'low' };
+}
+function randomPick() { return botShot(); }
+
+// ---- Leaderboard ----
+var lbData = [];
+async function fetchLb() {
+  try {
+    var r = await fetch('/api/scores?game=' + SLUG);
+    var d = await r.json();
+    lbData = d.scores || [];
+  } catch (e) {
+    try { lbData = JSON.parse(localStorage.getItem('lb_' + SLUG) || '[]'); } catch (e2) { lbData = []; }
+  }
+  renderLb('titleLb');
+}
+function renderLb(elId, hlName) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  if (!lbData.length) { el.innerHTML = '<div class="lb-title">HIGH SCORES</div><div class="lb-empty">No scores yet. Be the first!</div>'; return; }
+  var h = '<div class="lb-title">HIGH SCORES</div>';
+  lbData.slice(0, 10).forEach(function(row, i) {
+    var hl = hlName && row.name === hlName ? ' highlight' : '';
+    h += '<div class="lb-row' + hl + '"><span>#' + (i + 1) + ' ' + row.name + '</span><span>' + row.value + '</span></div>';
+  });
+  el.innerHTML = h;
+}
+var winnerScore = 0, winnerName = '';
+async function saveScore() {
+  var name = (document.getElementById('nameInput').value || '').trim().toUpperCase() || winnerName || 'AZ';
+  try {
+    var r = await fetch('/api/scores', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game: SLUG, name: name, value: winnerScore })
+    });
+    var d = await r.json();
+    lbData = d.scores || lbData;
+    localStorage.setItem('lb_' + SLUG, JSON.stringify(lbData));
+  } catch (e) {
+    lbData.push({ name: name, value: winnerScore });
+    lbData.sort(function(a, b) { return b.value - a.value; });
+    lbData = lbData.slice(0, 10);
+    localStorage.setItem('lb_' + SLUG, JSON.stringify(lbData));
+  }
+  document.getElementById('nameEntry').style.display = 'none';
+  renderLb('endLb', name);
+}
+
+// ---- ActionCable (minimal client, same pattern as Snake Pit) ----
+// The TV subscribes as role 'tv', which also opens the private
+// golden_goal:<code>:tv stream where the secret picks arrive.
+var CHARS_BC = 'BCDFGHJKLMNPQRSTVWXYZ23456789';
+var gameCode = Array.from({ length: 4 }, function() { return CHARS_BC[Math.floor(Math.random() * CHARS_BC.length)]; }).join('');
+var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
+var tvCable = null, tvSub = null;
+
+function initCable() {
+  try {
+    tvCable = { _ws: null, _connect: function() {
+      var self = tvCable;
+      self._ws = new WebSocket(wsBase);
+      self._ws.onopen = function() { if (tvSub) tvSub._subscribe(); };
+      self._ws.onmessage = function(e) {
+        var msg = JSON.parse(e.data);
+        if (msg.type === 'ping' || msg.type === 'welcome' || msg.type === 'confirm_subscription') return;
+        if (tvSub && tvSub._id === msg.identifier && msg.message) handleCable(msg.message);
+      };
+      self._ws.onclose = function() { setTimeout(function() { self._connect(); }, 2000); };
+    } };
+    tvCable._connect();
+
+    var params = { channel: 'GoldenGoalChannel', code: gameCode, role: 'tv' };
+    tvSub = {
+      _id: JSON.stringify(params),
+      _subscribe: function() { tvCable._ws.send(JSON.stringify({ command: 'subscribe', identifier: this._id })); },
+      send: function(action, data) {
+        if (tvCable._ws && tvCable._ws.readyState === WebSocket.OPEN) {
+          tvCable._ws.send(JSON.stringify({ command: 'message', identifier: this._id, data: JSON.stringify(Object.assign({ action: action }, data || {})) }));
+        }
+      }
+    };
+  } catch (e) {}
+}
+function tvEvent(event, payload) {
+  if (tvSub) tvSub.send('tv_event', { event: event, payload: payload || {} });
+}
+
+var lobby = [null, null, null, null]; // names by slot from phones
+function handleCable(msg) {
+  if (msg.type === 'lobby_update') {
+    lobby = [null, null, null, null];
+    (msg.players || []).forEach(function(p) { lobby[p.slot] = p.name; });
+    for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+  } else if (msg.type === 'pick') {
+    // Secret pick from a phone (arrives on the TV-only stream)
+    if (gameState !== 'pick' && gameState !== 'paused') return;
+    if (msg.kind === 'shot' && msg.slot === striker && !picks.shot) {
+      picks.shot = { aim: msg.aim, height: msg.height };
+      sLock();
+    } else if (msg.kind === 'dive' && msg.slot === keeper && !picks.dive) {
+      picks.dive = { aim: msg.aim, height: msg.height };
+      sLock();
+    }
+  }
+}
+function updateSlot(slot, name) {
+  var el = document.getElementById('slot' + slot);
+  var nm = document.getElementById('slot' + slot + 'name');
+  if (el) el.style.borderColor = name ? SLOTS[slot].col : '#222';
+  if (nm) { nm.textContent = name || 'EMPTY'; nm.style.color = name ? '#fff' : '#444'; }
+}
+
+// ---- Lifecycle ----
+function tvStart() {
+  if (tvSub) tvSub.send('start_game', {});
+  startGame();
+}
+function startGame() {
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'none';
+  players = [];
+  var botIdx = 0;
+  for (var i = 0; i < 4; i++) {
+    var isBot = !lobby[i];
+    var name = lobby[i] || BOT_NAMES[(botIdx++) % BOT_NAMES.length];
+    players.push({ slot: i, name: name, isBot: isBot, col: SLOTS[i].col, score: 0, goals: 0, saves: 0 });
+  }
+  roundIdx = -1;
+  particles = [];
+  if (window.Music) Music.start('golden-goal');
+  az('Welcome to the Golden Goal final! RAWR!', 2800);
+  sWhistle();
+  nextRound();
+}
+
+function nextRound() {
+  roundIdx++;
+  if (roundIdx >= totalRounds) return endMatch();
+
+  var shotRound = Math.floor(roundIdx / 4);   // 0..4
+  striker = roundIdx % 4;
+  keeper  = (striker + KEEPER_OFFS[shotRound]) % 4;
+
+  picks = { shot: null, dive: null };
+  outcome = null; outcomeApplied = false;
+
+  // Bot picks happen TV-side, instantly and secretly (the TV is authoritative)
+  if (players[striker].isBot) picks.shot = botShot();
+  if (players[keeper].isBot)  picks.dive = botDive();
+
+  var humanInvolved = !players[striker].isBot || !players[keeper].isBot;
+  pickDeadline = now() + (humanInvolved ? PICK_MS : BOT_PICK_MS);
+  gameState = 'pick';
+
+  // Public round state — who's up. Never includes the picks themselves.
+  tvEvent('round_setup', {
+    round: roundIdx + 1, total: totalRounds,
+    striker: striker, keeper: keeper,
+    striker_name: players[striker].name, keeper_name: players[keeper].name
+  });
+  az(players[striker].name + ' steps up... ' + players[keeper].name + ' guards the goal!', 3000);
+}
+
+function startReveal() {
+  if (!picks.shot) picks.shot = randomPick();   // human ran out of time
+  if (!picks.dive) picks.dive = randomPick();
+  outcome = (picks.shot.aim === picks.dive.aim && picks.shot.height === picks.dive.height) ? 'save' : 'goal';
+  revealStart = now();
+  gameState = 'reveal';
+  sWhistle();
+}
+
+function applyOutcome() {
+  outcomeApplied = true;
+  if (outcome === 'goal') {
+    players[striker].score++; players[striker].goals++;
+    sGoal();
+    shakeUntil = now() + 350;
+    var z = zoneCentre(picks.shot.aim, picks.shot.height);
+    burst(z.x, z.y, '#ffd23b', 26);
+    az('GOOOAL! ' + players[striker].name + ' buries it!', 2600);
+  } else {
+    players[keeper].score++; players[keeper].saves++;
+    sSave();
+    shakeUntil = now() + 250;
+    var z2 = zoneCentre(picks.dive.aim, picks.dive.height);
+    burst(z2.x, z2.y, players[keeper].col, 22);
+    az('WHAT A SAVE! ' + players[keeper].name + ' read it all the way!', 2600);
+  }
+}
+
+function endReveal() {
+  tvEvent('scoreboard', {
+    scores: players.map(function(p) { return { slot: p.slot, name: p.name, score: p.score }; })
+  });
+  interludeEnd = now() + INTER_MS;
+  gameState = 'interlude';
+}
+
+function togglePause() {
+  if (gameState === 'pick' || gameState === 'reveal' || gameState === 'interlude') {
+    prePauseState = gameState;
+    gameState = 'paused';
+    pausedAt = now();
+    document.getElementById('pauseScreen').style.display = 'flex';
+  } else if (gameState === 'paused') {
+    resumeGame();
+  }
+}
+function resumeGame() {
+  if (gameState !== 'paused') return;
+  var delta = now() - pausedAt;
+  pickDeadline += delta; revealStart += delta; interludeEnd += delta; azUntil += delta;
+  gameState = prePauseState;
+  document.getElementById('pauseScreen').style.display = 'none';
+}
+function quitGame() {
+  gameState = 'title';
+  if (window.Music) Music.stop();
+  document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('titleScreen').style.display = 'flex';
+}
+
+function endMatch() {
+  if (gameState === 'gameover') return;
+  gameState = 'gameover';
+  if (window.Music) Music.stop();
+
+  var ranked = players.slice().sort(function(a, b) {
+    if (b.score !== a.score) return b.score - a.score;
+    return b.goals - a.goals;   // tiebreak: more goals beats more saves
+  });
+  var champ = ranked[0];
+  winnerScore = champ.score; winnerName = champ.name;
+  sWin(); az(champ.name + ' lifts the cup! RAWR!', 4000);
+
+  var results = ranked.map(function(p, i) { return { slot: p.slot, score: p.score, rank: i + 1 }; });
+  if (tvSub) tvSub.send('game_ended', { results: results });
+
+  var endTitle = document.getElementById('endTitle');
+  endTitle.textContent = champ.name + ' WINS THE CUP!';
+  endTitle.style.color = champ.col;
+
+  var grid = '';
+  ranked.forEach(function(p, i) {
+    grid += '<div class="score-card' + (i === 0 ? ' winner' : '') + '">';
+    grid += '<div class="score-tag" style="color:' + p.col + '">' + p.name + (p.isBot ? ' (BOT)' : '') + '</div>';
+    grid += '<div class="score-val">' + p.score + ' pts</div>';
+    grid += '<div class="score-rank">' + (i === 0 ? 'CHAMPION' : '#' + (i + 1)) + ' &middot; ' + p.goals + ' goals &middot; ' + p.saves + ' saves</div>';
+    grid += '</div>';
+  });
+  document.getElementById('scoreGrid').innerHTML = grid;
+
+  // only a human champion can claim a leaderboard spot -- a bot win is not saved
+  var qualifies = winnerScore > 0 && !champ.isBot &&
+                  (lbData.length < 10 || winnerScore > lbData[lbData.length - 1].value);
+  var ne = document.getElementById('nameEntry');
+  ne.style.display = qualifies ? 'flex' : 'none';
+  if (qualifies) document.getElementById('nameInput').value = champ.name;
+
+  renderLb('endLb');
+  document.getElementById('endScreen').style.display = 'flex';
+}
+
+// ---- Rendering ----
+function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+// precompute crowd dots
+(function() {
+  for (var i = 0; i < 260; i++) {
+    crowd.push({
+      x: Math.random() * TW, y: 28 + Math.random() * 80,
+      col: ['#334', '#445', '#536', '#454', '#544'][Math.floor(Math.random() * 5)],
+      ph: Math.random() * Math.PI * 2
+    });
+  }
+})();
+
+function drawPitch() {
+  // night sky + stadium
+  var sky = ctx.createLinearGradient(0, 0, 0, 130);
+  sky.addColorStop(0, '#04070a'); sky.addColorStop(1, '#0a1020');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, TW, 130);
+
+  // crowd band
+  ctx.fillStyle = '#0d1322';
+  ctx.fillRect(0, 24, TW, 96);
+  for (var i = 0; i < crowd.length; i++) {
+    var c = crowd[i];
+    var bounce = (gameState === 'reveal' && outcomeApplied) ? Math.sin(now() / 90 + c.ph) * 3 : 0;
+    ctx.fillStyle = c.col;
+    ctx.fillRect(c.x, c.y + bounce, 4, 5);
+  }
+  // floodlight glow line
+  ctx.fillStyle = 'rgba(255,255,220,0.07)';
+  ctx.fillRect(0, 118, TW, 4);
+
+  // pitch with mow stripes (perspective-ish horizontal bands)
+  var grass = ctx.createLinearGradient(0, 122, 0, TH);
+  grass.addColorStop(0, '#0c3a1e'); grass.addColorStop(1, '#11512b');
+  ctx.fillStyle = grass; ctx.fillRect(0, 122, TW, TH - 122);
+  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  var y = 122, band = 26;
+  for (var b = 0; y < TH; b++) {
+    if (b % 2 === 0) ctx.fillRect(0, y, TW, band);
+    y += band; band += 9;
+  }
+
+  // penalty box lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(GX - 180, TH); ctx.lineTo(GX - 60, GY + GOAL_H + 14);
+  ctx.lineTo(GX + GOAL_W + 60, GY + GOAL_H + 14); ctx.lineTo(GX + GOAL_W + 180, TH);
+  ctx.stroke();
+  // penalty spot
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.beginPath(); ctx.ellipse(SPOT.x, SPOT.y + 16, 9, 4, 0, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawGoal() {
+  // net
+  ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+  ctx.lineWidth = 1;
+  for (var nx = 0; nx <= 18; nx++) {
+    var x = GX + nx * (GOAL_W / 18);
+    ctx.beginPath(); ctx.moveTo(x, GY); ctx.lineTo(x, GY + GOAL_H); ctx.stroke();
+  }
+  for (var ny = 0; ny <= 7; ny++) {
+    var yy = GY + ny * (GOAL_H / 7);
+    ctx.beginPath(); ctx.moveTo(GX, yy); ctx.lineTo(GX + GOAL_W, yy); ctx.stroke();
+  }
+  // posts + crossbar
+  ctx.strokeStyle = '#f4f4f4';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(GX - 4, GY + GOAL_H + 4); ctx.lineTo(GX - 4, GY - 4);
+  ctx.lineTo(GX + GOAL_W + 4, GY - 4); ctx.lineTo(GX + GOAL_W + 4, GY + GOAL_H + 4);
+  ctx.stroke();
+}
+
+function keeperPose() {
+  // returns { x, y, lean } for the keeper body centre
+  var base = { x: TW / 2, y: GY + GOAL_H - 38, lean: 0 };
+  if (gameState !== 'reveal' || !picks.dive) {
+    // idle sway on the line
+    base.x += Math.sin(now() / 420) * 14;
+    return base;
+  }
+  var t = clamp01((now() - revealStart - IMPACT_MS * 0.45) / (IMPACT_MS * 0.55));
+  var z = zoneCentre(picks.dive.aim, picks.dive.height);
+  var e = ease(t);
+  return {
+    x: TW / 2 + (z.x - TW / 2) * e,
+    y: (GY + GOAL_H - 38) + (z.y - (GY + GOAL_H - 38)) * e * 0.9,
+    lean: (z.x - TW / 2) / (GOAL_W / 2) * 1.1 * e
+  };
+}
+
+function drawKeeper() {
+  var p = keeperPose();
+  var col = players.length ? players[keeper] && players[keeper].col || '#ff3b6b' : '#ff3b6b';
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(p.lean);
+  ctx.shadowColor = col; ctx.shadowBlur = 10;
+  // body
+  ctx.fillStyle = col;
+  ctx.fillRect(-10, -22, 20, 34);
+  // head
+  ctx.fillStyle = '#ffe0bd';
+  ctx.beginPath(); ctx.arc(0, -32, 9, 0, Math.PI * 2); ctx.fill();
+  // arms out (wider mid-dive)
+  var spread = 16 + Math.abs(p.lean) * 18;
+  ctx.strokeStyle = col; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-8, -16); ctx.lineTo(-spread, -30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(8, -16); ctx.lineTo(spread, -30); ctx.stroke();
+  // legs
+  ctx.beginPath(); ctx.moveTo(-6, 12); ctx.lineTo(-10, 30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(6, 12); ctx.lineTo(10, 30); ctx.stroke();
+  ctx.restore();
+}
+
+function strikerPose() {
+  // run-up from bottom-left toward the spot during the first part of the reveal
+  var home = { x: SPOT.x - 130, y: SPOT.y + 70 };
+  if (gameState !== 'reveal') return home;
+  var t = clamp01((now() - revealStart) / (IMPACT_MS * 0.62));
+  var e = ease(t);
+  return { x: home.x + (SPOT.x - 26 - home.x) * e, y: home.y + (SPOT.y - home.y) * e };
+}
+
+function drawStriker() {
+  var p = strikerPose();
+  var col = players.length ? players[striker] && players[striker].col || '#00ffaa' : '#00ffaa';
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.shadowColor = col; ctx.shadowBlur = 12;
+  // seen from behind, bigger than the keeper (perspective)
+  ctx.fillStyle = col;
+  ctx.fillRect(-16, -40, 32, 54);
+  ctx.fillStyle = '#ffe0bd';
+  ctx.beginPath(); ctx.arc(0, -54, 13, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = col; ctx.lineWidth = 9;
+  var run = (gameState === 'reveal') ? Math.sin(now() / 70) * 10 : 0;
+  ctx.beginPath(); ctx.moveTo(-9, 14); ctx.lineTo(-13 - run * 0.4, 44); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(9, 14); ctx.lineTo(13 + run * 0.4, 44); ctx.stroke();
+  ctx.restore();
+}
+
+function ballState() {
+  // returns { x, y, r } -- ball shrinks as it travels toward the goal
+  if (gameState !== 'reveal' || !picks.shot) return { x: SPOT.x, y: SPOT.y, r: 15 };
+  var kickAt = IMPACT_MS * 0.62;
+  var t = now() - revealStart;
+  if (t < kickAt) return { x: SPOT.x, y: SPOT.y, r: 15 };
+  var f = clamp01((t - kickAt) / (IMPACT_MS - kickAt));
+  var z = zoneCentre(picks.shot.aim, picks.shot.height);
+  var x = SPOT.x + (z.x - SPOT.x) * f;
+  var y = SPOT.y + (z.y - SPOT.y) * f - Math.sin(f * Math.PI) * 60; // little arc
+  return { x: x, y: y, r: 15 - 8 * f, flying: true, f: f };
+}
+
+var kickPlayed = false;
+function drawBall() {
+  var b = ballState();
+  // saved ball deflects off the keeper after impact
+  if (gameState === 'reveal' && outcomeApplied && outcome === 'save') {
+    var t2 = clamp01((now() - revealStart - IMPACT_MS) / 600);
+    b.x += (picks.dive.aim === 'left' ? -1 : picks.dive.aim === 'right' ? 1 : 0.4) * 120 * t2;
+    b.y += 90 * t2 * t2;
+  }
+  ctx.save();
+  ctx.shadowColor = '#fff'; ctx.shadowBlur = 10;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(b.x, b.y, Math.max(5, b.r), 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(b.x - b.r * 0.25, b.y - b.r * 0.15, Math.max(1.5, b.r * 0.28), 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawHud() {
+  ctx.textAlign = 'left';
+  ctx.font = '11px "Press Start 2P", monospace';
+  var positions = [40, 290, TW - 480, TW - 230];
+  for (var i = 0; i < players.length; i++) {
+    var p = players[i];
+    var x = positions[i];
+    var active = (i === striker || i === keeper) && gameState !== 'gameover';
+    ctx.globalAlpha = active ? 1 : 0.55;
+    ctx.fillStyle = p.col;
+    ctx.fillRect(x, 8, 12, 12);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(p.name.slice(0, 8) + ' ' + p.score, x + 18, 19);
+    ctx.globalAlpha = 1;
+  }
+  // round counter
+  if (roundIdx >= 0 && gameState !== 'gameover') {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#9ab';
+    ctx.font = '11px "Press Start 2P", monospace';
+    ctx.fillText('SHOT ' + (roundIdx + 1) + '/' + totalRounds, TW / 2, 19);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawPickPhase() {
+  var sp = players[striker], kp = players[keeper];
+  ctx.textAlign = 'center';
+  ctx.font = '16px "Press Start 2P", monospace';
+  ctx.fillStyle = sp.col;
+  ctx.fillText(sp.name + ' TO SHOOT', TW / 2, 420);
+  ctx.font = '11px "Press Start 2P", monospace';
+  ctx.fillStyle = kp.col;
+  ctx.fillText(kp.name + ' IN GOAL', TW / 2, 450);
+
+  // lock indicators -- never the zones themselves, picks stay secret
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.fillStyle = picks.shot ? '#00ffaa' : '#456';
+  ctx.fillText(picks.shot ? 'SHOT LOCKED ✓' : 'PICKING SHOT...', TW / 2 - 180, 490);
+  ctx.fillStyle = picks.dive ? '#00ffaa' : '#456';
+  ctx.fillText(picks.dive ? 'DIVE LOCKED ✓' : 'PICKING DIVE...', TW / 2 + 180, 490);
+
+  // countdown bar
+  var frac = clamp01((pickDeadline - now()) / PICK_MS);
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(TW / 2 - 160, 508, 320, 8);
+  ctx.fillStyle = frac < 0.25 ? '#ff4444' : '#ffd23b';
+  ctx.fillRect(TW / 2 - 160, 508, 320 * frac, 8);
+  ctx.textAlign = 'left';
+}
+
+function drawOutcome() {
+  if (!outcomeApplied) return;
+  var t = clamp01((now() - revealStart - IMPACT_MS) / 250);
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = t;
+  var label = outcome === 'goal' ? 'GOOOAL!' : 'SAVED!';
+  ctx.fillStyle = outcome === 'goal' ? '#ffd23b' : '#ff3b6b';
+  ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 26;
+  ctx.font = 'bold ' + Math.floor(54 + 14 * t) + 'px "Press Start 2P", monospace';
+  ctx.fillText(label, TW / 2, 410);
+  ctx.restore();
+  ctx.textAlign = 'left';
+}
+
+function drawAz() {
+  if (azLine && now() < azUntil) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = Math.min(1, (azUntil - now()) / 400);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.font = '14px "Press Start 2P", monospace';
+    var tw = ctx.measureText(azLine).width + 36;
+    ctx.fillRect(TW / 2 - tw / 2, TH - 52, tw, 30);
+    ctx.fillStyle = '#ffd23b';
+    ctx.fillText(azLine, TW / 2, TH - 31);
+    ctx.restore();
+    ctx.textAlign = 'left';
+  }
+}
+
+function drawScene() {
+  ctx.fillStyle = '#04070a';
+  ctx.fillRect(0, 0, TW, TH);
+
+  var sh = 0;
+  if (now() < shakeUntil) sh = (Math.random() - 0.5) * 9;
+  ctx.save();
+  ctx.translate(sh, sh * 0.5);
+
+  drawPitch();
+  drawGoal();
+  drawKeeper();
+  drawBall();
+  drawStriker();
+
+  for (var k = 0; k < particles.length; k++) {
+    var pt = particles[k];
+    ctx.globalAlpha = Math.max(0, pt.life);
+    ctx.fillStyle = pt.col;
+    ctx.fillRect(pt.x - 2, pt.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  drawHud();
+  if (gameState === 'pick') drawPickPhase();
+  if (gameState === 'reveal' || gameState === 'interlude') drawOutcome();
+  drawAz();
+}
+
+// ---- Main loop ----
+function loop() {
+  requestAnimationFrame(loop);
+
+  if (gameState === 'pick') {
+    if ((picks.shot && picks.dive) || now() >= pickDeadline) { kickPlayed = false; startReveal(); }
+  } else if (gameState === 'reveal') {
+    var t = now() - revealStart;
+    if (!kickPlayed && t >= IMPACT_MS * 0.62) { kickPlayed = true; sKick(); }
+    if (!outcomeApplied && t >= IMPACT_MS) applyOutcome();
+    if (t >= REVEAL_MS) endReveal();
+  } else if (gameState === 'interlude') {
+    if (now() >= interludeEnd) nextRound();
+  }
+
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.03;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  if (gameState !== 'title') drawScene();
+}
+
+// ---- Boot ----
+(function() {
+  var fullUrl = window.location.origin + '/golden-goal/join?code=' + gameCode;
+  var el = document.getElementById('joinUrl');
+  if (el) el.textContent = fullUrl.replace(/^https?:\/\//, '');
+  var qr = document.getElementById('joinQr');
+  if (qr) { qr.src = '/qr?url=' + encodeURIComponent(fullUrl); qr.style.display = 'block'; }
+  document.getElementById('joinCode').textContent = gameCode;
+})();
+initCable();
+fetchLb();
+loop();
+</script>
+</body>
+</html>

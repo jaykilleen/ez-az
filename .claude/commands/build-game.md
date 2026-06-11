@@ -71,6 +71,18 @@ Build the self-contained game following the standard features in CLAUDE.md. Ever
 
 TV games additionally follow ADR 006: per-slot ActionCable streams for private state, `data-screen` Zone screen, a `tv-music.js` track, and a TV remote whose OK/FIRE button does the right thing in-game (the Marble Run "OK navigates to store" bug).
 
+**The TV lobby MUST show a scannable QR code, not just a text link.** Phones join by scanning — typing a URL on a phone from across the room is the friction the whole party model exists to kill (ADR 001). Server-rendered TV views (trivia, treasure, boomerang) build the QR with the `rqrcode` gem into `@qr_code_svg`. The static-file real-time games (Snake Pit, Dino Jump, Golden Goal) can't run rqrcode inline, so they embed the shared `/qr` endpoint:
+
+```html
+<img id="joinQr" alt="Scan to join" style="width:180px;height:180px;background:#fff;border-radius:10px;padding:8px;" />
+```
+```javascript
+var fullUrl = window.location.origin + '/<slug>/join?code=' + gameCode;
+document.getElementById('joinQr').src = '/qr?url=' + encodeURIComponent(fullUrl);
+```
+
+Keep the short join CODE as a fallback, but the QR is the primary join path. `/qr` only encodes same-origin URLs.
+
 ---
 
 ## Phase 4 — Registration (the part that always gets missed)

@@ -55,7 +55,8 @@
 
   <!-- Join URL for phones -->
   <div style="background:rgba(255,228,77,0.07); border:1px solid rgba(255,228,77,0.2); border-radius:10px; padding:10px 18px; margin-bottom:12px; max-width:600px; width:100%;">
-    <p style="font-family:'Press Start 2P',monospace; font-size:8px; color:#888; margin-bottom:4px;">JOIN ON YOUR PHONE</p>
+    <p style="font-family:'Press Start 2P',monospace; font-size:8px; color:#888; margin-bottom:4px;">SCAN TO JOIN ON YOUR PHONE</p>
+    <img id="joinQr" alt="Scan to join" style="width:180px;height:180px;background:#fff;border-radius:10px;padding:8px;margin:4px auto 8px;display:none;" />
     <p id="joinUrl" style="font-family:'Press Start 2P',monospace; font-size:10px; color:#ffe44d; word-break:break-all;"></p>
   </div>
 
@@ -693,6 +694,8 @@ function loop() {
   var url = base + '/dino-jump/join?code=' + gameCode;
   var el = document.getElementById('joinUrl');
   if (el) el.textContent = url.replace(/^https?:\/\//, '');
+  var qr = document.getElementById('joinQr');
+  if (qr) { qr.src = '/qr?url=' + encodeURIComponent(url); qr.style.display = 'block'; }
 })();
 
 initCable();

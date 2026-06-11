@@ -146,6 +146,15 @@ class Game
       tv_optimised: false
     },
     {
+      slug: "golden-goal",
+      title: "Golden Goal",
+      creators: "Az",
+      tagline: "Step up to the spot. Pick your corner. Glory or heartbreak on one kick.",
+      path: "/games/golden-goal.html",
+      icon: "golden-goal",
+      tv_optimised: true
+    },
+    {
       slug: "magnet-lab",
       title: "Magnet Lab",
       creators: "Jaykill",

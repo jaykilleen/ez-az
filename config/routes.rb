@@ -31,6 +31,11 @@ Rails.application.routes.draw do
 
   get '/snake-pit/join', to: 'snake_pit#join'
 
+  get '/golden-goal/join', to: 'golden_goal#join'
+
+  # QR code SVG for static-file TV games (Snake Pit, Dino Jump, Golden Goal).
+  get '/qr', to: 'qr#show'
+
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
       get  :join,     action: :join

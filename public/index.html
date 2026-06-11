@@ -1508,6 +1508,21 @@
         </div>
       </a>
 
+      <a href="/games/golden-goal.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="goldenGoalCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Golden Goal</div>
+          <div class="game-box-creators">By Az</div>
+          <div class="game-box-desc">
+            Penalty shootout under the lights. Step up to the spot, pick your corner on your phone. Glory or heartbreak on one kick.
+          </div>
+          <span class="game-box-badge">1-4 PLAYERS · PHONE</span><br>
+          <span class="game-box-scores" data-game="golden-goal">High Scores</span>
+        </div>
+      </a>
+
       <a href="/games/boomerang-brawl" class="game-box">
         <div class="game-box-art">
           <canvas id="boomerangCover" width="220" height="280"></canvas>
@@ -2960,6 +2975,82 @@
       ctx.fillText('DINO JUMP', W / 2, GAME_H + TITLE_H / 2);
       ctx.restore();
     })();
+
+    // ── Golden Goal cover ──
+    (function () {
+      var canvas = document.getElementById('goldenGoalCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height; // 220 x 280
+
+      var TITLE_H = 44;
+      var GAME_H  = H - TITLE_H;
+
+      // Night sky + crowd band
+      var sky = ctx.createLinearGradient(0, 0, 0, 70);
+      sky.addColorStop(0, '#04070a'); sky.addColorStop(1, '#0a1020');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 70);
+      for (var i = 0; i < 70; i++) {
+        ctx.fillStyle = ['#334', '#445', '#536', '#454'][i % 4];
+        ctx.fillRect(Math.random() * W, 8 + Math.random() * 38, 3, 4);
+      }
+
+      // Pitch
+      var grass = ctx.createLinearGradient(0, 48, 0, GAME_H);
+      grass.addColorStop(0, '#0c3a1e'); grass.addColorStop(1, '#11512b');
+      ctx.fillStyle = grass; ctx.fillRect(0, 48, W, GAME_H - 48);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(0, 90, W, 16); ctx.fillRect(0, 130, W, 22); ctx.fillRect(0, 180, W, 28);
+
+      // Goal: net, posts
+      var gx = 30, gy = 62, gw = 160, gh = 62;
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+      for (var nx = 0; nx <= 8; nx++) { ctx.beginPath(); ctx.moveTo(gx + nx * gw / 8, gy); ctx.lineTo(gx + nx * gw / 8, gy + gh); ctx.stroke(); }
+      for (var ny = 0; ny <= 4; ny++) { ctx.beginPath(); ctx.moveTo(gx, gy + ny * gh / 4); ctx.lineTo(gx + gw, gy + ny * gh / 4); ctx.stroke(); }
+      ctx.strokeStyle = '#f4f4f4'; ctx.lineWidth = 4;
+      ctx.strokeRect(gx, gy, gw, gh);
+
+      // Keeper diving (pink kit)
+      ctx.save();
+      ctx.translate(gx + gw * 0.32, gy + gh - 16);
+      ctx.rotate(-0.6);
+      ctx.shadowColor = '#ff3b6b'; ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ff3b6b'; ctx.fillRect(-5, -10, 10, 18);
+      ctx.fillStyle = '#ffe0bd'; ctx.beginPath(); ctx.arc(0, -15, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Ball flying top-right corner with trail
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+      ctx.setLineDash([4, 5]);
+      ctx.beginPath(); ctx.moveTo(W / 2, GAME_H - 18); ctx.quadraticCurveTo(W * 0.62, 110, gx + gw - 18, gy + 14); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.save();
+      ctx.shadowColor = '#fff'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(gx + gw - 18, gy + 14, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Striker in the foreground (green kit, seen from behind)
+      ctx.save();
+      ctx.shadowColor = '#00ffaa'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ffaa'; ctx.fillRect(W / 2 - 12, GAME_H - 60, 24, 38);
+      ctx.fillStyle = '#ffe0bd'; ctx.beginPath(); ctx.arc(W / 2, GAME_H - 70, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Title bar
+      ctx.fillStyle = '#141004';
+      ctx.fillRect(0, GAME_H, W, TITLE_H);
+      ctx.fillStyle = 'rgba(255,210,59,0.15)';
+      ctx.fillRect(0, GAME_H, W, 2);
+      ctx.save();
+      ctx.shadowColor = '#ffd23b'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ffd23b';
+      ctx.font = 'bold 12px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('GOLDEN GOAL', W / 2, GAME_H + TITLE_H / 2);
+      ctx.restore();
+    })();
   </script>
 
   <script>
@@ -3096,7 +3187,8 @@
         'magnet-lab': 'Magnet Lab',
         'dino-jump': 'Dino Jump',
         'late-shift': 'Late Shift',
-        'snake-pit-royale': 'Snake Pit Royale'
+        'snake-pit-royale': 'Snake Pit Royale',
+        'golden-goal': 'Golden Goal'
       };
 
       var timeGames = { bloom: true, descent: true };

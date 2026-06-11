@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Golden Goal — Controller</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #04070a; color: #fff;
+      font-family: 'Courier New', monospace;
+      overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .store-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(4,7,10,0.92); border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 16px; text-align: center; font-size: 13px; letter-spacing: 0.1em;
+    }
+    .store-banner a { color: #ffd23b; text-decoration: none; font-weight: 700; }
+    .page { padding-top: 44px; height: 100%; display: flex; flex-direction: column; align-items: center; }
+    .screen { width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    .join-inner { max-width: 400px; width: 100%; padding: 24px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .game-title { font-size: 23px; font-weight: 900; letter-spacing: 0.1em; color: #ffd23b; text-align: center; text-shadow: 0 0 14px rgba(255,210,59,0.5); }
+    .game-sub { font-size: 12px; color: #567; text-align: center; letter-spacing: 0.06em; }
+    .label { font-size: 11px; color: #678; letter-spacing: 0.1em; text-transform: uppercase; }
+    .name-input {
+      width: 100%; background: #14110c; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+      padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700;
+      color: #fff; text-transform: uppercase; letter-spacing: 0.1em; outline: none;
+    }
+    .name-input:focus { border-color: #ffd23b; }
+    .name-input::placeholder { color: #443; }
+    .btn {
+      width: 100%; padding: 16px; border: none; border-radius: 10px;
+      font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; background: #ffd23b; color: #14110c;
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .error-msg { color: #ff4757; font-size: 12px; text-align: center; min-height: 16px; }
+
+    .lobby-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; padding: 20px; }
+    .char-badge { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 56px; border: 4px solid rgba(255,255,255,0.3); }
+    .char-name-big { font-size: 26px; font-weight: 900; letter-spacing: 0.12em; }
+    .waiting-text { font-size: 13px; color: #567; letter-spacing: 0.06em; text-align: center; line-height: 1.6; }
+
+    /* ---- Pick controller ---- */
+    .controller { width: 100%; flex: 1; display: flex; flex-direction: column; }
+    .ctrl-header { padding: 10px 16px; text-align: center; flex-shrink: 0; }
+    .ctrl-role { font-size: 18px; font-weight: 900; letter-spacing: 0.12em; }
+    .ctrl-hint { font-size: 10px; color: #567; letter-spacing: 0.06em; margin-top: 4px; }
+
+    /* Mini goal: 3 wide x 2 high target zones */
+    .mini-goal-wrap { display: flex; justify-content: center; padding: 8px 16px; flex-shrink: 0; }
+    .mini-goal {
+      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
+      gap: 4px; width: min(78vw, 300px); aspect-ratio: 2.2;
+      border: 3px solid #ddd; border-bottom: none; border-radius: 6px 6px 0 0; padding: 5px;
+      background: rgba(255,255,255,0.04);
+    }
+    .zone { border: 1px dashed rgba(255,255,255,0.18); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #456; letter-spacing: 0.05em; }
+    .zone.sel { background: rgba(255,210,59,0.3); border: 2px solid #ffd23b; color: #ffd23b; font-weight: 700; box-shadow: 0 0 12px rgba(255,210,59,0.4); }
+    .pick-readout { text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: #ffd23b; min-height: 18px; padding: 4px; }
+
+    .dpad-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px; }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      width: min(80vw, 44vh);
+      height: min(80vw, 44vh);
+    }
+    .dir-btn {
+      border: 3px solid rgba(255,255,255,0.15); border-radius: 18px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 900; color: rgba(255,255,255,0.92);
+      cursor: pointer; -webkit-tap-highlight-color: transparent; transition: filter 0.06s, transform 0.06s;
+      background: #14110c;
+    }
+    .dir-btn small { font-size: 9px; letter-spacing: 0.08em; color: #789; font-weight: 700; }
+    .dir-btn:active, .dir-btn.pressed { filter: brightness(1.5); transform: scale(0.95); }
+    .dir-up    { grid-column: 2; grid-row: 1; }
+    .dir-left  { grid-column: 1; grid-row: 2; }
+    .dir-right { grid-column: 3; grid-row: 2; }
+    .dir-down  { grid-column: 2; grid-row: 3; }
+    .fire-btn {
+      grid-column: 2; grid-row: 2;
+      border-radius: 50%; border: 3px solid #ffd23b;
+      background: rgba(255,210,59,0.14); color: #ffd23b;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.1em; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; transition: filter 0.06s, transform 0.06s;
+    }
+    .fire-btn:active, .fire-btn.pressed { filter: brightness(1.6); transform: scale(0.93); }
+
+    .locked-inner, .watch-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 24px 20px; text-align: center; }
+    .locked-big { font-size: 30px; font-weight: 900; letter-spacing: 0.1em; color: #00ffaa; }
+    .sb-list { width: 100%; max-width: 320px; }
+    .sb-row { display: flex; justify-content: space-between; padding: 7px 12px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sb-row.me { background: rgba(255,210,59,0.1); border-radius: 6px; }
+
+    .gameover-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 24px 20px; text-align: center; }
+    .go-rank { font-size: 56px; font-weight: 900; }
+    .go-score { font-size: 16px; color: #ffd23b; letter-spacing: 0.06em; }
+    .go-name { font-size: 22px; font-weight: 700; letter-spacing: 0.1em; }
+    .btn-outline {
+      padding: 14px 32px; border: 2px solid rgba(255,255,255,0.2); border-radius: 10px;
+      background: transparent; color: #aaa; font-family: 'Courier New', monospace; font-size: 13px;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="store-banner"><a href="/">EZ-AZ</a></div>
+
+  <div class="page">
+
+    <!-- JOIN -->
+    <div class="screen active" id="screenJoin">
+      <div class="join-inner">
+        <div class="game-title">GOLDEN GOAL</div>
+        <div class="game-sub">Enter your name to step up to the spot</div>
+        <span class="label">Your name</span>
+        <input class="name-input" id="nameInput" type="text" maxlength="12"
+               placeholder="ENTER NAME" autocomplete="off" autocorrect="off"
+               autocapitalize="characters" spellcheck="false">
+        <div class="error-msg" id="errorMsg"></div>
+        <button class="btn" id="joinBtn" disabled>JOIN GAME</button>
+      </div>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="screen" id="screenLobby">
+      <div class="lobby-inner">
+        <div class="game-title">GOLDEN GOAL</div>
+        <div class="char-badge" id="lobbyBadge">&#9917;</div>
+        <div class="char-name-big" id="lobbyCharName"></div>
+        <div class="waiting-text">You're in! Waiting for the host to start.</div>
+      </div>
+    </div>
+
+    <!-- PICK (striker or keeper) -->
+    <div class="screen" id="screenPick">
+      <div class="controller">
+        <div class="ctrl-header">
+          <div class="ctrl-role" id="pickRole"></div>
+          <div class="ctrl-hint" id="pickHint"></div>
+        </div>
+        <div class="mini-goal-wrap">
+          <div class="mini-goal" id="miniGoal">
+            <div class="zone" data-aim="left"   data-height="high">L&middot;HI</div>
+            <div class="zone" data-aim="centre" data-height="high">C&middot;HI</div>
+            <div class="zone" data-aim="right"  data-height="high">R&middot;HI</div>
+            <div class="zone" data-aim="left"   data-height="low">L&middot;LO</div>
+            <div class="zone" data-aim="centre" data-height="low">C&middot;LO</div>
+            <div class="zone" data-aim="right"  data-height="low">R&middot;LO</div>
+          </div>
+        </div>
+        <div class="pick-readout" id="pickReadout"></div>
+        <div class="dpad-wrap">
+          <div class="dpad">
+            <div class="dir-btn dir-up"    id="btnUp">&#9650;<small>HIGH</small></div>
+            <div class="dir-btn dir-left"  id="btnLeft">&#9664;<small>LEFT</small></div>
+            <div class="fire-btn" id="btnFire">FIRE</div>
+            <div class="dir-btn dir-right" id="btnRight">&#9654;<small>RIGHT</small></div>
+            <div class="dir-btn dir-down"  id="btnDown">&#9660;<small>LOW</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCKED -->
+    <div class="screen" id="screenLocked">
+      <div class="locked-inner">
+        <div class="locked-big" id="lockedBig"></div>
+        <div class="waiting-text">Look at the TV!</div>
+      </div>
+    </div>
+
+    <!-- WATCHING -->
+    <div class="screen" id="screenWatch">
+      <div class="watch-inner">
+        <div class="game-title">GOLDEN GOAL</div>
+        <div class="waiting-text" id="watchLine">Watch the big screen</div>
+        <div class="sb-list" id="sbList"></div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="screen" id="screenOver">
+      <div class="gameover-inner">
+        <div class="game-title">GOLDEN GOAL</div>
+        <div class="go-rank" id="goRank"></div>
+        <div class="go-name" id="goName"></div>
+        <div class="go-score" id="goScore"></div>
+        <a href="/" class="btn-outline">BACK TO STORE</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+  (function () {
+    var CHARS = [
+      { name: 'GREEN', colour: '#00ffaa', bg: '#04140d' },
+      { name: 'PINK',  colour: '#ff3b6b', bg: '#170610' },
+      { name: 'BLUE',  colour: '#3aa0ff', bg: '#04101f' },
+      { name: 'GOLD',  colour: '#ffd23b', bg: '#171206' }
+    ];
+
+    var code   = new URLSearchParams(location.search).get('code') || '';
+    var mySlot = null, myName = null, myChar = null;
+
+    // Current pick state
+    var pickKind = null;          // 'shot' | 'dive'
+    var aim = 'centre', height = 'low';
+    var locked = false;
+    var lastScores = [];
+
+    var screens = ['Join', 'Lobby', 'Pick', 'Locked', 'Watch', 'Over'];
+    function showScreen(name) {
+      screens.forEach(function(s) { document.getElementById('screen' + s).classList.remove('active'); });
+      document.getElementById('screen' + name).classList.add('active');
+    }
+
+    var nameInput = document.getElementById('nameInput');
+    var joinBtn   = document.getElementById('joinBtn');
+    var errorMsg  = document.getElementById('errorMsg');
+
+    nameInput.addEventListener('input', function() {
+      nameInput.value = nameInput.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+      joinBtn.disabled = !nameInput.value.trim();
+    });
+    joinBtn.addEventListener('click', function() {
+      var name = nameInput.value.trim();
+      if (!name || !sub) return;
+      errorMsg.textContent = '';
+      sub.send('join', { name: name });
+    });
+
+    // ---- Pick controls ----
+    var AIMS = ['left', 'centre', 'right'];
+    function renderZones() {
+      var zones = document.querySelectorAll('#miniGoal .zone');
+      zones.forEach(function(z) {
+        z.classList.toggle('sel', z.dataset.aim === aim && z.dataset.height === height);
+      });
+      var label = aim.toUpperCase() + ' · ' + (height === 'high' ? 'HIGH' : 'LOW');
+      document.getElementById('pickReadout').textContent = label;
+    }
+    function move(dir) {
+      if (locked) return;
+      if (dir === 'up') height = 'high';
+      else if (dir === 'down') height = 'low';
+      else if (dir === 'left') aim = AIMS[Math.max(0, AIMS.indexOf(aim) - 1)];
+      else if (dir === 'right') aim = AIMS[Math.min(2, AIMS.indexOf(aim) + 1)];
+      renderZones();
+      buzz(12);
+    }
+    // FIRE locks the pick. It must never navigate anywhere (the Marble Run OK bug).
+    function fire() {
+      if (locked || !pickKind || mySlot === null) return;
+      locked = true;
+      if (sub) sub.send('pick', { kind: pickKind, aim: aim, height: height });
+      document.getElementById('lockedBig').textContent =
+        pickKind === 'shot' ? 'SHOT LOCKED' : 'DIVE LOCKED';
+      showScreen('Locked');
+      buzz(40);
+    }
+    function buzz(ms) { if (navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) {} } }
+
+    function attachBtn(elId, fn) {
+      var el = document.getElementById(elId);
+      el.addEventListener('touchstart', function(e) { e.preventDefault(); el.classList.add('pressed'); fn(); }, { passive: false });
+      el.addEventListener('touchend',   function(e) { e.preventDefault(); el.classList.remove('pressed'); }, { passive: false });
+      el.addEventListener('touchcancel', function() { el.classList.remove('pressed'); });
+      el.addEventListener('mousedown', function() { el.classList.add('pressed'); fn(); });
+      el.addEventListener('mouseup',   function() { el.classList.remove('pressed'); });
+    }
+    attachBtn('btnUp',    function() { move('up'); });
+    attachBtn('btnDown',  function() { move('down'); });
+    attachBtn('btnLeft',  function() { move('left'); });
+    attachBtn('btnRight', function() { move('right'); });
+    attachBtn('btnFire',  fire);
+
+    // Keyboard (desktop testing)
+    document.addEventListener('keydown', function(e) {
+      if (!document.getElementById('screenPick').classList.contains('active')) return;
+      var m = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[e.code];
+      if (m) { e.preventDefault(); move(m); }
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); fire(); }
+    });
+
+    function applyChar(slot) {
+      myChar = CHARS[slot];
+      var badge = document.getElementById('lobbyBadge');
+      badge.style.background = myChar.bg;
+      badge.style.border = '4px solid ' + myChar.colour;
+      document.getElementById('lobbyCharName').textContent = myChar.name;
+      document.getElementById('lobbyCharName').style.color = myChar.colour;
+      document.body.style.background = myChar.bg;
+    }
+
+    function startPick(kind) {
+      pickKind = kind;
+      aim = 'centre'; height = 'low'; locked = false;
+      var roleEl = document.getElementById('pickRole');
+      var hintEl = document.getElementById('pickHint');
+      if (kind === 'shot') {
+        roleEl.textContent = "YOU'RE THE STRIKER";
+        roleEl.style.color = '#00ffaa';
+        hintEl.textContent = 'Pick your corner, then FIRE to lock the shot';
+      } else {
+        roleEl.textContent = "YOU'RE THE KEEPER";
+        roleEl.style.color = '#ff3b6b';
+        hintEl.textContent = 'Pick your dive, then FIRE to commit';
+      }
+      renderZones();
+      showScreen('Pick');
+      buzz(60);
+    }
+
+    function renderScoreboard(scores) {
+      lastScores = scores || lastScores;
+      var el = document.getElementById('sbList');
+      var h = '';
+      (lastScores || []).slice().sort(function(a, b) { return b.score - a.score; }).forEach(function(p) {
+        var c = CHARS[p.slot] ? CHARS[p.slot].colour : '#fff';
+        h += '<div class="sb-row' + (p.slot === mySlot ? ' me' : '') + '">'
+           + '<span style="color:' + c + '">' + p.name + '</span><span>' + p.score + '</span></div>';
+      });
+      el.innerHTML = h;
+    }
+
+    // ---- AzCable (same minimal client as Snake Pit) ----
+    var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
+    function AzCable() { this._subs = []; this._ws = null; this._connect(); }
+    AzCable.prototype._connect = function() {
+      var self = this;
+      this._ws = new WebSocket(wsBase);
+      this._ws.onopen = function() { self._subs.forEach(function(s) { s._subscribe(); }); };
+      this._ws.onmessage = function(e) {
+        var msg = JSON.parse(e.data);
+        if (msg.type === 'ping' || msg.type === 'welcome' || msg.type === 'confirm_subscription') return;
+        var id = msg.identifier;
+        self._subs.forEach(function(s) { if (s._id === id && msg.message) s._received(msg.message); });
+      };
+      this._ws.onclose = function() { setTimeout(function() { self._connect(); }, 2000); };
+    };
+    AzCable.prototype.subscribe = function(params, handlers) {
+      var s = new AzSub(this, params, handlers);
+      this._subs.push(s);
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) s._subscribe();
+      return s;
+    };
+    AzCable.prototype._send = function(d) { if (this._ws && this._ws.readyState === WebSocket.OPEN) this._ws.send(JSON.stringify(d)); };
+    function AzSub(cable, params, handlers) { this._cable = cable; this._params = params; this._id = JSON.stringify(params); this._handlers = handlers; }
+    AzSub.prototype._subscribe = function() { this._cable._send({ command: 'subscribe', identifier: this._id }); };
+    AzSub.prototype._received = function(msg) { if (this._handlers.received) this._handlers.received(msg); };
+    AzSub.prototype.send = function(action, data) {
+      this._cable._send({ command: 'message', identifier: this._id, data: JSON.stringify(Object.assign({ action: action }, data || {})) });
+    };
+
+    var cable = new AzCable();
+    var sub = cable.subscribe({ channel: 'GoldenGoalChannel', code: code, role: 'phone' }, { received: onMessage });
+
+    function onMessage(msg) {
+      switch (msg.type) {
+        case 'joined':
+          mySlot = msg.slot; myName = msg.name;
+          applyChar(mySlot); showScreen('Lobby');
+          break;
+        case 'join_error':
+          errorMsg.textContent = msg.message || 'Could not join.';
+          break;
+        case 'game_started':
+          if (mySlot !== null) { document.getElementById('watchLine').textContent = 'Watch the big screen'; showScreen('Watch'); }
+          break;
+        case 'round_setup':
+          if (mySlot === null) break;
+          if (msg.striker === mySlot)      startPick('shot');
+          else if (msg.keeper === mySlot)  startPick('dive');
+          else {
+            document.getElementById('watchLine').textContent =
+              (msg.striker_name || 'Striker') + ' vs ' + (msg.keeper_name || 'Keeper') + ' — watch the big screen';
+            showScreen('Watch');
+          }
+          break;
+        case 'scoreboard':
+          renderScoreboard(msg.scores || []);
+          // After the reveal everyone goes back to watching until the next round
+          if (mySlot !== null && !document.getElementById('screenOver').classList.contains('active')) {
+            showScreen('Watch');
+          }
+          break;
+        case 'game_over':
+          if (mySlot === null) break;
+          var results = msg.results || [];
+          var mine = results.find(function(r) { return r.slot === mySlot; });
+          if (mine) {
+            var ordinals = ['1ST', '2ND', '3RD', '4TH'];
+            var rank = mine.rank || 4;
+            document.getElementById('goRank').textContent = ordinals[rank - 1] || (rank + 'TH');
+            document.getElementById('goRank').style.color = myChar ? myChar.colour : '#fff';
+            document.getElementById('goName').textContent = (rank === 1 ? '🏆 ' : '') + (myName || '');
+            document.getElementById('goScore').textContent = mine.score + ' pts';
+          }
+          showScreen('Over');
+          break;
+      }
+    }
+
+    if (!code) {
+      errorMsg.textContent = 'No game code. Scan or open the link from the TV.';
+      joinBtn.disabled = true;
+    }
+  })();
+  </script>
+</body>
+</html>
