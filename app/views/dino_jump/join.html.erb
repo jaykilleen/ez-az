@@ -4,29 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dino Jump — Controller</title>
+  <link rel="stylesheet" href="/ez-az-shell.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100%; height: 100%;
       background: #080810;
       color: #fff;
-      font-family: 'Courier New', monospace;
+      font-family: var(--ez-font);
       overflow: hidden;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
     }
-
-    .store-banner {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(8,8,16,0.92);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 16px;
-      text-align: center;
-      font-size: 13px;
-      letter-spacing: 0.1em;
-    }
-    .store-banner a { color: #ffe44d; text-decoration: none; font-weight: 700; }
 
     .page {
       padding-top: 44px;
@@ -54,69 +44,15 @@
       letter-spacing: 0.12em;
       color: #ffe44d;
       text-align: center;
+      text-shadow: 0 0 12px rgba(255,228,77,0.5);
     }
     .game-sub { font-size: 12px; color: #556; text-align: center; letter-spacing: 0.08em; }
-    .label { font-size: 11px; color: #778; letter-spacing: 0.1em; text-transform: uppercase; }
-    .name-input {
-      width: 100%;
-      background: #13131f;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-family: 'Courier New', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      outline: none;
-    }
-    .name-input:focus { border-color: #ffe44d; }
-    .name-input::placeholder { color: #334; }
-    .btn {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Courier New', monospace;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      background: #ffe44d;
-      color: #111;
-    }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .error-msg { color: #ff4757; font-size: 12px; text-align: center; min-height: 16px; }
+
+    /* Yellow accent for name input on this game */
+    .ezaz-name-input:focus { border-color: #ffe44d; }
 
     /* ---- Lobby screen ---- */
-    .lobby-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 20px;
-      padding: 20px;
-    }
-    .char-badge {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      border: 4px solid rgba(255,255,255,0.3);
-    }
-    .char-name-big {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 0.15em;
-      font-family: 'Courier New', monospace;
-    }
-    .waiting-text { font-size: 13px; color: #556; letter-spacing: 0.08em; text-align: center; }
+    .char-badge { background: #080810; }
 
     /* ---- Controller screen ---- */
     .controller {
@@ -156,40 +92,16 @@
       border: 3px solid rgba(255,255,255,0.15);
     }
     .dir-btn:active, .dir-btn.pressed { filter: brightness(1.3); }
-
-    /* ---- Game over screen ---- */
-    .gameover-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 16px;
-      padding: 24px 20px;
-      text-align: center;
-    }
-    .go-rank { font-size: 60px; font-weight: 900; }
-    .go-score { font-size: 16px; color: #00ffcc; letter-spacing: 0.08em; }
-    .go-name { font-size: 22px; font-weight: 700; letter-spacing: 0.1em; }
-    .btn-outline {
-      padding: 14px 32px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
-      background: transparent;
-      color: #aaa;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
-    }
   </style>
 </head>
 <body>
-  <div class="store-banner"><a href="/">EZ-AZ</a></div>
+  <div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
+  <!--
+    Phone Contract 4: EXIT must be reachable from every screen and must free
+    the slot server-side. The button is wired after the cable subscription
+    is created below.
+  -->
+  <button class="ezaz-exit-btn" id="exitBtn">EXIT</button>
 
   <div class="page">
 
@@ -198,22 +110,22 @@
       <div class="join-inner">
         <div class="game-title">DINO JUMP</div>
         <div class="game-sub">Enter your name to join</div>
-        <span class="label">Your name</span>
-        <input class="name-input" id="nameInput" type="text" maxlength="12"
+        <span class="ezaz-label">Your name</span>
+        <input class="ezaz-name-input" id="nameInput" type="text" maxlength="12"
                placeholder="ENTER NAME" autocomplete="off" autocorrect="off"
                autocapitalize="characters" spellcheck="false">
-        <div class="error-msg" id="errorMsg"></div>
-        <button class="btn" id="joinBtn" disabled>JOIN GAME</button>
+        <div class="ezaz-error-msg" id="errorMsg"></div>
+        <button class="ezaz-btn-primary" id="joinBtn" disabled style="--ez-btn-bg:#ffe44d;--ez-btn-fg:#111;">JOIN GAME</button>
       </div>
     </div>
 
     <!-- LOBBY (waiting for start) -->
     <div class="screen" id="screenLobby">
-      <div class="lobby-inner">
+      <div class="ezaz-lobby-inner">
         <div class="game-title">DINO JUMP</div>
-        <div class="char-badge" id="lobbyBadge"></div>
-        <div class="char-name-big" id="lobbyCharName"></div>
-        <div class="waiting-text">Waiting for the host to start...</div>
+        <div class="ezaz-char-badge char-badge" id="lobbyBadge"></div>
+        <div class="ezaz-char-name" id="lobbyCharName"></div>
+        <div class="ezaz-waiting">Waiting for the host to start...</div>
       </div>
     </div>
 
@@ -233,12 +145,12 @@
 
     <!-- GAME OVER -->
     <div class="screen" id="screenOver">
-      <div class="gameover-inner">
+      <div class="ezaz-gameover-inner">
         <div class="game-title">DINO JUMP</div>
-        <div class="go-rank" id="goRank"></div>
-        <div class="go-name" id="goName"></div>
-        <div class="go-score" id="goScore"></div>
-        <a href="/" class="btn-outline">BACK TO STORE</a>
+        <div class="ezaz-go-rank" id="goRank"></div>
+        <div class="ezaz-go-name" id="goName"></div>
+        <div class="ezaz-go-score" id="goScore"></div>
+        <a href="/" class="ezaz-btn-outline">BACK TO STORE</a>
       </div>
     </div>
 
@@ -339,7 +251,7 @@
       document.body.style.background = myChar.bg;
     }
 
-    // ---- AzCable (same pattern as Marble Run) ----
+    // ---- Cable (minimal raw ActionCable WebSocket client) ----
     var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
 
     function AzCable() {
@@ -383,6 +295,12 @@
       { channel: 'DinoJumpChannel', code: code, role: 'phone' },
       { received: onMessage }
     );
+
+    // Phone Contract 4: EXIT frees the slot server-side before going home.
+    document.getElementById('exitBtn').addEventListener('click', function() {
+      if (sub && mySlot !== null) { try { sub.send('leave', {}); } catch (_) {} }
+      setTimeout(function() { window.location.href = '/'; }, 150);
+    });
 
     function onMessage(msg) {
       switch (msg.type) {
