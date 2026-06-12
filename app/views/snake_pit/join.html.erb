@@ -4,59 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Snake Pit Royale — Controller</title>
+  <link rel="stylesheet" href="/ez-az-shell.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100%; height: 100%;
       background: #04070a; color: #fff;
-      font-family: 'Courier New', monospace;
+      font-family: var(--ez-font);
       overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
     }
-    .store-banner {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(4,7,10,0.92); border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 16px; text-align: center; font-size: 13px; letter-spacing: 0.1em;
-    }
-    .store-banner a { color: #00ffaa; text-decoration: none; font-weight: 700; }
-    .exit-btn {
-      position: fixed; top: 6px; right: 10px; z-index: 101;
-      background: transparent; border: 1px solid rgba(255,71,87,0.5); border-radius: 6px;
-      color: #ff4757; font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
-      letter-spacing: 0.1em; padding: 5px 10px; cursor: pointer;
-    }
-    .start-btn {
-      width: 100%; max-width: 280px; padding: 16px; border: none; border-radius: 10px;
-      font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
-      background: #ffd23b; color: #171206;
-    }
+
     .page { padding-top: 44px; height: 100%; display: flex; flex-direction: column; align-items: center; }
     .screen { width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; }
     .screen.active { display: flex; }
 
+    /* ---- Join screen ---- */
     .join-inner { max-width: 400px; width: 100%; padding: 24px 20px; display: flex; flex-direction: column; gap: 14px; }
     .game-title { font-size: 23px; font-weight: 900; letter-spacing: 0.1em; color: #00ffaa; text-align: center; text-shadow: 0 0 14px rgba(0,255,170,0.5); }
     .game-sub { font-size: 12px; color: #567; text-align: center; letter-spacing: 0.06em; }
-    .label { font-size: 11px; color: #678; letter-spacing: 0.1em; text-transform: uppercase; }
-    .name-input {
-      width: 100%; background: #0c1411; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-      padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700;
-      color: #fff; text-transform: uppercase; letter-spacing: 0.1em; outline: none;
-    }
-    .name-input:focus { border-color: #00ffaa; }
-    .name-input::placeholder { color: #243; }
-    .btn {
-      width: 100%; padding: 16px; border: none; border-radius: 10px;
-      font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; background: #00ffaa; color: #04140d;
-    }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .error-msg { color: #ff4757; font-size: 12px; text-align: center; min-height: 16px; }
 
-    .lobby-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; padding: 20px; }
-    .char-badge { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 56px; border: 4px solid rgba(255,255,255,0.3); }
-    .char-name-big { font-size: 26px; font-weight: 900; letter-spacing: 0.12em; }
-    .waiting-text { font-size: 13px; color: #567; letter-spacing: 0.06em; text-align: center; }
+    /* ---- Lobby screen ---- */
+    .char-badge { background: #04140d; }
+    .char-name-big { color: #00ffaa; }
+
+    /* ---- Start button (host only) ---- */
+    .start-btn {
+      width: 100%; max-width: 280px; padding: 16px; border: none; border-radius: 10px;
+      font-family: var(--ez-font); font-size: 16px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+      background: #ffd23b; color: #171206;
+      transition: transform 0.1s;
+    }
+    .start-btn:hover { transform: scale(1.03); }
 
     /* ---- D-pad controller ---- */
     .controller { width: 100%; flex: 1; display: flex; flex-direction: column; }
@@ -85,23 +64,13 @@
     .dir-right { grid-column: 3; grid-row: 2; }
     .dir-down  { grid-column: 2; grid-row: 3; }
     .dpad-center { grid-column: 2; grid-row: 2; display: flex; align-items: center; justify-content: center; font-size: 34px; opacity: 0.5; }
-
-    .gameover-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 24px 20px; text-align: center; }
-    .go-rank { font-size: 56px; font-weight: 900; }
-    .go-score { font-size: 16px; color: #00ffaa; letter-spacing: 0.06em; }
-    .go-name { font-size: 22px; font-weight: 700; letter-spacing: 0.1em; }
-    .btn-outline {
-      padding: 14px 32px; border: 2px solid rgba(255,255,255,0.2); border-radius: 10px;
-      background: transparent; color: #aaa; font-family: 'Courier New', monospace; font-size: 13px;
-      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: block;
-    }
   </style>
 </head>
 <body>
-  <div class="store-banner"><a href="/">EZ-AZ</a></div>
+  <div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
   <!-- Phone Contract 4: EXIT is reachable from every screen. It frees the
        slot server-side (leave) before heading back to the store. -->
-  <button class="exit-btn" id="exitBtn">EXIT</button>
+  <button class="ezaz-exit-btn" id="exitBtn">EXIT</button>
 
   <div class="page">
 
@@ -110,22 +79,22 @@
       <div class="join-inner">
         <div class="game-title">SNAKE PIT ROYALE</div>
         <div class="game-sub">Enter your name to join the pit</div>
-        <span class="label">Your name</span>
-        <input class="name-input" id="nameInput" type="text" maxlength="12"
+        <span class="ezaz-label">Your name</span>
+        <input class="ezaz-name-input" id="nameInput" type="text" maxlength="12"
                placeholder="ENTER NAME" autocomplete="off" autocorrect="off"
                autocapitalize="characters" spellcheck="false">
-        <div class="error-msg" id="errorMsg"></div>
-        <button class="btn" id="joinBtn" disabled>JOIN GAME</button>
+        <div class="ezaz-error-msg" id="errorMsg"></div>
+        <button class="ezaz-btn-primary" id="joinBtn" disabled style="--ez-btn-bg:#00ffaa;--ez-btn-fg:#04140d;">JOIN GAME</button>
       </div>
     </div>
 
     <!-- LOBBY -->
     <div class="screen" id="screenLobby">
-      <div class="lobby-inner">
+      <div class="ezaz-lobby-inner">
         <div class="game-title">SNAKE PIT</div>
-        <div class="char-badge" id="lobbyBadge">🐍</div>
-        <div class="char-name-big" id="lobbyCharName"></div>
-        <div class="waiting-text" id="lobbyWaitText">You're in. Waiting for the host to start...</div>
+        <div class="ezaz-char-badge char-badge" id="lobbyBadge">🐍</div>
+        <div class="ezaz-char-name char-name-big" id="lobbyCharName"></div>
+        <div class="ezaz-waiting" id="lobbyWaitText">You're in. Waiting for the host to start...</div>
         <!-- Phone Contract 3: the first joiner is the host and can start the
              match from the couch. Hidden for everyone else. -->
         <button class="start-btn" id="startBtn">START THE PIT</button>
@@ -153,14 +122,14 @@
 
     <!-- GAME OVER -->
     <div class="screen" id="screenOver">
-      <div class="gameover-inner">
+      <div class="ezaz-gameover-inner">
         <div class="game-title">SNAKE PIT</div>
-        <div class="go-rank" id="goRank"></div>
-        <div class="go-name" id="goName"></div>
-        <div class="go-score" id="goScore"></div>
-        <div class="waiting-text">Your slot is saved. Stay for the rematch!</div>
-        <button class="btn-outline" id="lobbyAgainBtn">BACK TO LOBBY</button>
-        <button class="btn-outline" id="overExitBtn">BACK TO STORE</button>
+        <div class="ezaz-go-rank" id="goRank"></div>
+        <div class="ezaz-go-name" id="goName"></div>
+        <div class="ezaz-go-score" id="goScore"></div>
+        <div class="ezaz-waiting">Your slot is saved. Stay for the rematch!</div>
+        <button class="ezaz-btn-outline" id="lobbyAgainBtn">BACK TO LOBBY</button>
+        <button class="ezaz-btn-outline" id="overExitBtn">BACK TO STORE</button>
       </div>
     </div>
 
