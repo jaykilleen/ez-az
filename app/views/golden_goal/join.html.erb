@@ -18,6 +18,18 @@
       padding: 10px 16px; text-align: center; font-size: 13px; letter-spacing: 0.1em;
     }
     .store-banner a { color: #ffd23b; text-decoration: none; font-weight: 700; }
+    .exit-btn {
+      position: fixed; top: 6px; right: 10px; z-index: 101;
+      background: transparent; border: 1px solid rgba(255,71,87,0.5); border-radius: 6px;
+      color: #ff4757; font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; padding: 5px 10px; cursor: pointer;
+    }
+    .start-btn {
+      width: 100%; max-width: 280px; padding: 16px; border: none; border-radius: 10px;
+      font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+      background: #ffd23b; color: #171206;
+    }
     .page { padding-top: 44px; height: 100%; display: flex; flex-direction: column; align-items: center; }
     .screen { width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; }
     .screen.active { display: flex; }
@@ -115,6 +127,9 @@
 </head>
 <body>
   <div class="store-banner"><a href="/">EZ-AZ</a></div>
+  <!-- Phone Contract 4: EXIT is reachable from every screen. It frees the
+       slot server-side (leave) before heading back to the store. -->
+  <button class="exit-btn" id="exitBtn">EXIT</button>
 
   <div class="page">
 
@@ -138,7 +153,10 @@
         <div class="game-title">GOLDEN GOAL</div>
         <div class="char-badge" id="lobbyBadge">&#9917;</div>
         <div class="char-name-big" id="lobbyCharName"></div>
-        <div class="waiting-text">You're in! Waiting for the host to start.</div>
+        <div class="waiting-text" id="lobbyWaitText">You're in! Waiting for the host to start.</div>
+        <!-- Phone Contract 3: the first joiner is the host and can kick off
+             from the couch. Hidden for everyone else. -->
+        <button class="start-btn" id="startBtn">KICK OFF</button>
       </div>
     </div>
 
@@ -196,12 +214,15 @@
         <div class="go-rank" id="goRank"></div>
         <div class="go-name" id="goName"></div>
         <div class="go-score" id="goScore"></div>
-        <a href="/" class="btn-outline">BACK TO STORE</a>
+        <div class="waiting-text">Your slot is saved. Stay for the rematch!</div>
+        <button class="btn-outline" id="lobbyAgainBtn">BACK TO LOBBY</button>
+        <button class="btn-outline" id="overExitBtn">BACK TO STORE</button>
       </div>
     </div>
 
   </div>
 
+  <script src="/arcade-cable.js"></script>
   <script>
   (function () {
     var CHARS = [
@@ -335,49 +356,56 @@
       el.innerHTML = h;
     }
 
-    // ---- AzCable (same minimal client as Snake Pit) ----
-    var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
-    function AzCable() { this._subs = []; this._ws = null; this._connect(); }
-    AzCable.prototype._connect = function() {
-      var self = this;
-      this._ws = new WebSocket(wsBase);
-      this._ws.onopen = function() { self._subs.forEach(function(s) { s._subscribe(); }); };
-      this._ws.onmessage = function(e) {
-        var msg = JSON.parse(e.data);
-        if (msg.type === 'ping' || msg.type === 'welcome' || msg.type === 'confirm_subscription') return;
-        var id = msg.identifier;
-        self._subs.forEach(function(s) { if (s._id === id && msg.message) s._received(msg.message); });
-      };
-      this._ws.onclose = function() { setTimeout(function() { self._connect(); }, 2000); };
-    };
-    AzCable.prototype.subscribe = function(params, handlers) {
-      var s = new AzSub(this, params, handlers);
-      this._subs.push(s);
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) s._subscribe();
-      return s;
-    };
-    AzCable.prototype._send = function(d) { if (this._ws && this._ws.readyState === WebSocket.OPEN) this._ws.send(JSON.stringify(d)); };
-    function AzSub(cable, params, handlers) { this._cable = cable; this._params = params; this._id = JSON.stringify(params); this._handlers = handlers; }
-    AzSub.prototype._subscribe = function() { this._cable._send({ command: 'subscribe', identifier: this._id }); };
-    AzSub.prototype._received = function(msg) { if (this._handlers.received) this._handlers.received(msg); };
-    AzSub.prototype.send = function(action, data) {
-      this._cable._send({ command: 'message', identifier: this._id, data: JSON.stringify(Object.assign({ action: action }, data || {})) });
-    };
+    // ---- ArcadeCable (shared phone client -- /arcade-cable.js) ----
+    var sub = ArcadeCable.subscribe('GoldenGoalChannel', code, { received: onMessage });
 
-    var cable = new AzCable();
-    var sub = cable.subscribe({ channel: 'GoldenGoalChannel', code: code, role: 'phone' }, { received: onMessage });
+    // Phone Contract 4: EXIT frees the slot in every phase, then goes home.
+    ArcadeCable.attachExit(document.getElementById('exitBtn'), sub);
+    ArcadeCable.attachExit(document.getElementById('overExitBtn'), sub);
+
+    // Phone Contract 3: host-aware KICK OFF (first joiner is host).
+    var isHost = false;
+    var startCtl = ArcadeCable.hostStart(document.getElementById('startBtn'), sub);
+    function setHost(hostSlot) {
+      isHost = mySlot !== null && hostSlot === mySlot;
+      startCtl.update(isHost, 'lobby');
+      document.getElementById('lobbyWaitText').textContent = isHost
+        ? "You're the host. Kick off when everyone's in!"
+        : "You're in! Waiting for the host to start.";
+    }
+
+    document.getElementById('lobbyAgainBtn').addEventListener('click', function() {
+      if (mySlot !== null) showScreen('Lobby');
+    });
 
     function onMessage(msg) {
       switch (msg.type) {
         case 'joined':
           mySlot = msg.slot; myName = msg.name;
-          applyChar(mySlot); showScreen('Lobby');
+          applyChar(mySlot);
+          setHost(msg.host ? mySlot : -1);
+          showScreen('Lobby');
+          break;
+        case 'lobby_update':
+        case 'player_left':
+          if (mySlot !== null) setHost(msg.host_slot);
           break;
         case 'join_error':
           errorMsg.textContent = msg.message || 'Could not join.';
           break;
         case 'game_started':
           if (mySlot !== null) { document.getElementById('watchLine').textContent = 'Watch the big screen'; showScreen('Watch'); }
+          break;
+        case 'session_reset':
+          // Phone Contract 5: the TV quit or reset -- everyone lands back on
+          // a known screen with the same code and slot.
+          pickKind = null; locked = false;
+          if (mySlot !== null) { setHost(msg.host_slot); showScreen('Lobby'); }
+          else showScreen('Join');
+          break;
+        case 'left':
+          // Slot freed (our EXIT). attachExit handles the redirect.
+          mySlot = null;
           break;
         case 'round_setup':
           if (mySlot === null) break;
