@@ -7,6 +7,7 @@
 <script src="/game-viewport.js"></script>
 <script src="/error-reporter.js"></script>
 <script src="/tv-music.js"></script>
+<script src="/arcade-tv.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,15 +74,15 @@
     <div class="slot-card" id="slot3"><div class="slot-tag" style="color:#ffd23b;">GOLD</div><div class="slot-name" id="slot3name">EMPTY</div></div>
   </div>
 
-  <p class="hint">Phones are the controllers — picks stay secret &nbsp;|&nbsp; Empty slots get an Az bot &nbsp;|&nbsp; 5 shots each &middot; ESC pauses</p>
-  <button class="btn" onclick="tvStart()">KICK OFF</button>
+  <p class="hint">Phones are the controllers — picks stay secret &nbsp;|&nbsp; First phone in is the host and can start &nbsp;|&nbsp; Empty slots get an Az bot &nbsp;|&nbsp; 5 shots each &middot; ESC pauses</p>
+  <button class="btn" id="btnStart" onclick="tvStart()">KICK OFF</button>
   <div class="lb-wrap" id="titleLb"></div>
 </div>
 
 <div id="pauseScreen" class="overlay" style="display:none;">
   <h1 style="font-family:'Press Start 2P',monospace; font-size:22px; color:#fff; margin-bottom:20px;">PAUSED</h1>
-  <button class="btn" onclick="resumeGame()">RESUME</button>
-  <button class="btn-quit" onclick="quitGame()">QUIT</button>
+  <button class="btn" id="btnResume" onclick="resumeGame()">RESUME</button>
+  <button class="btn-quit" id="btnQuit" onclick="quitGame()">QUIT</button>
 </div>
 
 <div id="endScreen" class="overlay" style="display:none;">
@@ -90,11 +91,11 @@
   <div id="nameEntry" style="display:none;">
     <p style="font-family:'Press Start 2P',monospace; font-size:9px; color:#9ab;">CHAMPION NAME:</p>
     <input type="text" id="nameInput" class="lb-name-input" maxlength="10" placeholder="NAME">
-    <button class="btn-small" onclick="saveScore()">SAVE</button>
+    <button class="btn-small" id="btnSave" onclick="saveScore()">SAVE</button>
   </div>
   <div class="lb-wrap" id="endLb"></div>
-  <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
-  <button class="btn-quit" onclick="window.location.href='/'">BACK TO STORE</button>
+  <button class="btn" id="btnPlayAgain" onclick="playAgain()">PLAY AGAIN</button>
+  <button class="btn-quit" id="btnStore" onclick="goStore()">BACK TO STORE</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -263,13 +264,15 @@ async function saveScore() {
   }
   document.getElementById('nameEntry').style.display = 'none';
   renderLb('endLb', name);
+  focusButtons();
 }
 
 // ---- ActionCable (minimal client, same pattern as Snake Pit) ----
 // The TV subscribes as role 'tv', which also opens the private
 // golden_goal:<code>:tv stream where the secret picks arrive.
-var CHARS_BC = 'BCDFGHJKLMNPQRSTVWXYZ23456789';
-var gameCode = Array.from({ length: 4 }, function() { return CHARS_BC[Math.floor(Math.random() * CHARS_BC.length)]; }).join('');
+// The code comes from ?code= when /tv resumes (or the page reloads) so the
+// same session -- and everyone's phones -- survives (Phone Contract 6 + 9).
+var gameCode = ArcadeTV.sessionCode();
 var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
 var tvCable = null, tvSub = null;
 
@@ -305,11 +308,39 @@ function tvEvent(event, payload) {
 }
 
 var lobby = [null, null, null, null]; // names by slot from phones
+function syncLobby(players) {
+  lobby = [null, null, null, null];
+  (players || []).forEach(function(p) { lobby[p.slot] = p.name; });
+  for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+}
 function handleCable(msg) {
-  if (msg.type === 'lobby_update') {
-    lobby = [null, null, null, null];
-    (msg.players || []).forEach(function(p) { lobby[p.slot] = p.name; });
-    for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+  if (msg.type === 'lobby_update' || msg.type === 'state') {
+    syncLobby(msg.players);
+  } else if (msg.type === 'game_started') {
+    // The host phone can kick off too (Phone Contract 3). Our own tvStart()
+    // already moved past 'title', so this only fires for phones.
+    if (gameState === 'title' || gameState === 'gameover') startGame();
+  } else if (msg.type === 'player_left') {
+    // A phone bailed mid-match (Phone Contract 4): hand their boots to a bot.
+    if (msg.slot >= 0 && msg.slot <= 3) {
+      lobby[msg.slot] = null;
+      updateSlot(msg.slot, null);
+      var pl = players[msg.slot];
+      if (pl && !pl.isBot && gameState !== 'title' && gameState !== 'gameover') {
+        pl.isBot = true;
+        az(pl.name + ' left! A bot laces up!', 2200);
+        // If they were mid-pick, the bot decides instantly so the round
+        // never stalls on a phone that is gone.
+        if (gameState === 'pick' || gameState === 'paused') {
+          if (msg.slot === striker && !picks.shot) picks.shot = botShot();
+          if (msg.slot === keeper  && !picks.dive) picks.dive = botDive();
+        }
+      }
+    }
+  } else if (msg.type === 'session_reset') {
+    // Terminal reset (Phone Contract 5): back to the lobby, same code.
+    syncLobby(msg.players);
+    if (gameState !== 'title') showTitle();
   } else if (msg.type === 'pick') {
     // Secret pick from a phone (arrives on the TV-only stream)
     if (gameState !== 'pick' && gameState !== 'paused') return;
@@ -329,12 +360,34 @@ function updateSlot(slot, name) {
   if (nm) { nm.textContent = name || 'EMPTY'; nm.style.color = name ? '#fff' : '#444'; }
 }
 
+// ---- Phone Contract: focus model + remote (clauses 1, 2, 9) ----
+function focusButtons() {
+  if (gameState === 'title') {
+    ArcadeTV.setButtons([document.getElementById('btnStart')]);
+  } else if (gameState === 'paused') {
+    ArcadeTV.setButtons([document.getElementById('btnResume'), document.getElementById('btnQuit')]);
+  } else if (gameState === 'gameover') {
+    var els = [];
+    if (document.getElementById('nameEntry').style.display !== 'none') els.push(document.getElementById('btnSave'));
+    els.push(document.getElementById('btnPlayAgain'), document.getElementById('btnStore'));
+    ArcadeTV.setButtons(els);
+  } else {
+    ArcadeTV.setButtons([]);
+  }
+}
+function saveResume() {
+  // Writes ezaz_active_tv_game so /tv offers Resume (Phone Contract 9).
+  ArcadeTV.saveActiveGame({ slug: SLUG, title: 'Golden Goal', code: gameCode });
+}
+
 // ---- Lifecycle ----
 function tvStart() {
   if (tvSub) tvSub.send('start_game', {});
   startGame();
 }
 function startGame() {
+  if (gameState !== 'title' && gameState !== 'gameover') return;
+  saveResume();
   document.getElementById('titleScreen').style.display = 'none';
   document.getElementById('endScreen').style.display = 'none';
   players = [];
@@ -349,6 +402,7 @@ function startGame() {
   if (window.Music) Music.start('golden-goal');
   az('Welcome to the Golden Goal final! RAWR!', 2800);
   sWhistle();
+  focusButtons();
   nextRound();
 }
 
@@ -422,6 +476,7 @@ function togglePause() {
     gameState = 'paused';
     pausedAt = now();
     document.getElementById('pauseScreen').style.display = 'flex';
+    focusButtons();
   } else if (gameState === 'paused') {
     resumeGame();
   }
@@ -432,12 +487,38 @@ function resumeGame() {
   pickDeadline += delta; revealStart += delta; interludeEnd += delta; azUntil += delta;
   gameState = prePauseState;
   document.getElementById('pauseScreen').style.display = 'none';
+  focusButtons();
 }
+// TV-side quit (Phone Contract 5): broadcast the terminal reset so every
+// phone lands back in the lobby, then hand the screen back to /tv.
 function quitGame() {
+  if (tvSub) tvSub.send('abort', {});
+  ArcadeTV.clearActiveGame();
+  if (window.Music) Music.stop();
+  window.location.href = '/tv';
+}
+// Rematch (Phone Contract 6): back to the lobby with the SAME code. The
+// server already returned the session to 'lobby' on game_ended, so every
+// joined phone keeps its slot. Never reload the page -- that used to mint a
+// new code and orphan the party.
+function playAgain() {
+  showTitle();
+}
+function showTitle() {
   gameState = 'title';
   if (window.Music) Music.stop();
   document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'none';
   document.getElementById('titleScreen').style.display = 'flex';
+  saveResume();
+  fetchLb();
+  focusButtons();
+}
+function goStore() {
+  if (tvSub) tvSub.send('abort', {});
+  ArcadeTV.clearActiveGame();
+  if (window.Music) Music.stop();
+  window.location.href = '/';
 }
 
 function endMatch() {
@@ -479,6 +560,9 @@ function endMatch() {
 
   renderLb('endLb');
   document.getElementById('endScreen').style.display = 'flex';
+  // Resume contract (Phone Contract 9): the match is over, nothing to resume.
+  ArcadeTV.clearActiveGame();
+  focusButtons();
 }
 
 // ---- Rendering ----
@@ -807,6 +891,24 @@ function loop() {
 })();
 initCable();
 fetchLb();
+// Phone Contract 2: subscribe to TvRemoteChannel (via ArcadeTV) -- the Zone
+// pad moves the focused button, OK presses it, BACK pauses/resumes, HOME
+// hands the TV back to /tv.
+ArcadeTV.connectRemote({
+  gameTitle: 'Golden Goal',
+  roomCode: gameCode,
+  onBack: function() {
+    if (gameState === 'pick' || gameState === 'reveal' || gameState === 'interlude' || gameState === 'paused') togglePause();
+  },
+  onHome: function() {
+    if (tvSub) tvSub.send('abort', {});
+    ArcadeTV.clearActiveGame();
+    if (window.Music) Music.stop();
+    window.location.href = '/tv';
+  }
+});
+saveResume();
+focusButtons();
 loop();
 </script>
 </body>

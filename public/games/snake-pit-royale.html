@@ -6,6 +6,7 @@
 <script src="/opening-hours.js"></script>
 <script src="/game-viewport.js"></script>
 <script src="/error-reporter.js"></script>
+<script src="/arcade-tv.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,15 +73,15 @@
     <div class="slot-card" id="slot3"><div class="slot-tag" style="color:#ffd23b;">GOLD</div><div class="slot-name" id="slot3name">EMPTY</div></div>
   </div>
 
-  <p class="hint">Empty slots get an Az bot &nbsp;|&nbsp; Keyboard works too: P1 arrows &middot; P2 WASD &middot; P3 IJKL &middot; ESC pauses</p>
-  <button class="btn" onclick="tvStart()">START THE PIT</button>
+  <p class="hint">Empty slots get an Az bot &nbsp;|&nbsp; First phone in is the host and can start &nbsp;|&nbsp; Keyboard works too: P1 arrows &middot; P2 WASD &middot; P3 IJKL &middot; ESC pauses</p>
+  <button class="btn" id="btnStart" onclick="tvStart()">START THE PIT</button>
   <div class="lb-wrap" id="titleLb"></div>
 </div>
 
 <div id="pauseScreen" class="overlay" style="display:none;">
   <h1 style="font-family:'Press Start 2P',monospace; font-size:22px; color:#fff; margin-bottom:20px;">PAUSED</h1>
-  <button class="btn" onclick="resumeGame()">RESUME</button>
-  <button class="btn-quit" onclick="quitGame()">QUIT</button>
+  <button class="btn" id="btnResume" onclick="resumeGame()">RESUME</button>
+  <button class="btn-quit" id="btnQuit" onclick="quitGame()">QUIT</button>
 </div>
 
 <div id="endScreen" class="overlay" style="display:none;">
@@ -92,8 +93,8 @@
     <button class="btn-small" onclick="saveScore()">SAVE</button>
   </div>
   <div class="lb-wrap" id="endLb"></div>
-  <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
-  <button class="btn-quit" onclick="window.location.href='/'">BACK TO STORE</button>
+  <button class="btn" id="btnPlayAgain" onclick="playAgain()">PLAY AGAIN</button>
+  <button class="btn-quit" id="btnStore" onclick="goStore()">BACK TO STORE</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -478,8 +479,9 @@ async function saveScore() {
 }
 
 // ---- ActionCable (minimal client, same pattern as Dino Jump) ----
-var CHARS_BC = 'BCDFGHJKLMNPQRSTVWXYZ23456789';
-var gameCode = Array.from({ length: 4 }, function() { return CHARS_BC[Math.floor(Math.random() * CHARS_BC.length)]; }).join('');
+// The code comes from ?code= when /tv resumes (or the page reloads) so the
+// same session -- and everyone's phones -- survives (Phone Contract 6 + 9).
+var gameCode = ArcadeTV.sessionCode();
 var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
 var tvCable = null, tvSub = null;
 
@@ -512,11 +514,33 @@ function initCable() {
 }
 
 var lobby = [null, null, null, null]; // names by slot from phones
+function syncLobby(players) {
+  lobby = [null, null, null, null];
+  (players || []).forEach(function(p) { lobby[p.slot] = p.name; });
+  for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+}
 function handleCable(msg) {
-  if (msg.type === 'lobby_update') {
-    lobby = [null, null, null, null];
-    (msg.players || []).forEach(function(p) { lobby[p.slot] = p.name; });
-    for (var i = 0; i < 4; i++) updateSlot(i, lobby[i]);
+  if (msg.type === 'lobby_update' || msg.type === 'state') {
+    syncLobby(msg.players);
+  } else if (msg.type === 'game_started') {
+    // The host phone can start the pit too (Phone Contract 3). Our own
+    // tvStart() already moved past 'title', so this only fires for phones.
+    if (gameState === 'title' || gameState === 'gameover') startGame();
+  } else if (msg.type === 'player_left') {
+    // A phone bailed mid-match (Phone Contract 4): hand the snake to a bot.
+    if (msg.slot >= 0 && msg.slot <= 3) {
+      lobby[msg.slot] = null;
+      updateSlot(msg.slot, null);
+      var snk = snakes[msg.slot];
+      if (snk && snk.alive && !snk.isBot && (gameState === 'playing' || gameState === 'countdown' || gameState === 'paused')) {
+        snk.isBot = true;
+        az(snk.name + ' left! A bot slithers in!', 2200);
+      }
+    }
+  } else if (msg.type === 'session_reset') {
+    // Terminal reset (Phone Contract 5): back to the lobby, same code.
+    syncLobby(msg.players);
+    if (gameState !== 'title') showTitle();
   } else if (msg.type === 'input') {
     var slot = msg.slot;
     if (slot < 0 || slot > 3) return;
@@ -531,12 +555,31 @@ function updateSlot(slot, name) {
   if (nm) { nm.textContent = name || 'EMPTY'; nm.style.color = name ? '#fff' : '#444'; }
 }
 
+// ---- Phone Contract: focus model + remote (clauses 1, 2, 9) ----
+function focusButtons() {
+  if (gameState === 'title') {
+    ArcadeTV.setButtons([document.getElementById('btnStart')]);
+  } else if (gameState === 'paused') {
+    ArcadeTV.setButtons([document.getElementById('btnResume'), document.getElementById('btnQuit')]);
+  } else if (gameState === 'gameover') {
+    ArcadeTV.setButtons([document.getElementById('btnPlayAgain'), document.getElementById('btnStore')]);
+  } else {
+    ArcadeTV.setButtons([]);
+  }
+}
+function saveResume() {
+  // Writes ezaz_active_tv_game so /tv offers Resume (Phone Contract 9).
+  ArcadeTV.saveActiveGame({ slug: SLUG, title: 'Snake Pit Royale', code: gameCode });
+}
+
 // ---- Lifecycle ----
 function tvStart() {
   if (tvSub) tvSub.send('start_game', {});
   startGame();
 }
 function startGame() {
+  if (gameState === 'countdown' || gameState === 'playing') return;
+  saveResume();
   document.getElementById('titleScreen').style.display = 'none';
   document.getElementById('endScreen').style.display = 'none';
   snakes = [];
@@ -553,6 +596,7 @@ function startGame() {
   pauseOffset = 0;
   countdownEnd = now() + 3200;
   gameState = 'countdown';
+  focusButtons();
   az('Into the pit!', 1200);
 }
 function beginPlay() {
@@ -563,7 +607,7 @@ function beginPlay() {
   sGo();
 }
 function togglePause() {
-  if (gameState === 'playing') { gameState = 'paused'; pausedAt = now(); document.getElementById('pauseScreen').style.display = 'flex'; }
+  if (gameState === 'playing') { gameState = 'paused'; pausedAt = now(); document.getElementById('pauseScreen').style.display = 'flex'; focusButtons(); }
   else if (gameState === 'paused') resumeGame();
 }
 function resumeGame() {
@@ -572,11 +616,35 @@ function resumeGame() {
   lastTick = now();
   gameState = 'playing';
   document.getElementById('pauseScreen').style.display = 'none';
+  focusButtons();
 }
+// TV-side quit (Phone Contract 5): broadcast the terminal reset so every
+// phone lands back in the lobby, then show the title screen -- same code,
+// same QR, no restart needed.
 function quitGame() {
+  if (tvSub) tvSub.send('abort', {});
+  showTitle();
+}
+// Rematch (Phone Contract 6): back to the lobby with the SAME code. The
+// server already returned the session to 'lobby' on game_ended, so every
+// joined phone keeps its slot. Never reload the page -- that used to mint a
+// new code and orphan the party.
+function playAgain() {
+  showTitle();
+}
+function showTitle() {
   gameState = 'title';
   document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display = 'none';
   document.getElementById('titleScreen').style.display = 'flex';
+  saveResume();
+  fetchLb();
+  focusButtons();
+}
+function goStore() {
+  if (tvSub) tvSub.send('abort', {});
+  ArcadeTV.clearActiveGame();
+  window.location.href = '/';
 }
 
 function endMatch() {
@@ -621,6 +689,9 @@ function endMatch() {
 
   renderLb('endLb');
   document.getElementById('endScreen').style.display = 'flex';
+  // Resume contract (Phone Contract 9): the match is over, nothing to resume.
+  ArcadeTV.clearActiveGame();
+  focusButtons();
 }
 
 // ---- Rendering ----
@@ -850,6 +921,23 @@ function loop() {
 })();
 initCable();
 fetchLb();
+// Phone Contract 2: subscribe to TvRemoteChannel (via ArcadeTV) -- the Zone
+// pad moves the focused button, OK presses it, BACK pauses/resumes, HOME
+// hands the TV back to /tv.
+ArcadeTV.connectRemote({
+  gameTitle: 'Snake Pit Royale',
+  roomCode: gameCode,
+  onBack: function() {
+    if (gameState === 'playing' || gameState === 'paused') togglePause();
+  },
+  onHome: function() {
+    if (tvSub) tvSub.send('abort', {});
+    ArcadeTV.clearActiveGame();
+    window.location.href = '/tv';
+  }
+});
+saveResume();
+focusButtons();
 loop();
 </script>
 </body>
