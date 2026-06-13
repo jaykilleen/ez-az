@@ -2012,6 +2012,7 @@ function renderLB(board, highlightIdx) {
 
 let lbFinalScore = 0;
 let lbRestartFn = null;
+let lbSubmitted = false;
 
 function renderTitleLB(board) {
   var el = document.getElementById('titleLeaderboard');
@@ -2032,6 +2033,8 @@ function renderTitleLB(board) {
 async function showLBPanel(finalScore, isNewHigh, restartFn) {
   lbFinalScore = finalScore || 0;
   lbRestartFn = restartFn || null;
+  lbSubmitted = false;
+  document.getElementById('lbSaveBtn').disabled = false;
 
   document.querySelector('.lb-score-label').style.display = '';
   document.getElementById('lbScoreValue').style.display = '';
@@ -2059,6 +2062,9 @@ async function showLBPanel(finalScore, isNewHigh, restartFn) {
 }
 
 async function saveLBScore() {
+  if (lbSubmitted) return;
+  lbSubmitted = true;
+  document.getElementById('lbSaveBtn').disabled = true;
   var input = document.getElementById('lbNameInput');
   var name = (input.value.trim() || 'ANON').toUpperCase().slice(0, 12);
   var board;
