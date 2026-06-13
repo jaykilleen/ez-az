@@ -1,10 +1,15 @@
+<link rel="stylesheet" href="/ez-az-shell.css">
 <style>
   [hidden] { display: none !important; }
 
+  /* Core surface + brand tokens come from the shared shell (ez-az-shell.css).
+     These local aliases keep the game's short names working while pointing at
+     one source of truth. Slot colours (--c1..--c4) and --gold stay
+     game-specific (this game's gold is #ffd700, not the shell's --ez-gold). */
   :root {
     --c1: #ff4757; --c2: #3742fa; --c3: #ffa502; --c4: #2ed573;
-    --bg: #0a0a12; --surface: #13131f; --border: rgba(255,255,255,0.08);
-    --teal: #00ffc8; --gold: #ffd700;
+    --bg: var(--ez-bg); --surface: var(--ez-surface); --border: var(--ez-border);
+    --teal: var(--ez-teal); --gold: #ffd700;
   }
 
   .sp {
