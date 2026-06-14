@@ -162,6 +162,18 @@ echo "== GAME_SORT ==";        grep -n "\"${SLUG}\"" app/models/score.rb || echo
 echo "== Game.GAMES ==";       grep -n "slug: \"${SLUG}\"" app/models/game.rb || echo "MISSING in game.rb"
 echo "== shelf card ==";       grep -n "data-game=\"${SLUG}\"\|games/${SLUG}" public/index.html || echo "MISSING shelf card in index.html"
 echo "== modal title ==";      grep -n "'${SLUG}':" public/index.html || echo "MISSING in gameTitles map"
+echo "== cover art ==";
+# The shelf draws each game's box art on a per-game <canvas id="...Cover"> via a
+# matching getElementById draw function. A plain emoji/text placeholder div reads
+# as "no image" next to the drawn covers. Confirm the slug's card uses a canvas
+# cover AND that a draw function paints it. (Snake Pit and Late Shift shipped blank.)
+COVER_BLOCK=$(awk "/games\/${SLUG}[\"./]/{f=1} f{print} f&&/<\/a>/{exit}" public/index.html)
+COVER_ID=$(printf '%s' "$COVER_BLOCK" | grep -oE 'id="[a-zA-Z]+Cover"' | head -1 | sed -E 's/id="([a-zA-Z]+Cover)"/\1/')
+if [ -z "$COVER_ID" ]; then
+  echo "MISSING cover art: ${SLUG}'s shelf card has no <canvas id=\"...Cover\"> (placeholder div ≠ drawn cover)"
+else
+  grep -q "getElementById('${COVER_ID}')" public/index.html && echo "ok — ${COVER_ID} canvas + draw function present" || echo "MISSING cover art: canvas ${COVER_ID} exists but no getElementById('${COVER_ID}') draw function"
+fi
 echo "== route (TV only) ==";  grep -n "${SLUG}" config/routes.rb || echo "(no route — fine for standard games)"
 echo "== Phone Contract (TV only) ==";
 echo "-- Zone screen OR bespoke-join ADR that names the Phone Contract --"; grep -n "data-screen=\"${SLUG}\"" app/views/tv_remote/show.html.erb || grep -l "Phone Contract" $(grep -rl "${SLUG}" docs/decisions/ 2>/dev/null) 2>/dev/null || echo "MISSING: no Zone screen AND no ADR containing a 'Phone Contract' clause table — not waived (clause 10)"
