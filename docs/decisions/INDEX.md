@@ -1,0 +1,57 @@
+# ADR Index
+
+Topic-tagged map of all ADRs. Read this **before any non-trivial task** to
+find which decisions are already made.
+
+Newer ADRs carry `Triggers:` and `Topics:` near the top -- grep for them when
+in doubt: `grep -l "Triggers:.*tv" docs/decisions/*.md`. Older ADRs predate
+that convention and don't have them yet; they pick it up if they're touched.
+
+## How to use
+
+1. Identify the area of the task (TV/Zone, player identity, a specific game, deploys, design system).
+2. Look up the topic below to see which ADRs are relevant.
+3. Read the relevant ADRs **before** writing code, advising, or making a decision in that area.
+4. If the task spans topics, read all relevant ADRs.
+5. If no ADR covers the area but the decision is significant, use `/adr` to draft a new one.
+
+## Topics
+
+| Topic | ADRs |
+|-------|------|
+| **TV / Zone / phone controller** | 001, 005, 010 |
+| **Player identity & sessions** | 002 |
+| **Trivia** | 003 |
+| **Descent** | 004 |
+| **TV party games (Spotlight, Treasure Hunt, cards)** | 006 |
+| **Public game submission** | 007 |
+| **Build / retro workflow** | 008 |
+| **Golden Goal & QR join** | 009 |
+| **Shared design system** | 011 |
+| **TV / closed-screen resilience** | 012 |
+
+## All ADRs (chronological)
+
+| # | Title | Status | Date |
+|---|-------|--------|------|
+| 001 | TV Zone: Single-Scan Reactive Phone Controller | Accepted | 2026-04 |
+| 002 | Player Identity and Persistent Sessions | Accepted | 2026-04 / 2026-06 |
+| 003 | Trivia: Leave Game from Waiting Screen | Accepted | 2026-04 |
+| 004 | Descent: TV Controller Support | Accepted | 2026-04 |
+| 005 | Zone Component Naming and Navigation Bug Fixes | Accepted | 2026-04 |
+| 006 | TV Party Game Patterns: Spotlight, Treasure Hunt, Card-Game Architecture | Accepted | 2026-05 |
+| 007 | Public Game Submission Flow for Non-Developer Families | Accepted | 2026-05 |
+| 008 | Build/Retro Memory Loop | Accepted | 2026-06-07 |
+| 009 | Golden Goal Penalty Shootout, and QR-Code Join for Static-File TV Games | Accepted | 2026-06-12 |
+| 010 | The Phone Contract and the Shared Arcade Session | Accepted | 2026-06-12 |
+| 011 | Shared Design System (ez-az-shell.css) | Accepted | 2026-06-12 |
+| 012 | Self-Refreshing Idle TV Screens | Accepted | 2026-07-25 |
+
+## Maintenance
+
+When adding a new ADR:
+1. Use the next number in sequence (currently next: **013**)
+2. Add `Triggers:` and `Topics:` near the top
+3. Add a row to the chronological table above
+4. Add the ADR number to relevant topic rows above
+5. Cross-reference older ADRs in `## Related` if applicable
