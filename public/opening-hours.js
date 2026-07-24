@@ -54,8 +54,10 @@
     var hm = d.getHours() * 60 + d.getMinutes();
     var today = hoursFor(d);
 
-    if (hm < today.openMin) {
-      // Opens later today
+    if (hm < today.closeMin) {
+      // Opens later today, or already open today -- either way today's
+      // opening time is the target. If it's in the past (store's open
+      // right now) the caller clips the diff to 0, which is what we want.
       var t = new Date(d);
       t.setHours(Math.floor(today.openMin / 60), today.openMin % 60, 0, 0);
       return t;
