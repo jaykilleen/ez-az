@@ -14,4 +14,13 @@ class IconsController < ApplicationController
                 status: :moved_permanently,
                 allow_other_host: false
   end
+
+  # Browsers request /favicon.ico on any page that doesn't declare an icon --
+  # which is every self-contained game in public/games. Without this they all
+  # log a 404 on load. PNG is fine here; no browser still needs real .ico.
+  def favicon
+    redirect_to helpers.asset_path("icons/az-192.png"),
+                status: :moved_permanently,
+                allow_other_host: false
+  end
 end

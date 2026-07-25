@@ -48,6 +48,7 @@ Rails.application.routes.draw do
   get "/room-input.js",    to: "room_input#show", defaults: { format: :js }
   get "/manifest.json",    to: "manifest#show"
   get "/icons/:name.:format", to: "icons#show", constraints: { format: /png|jpg|jpeg|svg|webp/ }
+  get "/favicon.ico",         to: "icons#favicon"
 
   get "/counter", to: "counters#show"
   get "/gamers",  to: "counters#gamers"
