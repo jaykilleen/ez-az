@@ -4,21 +4,47 @@ on:
   push:
     branches:
       - main
+  pull_request:
   workflow_dispatch:
 
+# Serialise per-ref: two pushes to main queue behind each other, but a PR's
+# test run never blocks a production deploy.
 concurrency:
-  group: deploy
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.2"
+          bundler-cache: true
+
+      - name: Prepare test database
+        run: bin/rails db:test:prepare
+
+      - name: Run tests
+        run: bin/rails test
+
   deploy:
+    # Nothing reaches ez-az.net unless the suite is green. This is what makes
+    # the store-hours drift and expiry guards in StoreHoursTest load-bearing
+    # rather than advisory -- see ADR 013.
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -29,7 +55,7 @@ jobs:
         run: gem install kamal -v 2.11.0
 
       - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 

@@ -227,3 +227,5 @@ Run tests: `bin/rails test`
 ## Deployment
 
 Deployed via Kamal to a Linode server at https://ez-az.net. After deploy, poll `/api/version` until the new version is confirmed live.
+
+`.github/workflows/deploy.yml` runs the test suite first and the deploy job only runs if it passes (`needs: test`), so a red suite blocks production. Tests also run on pull requests; the deploy job is skipped there. Before this gate existed the suite never ran in CI at all, which quietly made every guard in it advisory.
