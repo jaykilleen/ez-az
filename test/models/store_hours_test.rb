@@ -107,14 +107,31 @@ class StoreHoursTest < ActiveSupport::TestCase
   end
 
   test "holiday end date is inclusive" do
-    travel_to Time.find_zone(ZONE).local(2026, 4, 21, 8, 0)  # Last day of holidays
+    travel_to Time.find_zone(ZONE).local(2026, 4, 17, 8, 0)  # Fri, last weekday of holidays
     assert StoreHours.open?
   end
 
   test "day after holiday returns to normal weekday hours" do
-    travel_to Time.find_zone(ZONE).local(2026, 4, 22, 8, 0)  # Wed after holidays
+    travel_to Time.find_zone(ZONE).local(2026, 4, 20, 8, 0)  # Mon, term 2 starts
     refute StoreHours.open?
-    travel_to Time.find_zone(ZONE).local(2026, 4, 22, 16, 0)  # Wed 4pm
+    travel_to Time.find_zone(ZONE).local(2026, 4, 20, 16, 0)  # Mon 4pm
+    assert StoreHours.open?
+  end
+
+  # The winter 2026 break was missing from HOLIDAYS entirely, so the store sat
+  # shut every weekday morning of it. Regression guard for each break we list.
+  test "winter 2026 holiday weekday opens at 7:30am" do
+    travel_to Time.find_zone(ZONE).local(2026, 6, 30, 8, 0)  # Tue in winter holidays
+    assert StoreHours.open?
+  end
+
+  test "spring 2026 holiday weekday opens at 7:30am" do
+    travel_to Time.find_zone(ZONE).local(2026, 9, 22, 8, 0)  # Tue in spring holidays
+    assert StoreHours.open?
+  end
+
+  test "summer holiday spanning the new year opens at 7:30am" do
+    travel_to Time.find_zone(ZONE).local(2027, 1, 5, 8, 0)  # Tue in summer holidays
     assert StoreHours.open?
   end
 
@@ -153,5 +170,35 @@ class StoreHoursTest < ActiveSupport::TestCase
   test "override_active? false when past" do
     Counter.create!(key: "store_open_until", value: (Time.now - 60).to_i)
     refute StoreHours.override_active?
+  end
+
+  # ── Holiday table health ──────────────────────────────────────────────────
+  #
+  # The holiday list is hand-maintained in two places. These two tests are the
+  # only thing standing between us and another silent lockout, so if one fails
+  # the fix is data, not the assertion.
+
+  JS_HOURS_PATH = Rails.root.join("public", "opening-hours.js").freeze
+
+  test "ruby and js holiday tables agree" do
+    js = File.read(JS_HOURS_PATH)
+    js_holidays = js.scan(/\{\s*from:\s*"(\d{4}-\d{2}-\d{2})",\s*to:\s*"(\d{4}-\d{2}-\d{2})"\s*\}/)
+                    .map { |from, to| { from: from, to: to } }
+
+    assert js_holidays.any?, "could not parse any holiday ranges out of #{JS_HOURS_PATH}"
+    assert_equal StoreHours::HOLIDAYS.map { |h| h.slice(:from, :to) }, js_holidays,
+      "HOLIDAYS in store_hours.rb and opening-hours.js have drifted. " \
+      "They must match exactly or the server and the browser disagree about opening time."
+  end
+
+  test "holiday coverage extends into the future" do
+    last = StoreHours::HOLIDAYS.map { |h| Date.parse(h[:to]) }.max
+    runway = (last - Date.current).to_i
+
+    assert runway >= 30,
+      "School holiday data runs out on #{last} (#{runway} days away). Top up HOLIDAYS in " \
+      "app/models/store_hours.rb AND public/opening-hours.js from " \
+      "https://education.qld.gov.au/about-us/calendar/term-dates before the next break, " \
+      "or the store will stay on 4pm weekday hours right through it."
   end
 end

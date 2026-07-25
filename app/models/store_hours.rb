@@ -13,9 +13,25 @@
 class StoreHours
   ZONE = "Australia/Brisbane".freeze
 
+  # Queensland state school holidays -- every non-term weekday block.
+  # Source: https://education.qld.gov.au/about-us/calendar/term-dates
+  # (2027+ dates come from the "future school dates" page.)
+  #
+  # MUST stay identical to HOLIDAYS in public/opening-hours.js.
+  # StoreHoursTest guards both the drift and the expiry:
+  #   - "ruby and js holiday tables agree" fails if the two lists diverge
+  #   - "holiday coverage extends into the future" fails once the data is
+  #     within 30 days of running out, so we top it up BEFORE a break starts
+  #     rather than after the kids find the store shut.
   HOLIDAYS = [
-    # Autumn school holidays 2026 (kept in sync with public/opening-hours.js)
-    { from: "2026-04-04", to: "2026-04-21" }
+    { from: "2026-04-03", to: "2026-04-19" },  # Autumn 2026
+    { from: "2026-06-27", to: "2026-07-12" },  # Winter 2026
+    { from: "2026-09-19", to: "2026-10-05" },  # Spring 2026
+    { from: "2026-12-12", to: "2027-01-26" },  # Summer 2026/27
+    { from: "2027-03-26", to: "2027-04-11" },  # Autumn 2027
+    { from: "2027-06-26", to: "2027-07-11" },  # Winter 2027
+    { from: "2027-09-18", to: "2027-10-04" },  # Spring 2027
+    { from: "2027-12-11", to: "2028-01-23" }   # Summer 2027/28
   ].freeze
 
   WEEKDAY_OPEN  = 16 * 60       # 4:00pm

@@ -16,9 +16,22 @@
 // Once the end date passes, normal hours resume automatically.
 
 (function () {
+  // Queensland state school holidays -- every non-term weekday block.
+  // Source: https://education.qld.gov.au/about-us/calendar/term-dates
+  //
+  // MUST stay identical to HOLIDAYS in app/models/store_hours.rb -- the Ruby
+  // side enforces the store server-side and this side drives the redirect,
+  // so a mismatch means the two disagree about whether we're open.
+  // StoreHoursTest parses this array and fails if they drift or expire.
   var HOLIDAYS = [
-    // Autumn school holidays 2026
-    { from: "2026-04-04", to: "2026-04-21" }
+    { from: "2026-04-03", to: "2026-04-19" },  // Autumn 2026
+    { from: "2026-06-27", to: "2026-07-12" },  // Winter 2026
+    { from: "2026-09-19", to: "2026-10-05" },  // Spring 2026
+    { from: "2026-12-12", to: "2027-01-26" },  // Summer 2026/27
+    { from: "2027-03-26", to: "2027-04-11" },  // Autumn 2027
+    { from: "2027-06-26", to: "2027-07-11" },  // Winter 2027
+    { from: "2027-09-18", to: "2027-10-04" },  // Spring 2027
+    { from: "2027-12-11", to: "2028-01-23" }   // Summer 2027/28
   ];
 
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
