@@ -39,7 +39,38 @@ pass, not a CSS swap. Blocks any further shell rollout.
 Also parked on this: the unified Zone (`tv_remote/show.html.erb`) and the TV
 room views are not on the shell and have no safe one-line adoption path.
 
-Related: ADR 011.
+**Comparison captured 2026-07-26.** All six lobbies screenshotted at
+1920x1080 and sent to Jay as a side-by-side. What it showed:
+
+| | Arcade | Broadcast |
+|---|---|---|
+| Screen used | ~middle half, big dead bands | Full frame, two columns |
+| Brand mark | Tiny mono `EZ-AZ`, top centre | Large gradient wordmark, top left |
+| Header | None | Title, sound, Exit, room-code chip |
+| Status | None | Bottom bar: waiting + connection |
+| Type | Press Start 2P throughout, small | Inter, real heading hierarchy |
+
+The screenshots surfaced a third option worth considering alongside
+"unify" and "keep both":
+
+- **A. Keep two registers.** Nothing to build. Defensible if they're two
+  product lines, but the split currently follows build order rather than
+  intent -- Snake Pit and Trivia are both "four phones round a TV".
+- **B. Unify onto the broadcast look.** One coherent store, but costs the
+  pixel-arcade character that genuinely suits those three games.
+- **C. Shared skeleton, per-game skin.** Adopt the broadcast *layout*
+  everywhere (full-frame two-column, header with Exit and room code, bottom
+  status bar) while each game keeps its own typeface and palette. Fixes the
+  measurable problems without discarding the arcade character, and is close
+  to what `ez-az-shell.css` was already reaching for -- ADR 011 extracted
+  shared *components*, where the real gap is shared *layout*.
+
+Open question, not yet a finding: the arcade lobbies show no on-screen Exit,
+only "ESC pauses". That's fine with a keyboard but may leave no quit path on
+a Google TV. Worth checking how these actually get launched before treating
+it as a defect.
+
+Related: ADR 011, ADR 010.
 
 ### BL-002 — Descent Party Mode (4-player TV split-screen)
 Up to 4 players each get a quadrant of the TV, each running their own maze
