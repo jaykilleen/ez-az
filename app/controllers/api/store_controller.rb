@@ -1,8 +1,20 @@
 class Api::StoreController < ApplicationController
   def status
     response.headers["Cache-Control"] = "no-store"
-    open_until = Counter.find_by(key: "store_open_until")&.value
-    override   = open_until && open_until > Time.now.to_i
-    render json: { override: !!override, open_until: override ? open_until : nil }
+    render json: StoreHours.status(asked_about)
+  end
+
+  private
+
+  # Optional ?at=<iso8601> answers "would the store be open then?" for any
+  # moment, so the school-holiday calendar can be verified against production
+  # without waiting for the date to arrive. Purely read-only -- it changes the
+  # answer, never the store, and nothing keys access off this endpoint.
+  # Unparseable input falls back to now rather than erroring.
+  def asked_about
+    return Time.zone.now if params[:at].blank?
+    Time.find_zone(StoreHours::ZONE).parse(params[:at].to_s) || Time.zone.now
+  rescue ArgumentError, RangeError
+    Time.zone.now
   end
 end

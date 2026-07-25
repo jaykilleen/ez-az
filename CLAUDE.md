@@ -210,6 +210,7 @@ Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `w
 - ADRs live in `docs/decisions/` (see `INDEX.md` there) -- read before touching TV, rooms, or player identity
 - Backlog lives in `docs/backlog.md` (Next / Soon / Ideas, stable `BL-NNN` ids). Bugs and Learning Centre content are GitHub issues; player-submitted bug reports are triaged via the `ez-az` MCP tools
 - School holiday dates in `app/models/store_hours.rb` and `public/opening-hours.js` must stay identical -- `StoreHoursTest` fails on drift, and fails again when the data is within 30 days of running out
+- The server is authoritative for store hours (ADR 013). `GET /api/store/status` reports resolved state (`open`, `schedule`, `holiday`, `opens_at`/`closes_at`); `?at=<iso8601>` answers for any moment, which is how you check the holiday calendar on production without waiting for the date
 - API controllers live under `app/controllers/api/` and inherit from `Api::BaseController`
 - Game slugs must be registered in `app/models/score.rb` (`GAME_SORT` and `DEFAULT_NAMES` hashes); also add the game to `app/models/game.rb` (`GAMES`), the shelf card and `gameTitles` map in `public/index.html`
 - Dev server runs on port 5003 (set by `config/puma.rb`; port 3000 is reserved for TXTavern)

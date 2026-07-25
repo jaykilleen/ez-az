@@ -99,11 +99,15 @@
   var storeOpen    = isOpen(new Date());
   var onClosedPage = location.pathname === "/closed.html";
 
-  // Check for an after-hours override set via the server (e.g. for testing).
-  // Falls back to regular hours if the request fails or times out.
+  // Ask the server. It owns the same timetable plus the after-hours override,
+  // and it can't drift from itself, so its answer wins whenever we get one.
+  // The local rules above stay as the offline fallback.
   fetch("/api/store/status", { cache: "no-store" })
     .then(function (r) { return r.json(); })
-    .then(function (d) { if (d.override) storeOpen = true; })
+    .then(function (d) {
+      if (typeof d.open === "boolean") storeOpen = d.open;
+      else if (d.override) storeOpen = true;  // older server, pre-resolved-state
+    })
     .catch(function () { /* network error — use regular hours */ })
     .finally(function () {
       if (!storeOpen && !onClosedPage) {
