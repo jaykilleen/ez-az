@@ -543,6 +543,12 @@
   </script>
 
   <script>
+    // The TV app has no manual refresh -- a stuck or stale screen here
+    // otherwise needs the whole TV power-cycled. Self-heal periodically.
+    setInterval(function () { window.location.reload(); }, 2 * 60 * 1000);
+  </script>
+
+  <script>
     fetch('/counter')
       .then(function(r) { return r.json(); })
       .then(function(data) {
