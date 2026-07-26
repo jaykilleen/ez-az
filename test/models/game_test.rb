@@ -52,6 +52,23 @@ class GameTest < ActiveSupport::TestCase
       "Only in Game::GAMES: #{(registered - shelf).inspect}."
   end
 
+  # Every "High Scores" link opens a modal titled `gameNames[slug] || slug`, so
+  # a slug missing from that map shows the kids the raw slug. az-cipher did
+  # exactly that: its modal read "az-cipher" instead of "Cipher".
+  test "every High Scores link on the shelf has a title in gameNames" do
+    src = File.read(Rails.root.join("public", "index.html"))
+
+    linked = src.scan(/class="game-box-scores"\s+data-game="([a-z0-9-]+)"/).flatten.uniq
+    named  = src[/var gameNames = \{(.*?)\};/m, 1].to_s
+             .scan(/'([a-z0-9-]+)':/).flatten
+
+    assert linked.any?, "found no High Scores links on the shelf"
+    missing = linked - named
+    assert_empty missing,
+      "these games have a High Scores link but no gameNames entry, so their " \
+      "leaderboard modal will show the raw slug as its title: #{missing.inspect}"
+  end
+
   test "find returns game by slug" do
     assert_equal "Space Dodge", Game.find("space-dodge")[:title]
   end
