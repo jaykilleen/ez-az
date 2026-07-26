@@ -146,6 +146,15 @@ class Game
       tv_optimised: false
     },
     {
+      slug: "az-cipher",
+      title: "Cipher",
+      creators: "Jaykill",
+      tagline: "Az locked up for the night. Crack the substitution cipher to get back in.",
+      path: "/games/az-cipher.html",
+      icon: "cipher",
+      tv_optimised: false
+    },
+    {
       slug: "golden-goal",
       title: "Golden Goal",
       creators: "Az",

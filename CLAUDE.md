@@ -212,7 +212,7 @@ Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `w
 - School holiday dates in `app/models/store_hours.rb` and `public/opening-hours.js` must stay identical -- `StoreHoursTest` fails on drift, and fails again when the data is within 30 days of running out
 - The server is authoritative for store hours (ADR 013). `GET /api/store/status` reports resolved state (`open`, `schedule`, `holiday`, `opens_at`/`closes_at`); `?at=<iso8601>` answers for any moment, which is how you check the holiday calendar on production without waiting for the date
 - API controllers live under `app/controllers/api/` and inherit from `Api::BaseController`
-- Game slugs must be registered in `app/models/score.rb` (`GAME_SORT` and `DEFAULT_NAMES` hashes); also add the game to `app/models/game.rb` (`GAMES`), the shelf card and `gameTitles` map in `public/index.html`
+- Game slugs must be registered in three places: `app/models/score.rb` (`GAME_SORT` and `DEFAULT_NAMES`), `app/models/game.rb` (`GAMES`), and a shelf card in `public/index.html`. `GameTest` asserts all three agree and names what is missing, so run `bin/rails test test/models/game_test.rb` after adding a game. (There is no `gameTitles` map -- this list used to mention one that does not exist.)
 - Dev server runs on port 5003 (set by `config/puma.rb`; port 3000 is reserved for TXTavern)
 - No Turbo, no Stimulus -- this is not a standard Rails app; the frontend is vanilla JS and Canvas
 
