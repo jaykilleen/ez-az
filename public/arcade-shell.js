@@ -162,12 +162,17 @@
 
     var scores = (data && data.scores) ? data.scores.slice(0, 10) : [];
 
-    if (!scores.length && !opts.fill) {
-      el.innerHTML = title + '<div class="ezaz-lb-empty">No scores yet. Be the first!</div>';
-      return;
-    }
-
+    // Keep the encouragement even on a padded board -- ten rows of dashes says
+    // "empty", but "Be the first!" says "have a go", which is the point of the
+    // store. The games that predate the shell did both.
     var html = title;
+    if (!scores.length) {
+      html += '<div class="ezaz-lb-empty">No scores yet. Be the first!</div>';
+      if (!opts.fill) {
+        el.innerHTML = html;
+        return;
+      }
+    }
     scores.forEach(function (row, i) {
       var mine = opts.highlight && row.name === opts.highlight ? ' highlight' : '';
       html += '<div class="ezaz-lb-row' + mine + '">' +

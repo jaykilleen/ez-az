@@ -14,7 +14,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
   # list is the goal; adding one is not allowed. See docs/design-system.md.
   PRE_SHELL_GAMES = %w[
     az-cipher
-    bloom
     cat-vs-mouse
     corrupted
     descent

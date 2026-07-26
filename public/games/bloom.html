@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <title>Bloom - By Az</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,23 +41,17 @@
   .time-display { margin: 16px 0; }
   .time-label { display: block; font-family: 'Press Start 2P', monospace; font-size: 9px; color: #aaa; margin-bottom: 6px; letter-spacing: 1px; }
   .time-value { font-family: 'Press Start 2P', monospace; font-size: 20px; color: #00ffc8; }
+  /* Leaderboard rows, title and placeholders come from ez-az-shell.css
+     (.ezaz-lb-*). Only these containers are game-specific. */
   .leaderboard { margin: 16px auto; max-width: 360px; text-align: left; }
   .title-leaderboard { margin: 16px auto; max-width: 360px; text-align: left; }
-  .leaderboard-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #ffe44d; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
-  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #ffe44d; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
-  .lb-empty { color: #555; font-size: 13px; padding: 8px 0; text-align: center; }
-  .lb-row.placeholder { color: #333; }
-  .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 13px; color: #aaa; font-family: 'Press Start 2P', monospace; }
-  .lb-row.highlight { color: #00ffc8; background: rgba(0, 255, 200, 0.08); border-radius: 4px; }
   .lb-name-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 10px; font-size: 14px; border-radius: 6px; width: 140px; font-family: 'Press Start 2P', monospace; margin-right: 8px; text-transform: uppercase; }
   .lb-name-input::placeholder { color: rgba(255,255,255,0.3); font-size: 10px; }
-  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
-  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
-  .store-banner a:hover { opacity: 1; }
+  /* Store banner comes from ez-az-shell.css (.ezaz-store-banner). */
 </style>
 </head>
 <body>
-<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
 <div id="titleScreen" class="overlay">
   <h1>BLOOM</h1>
   <p class="byline">By Az</p>
@@ -1202,36 +1198,23 @@ function quitGame() {
 }
 
 // Leaderboard
-function getLeaderboard() {
-  try {
-    return JSON.parse(localStorage.getItem('bloom-leaderboard') || '[]');
-  } catch (e) { return []; }
-}
+// ── Leaderboard ───────────────────────────────────────────────────────────
+//
+// Fetching (with its offline fallback), rendering, submitting and the "did I
+// make the board" check come from ArcadeShell (/arcade-shell.js). Bloom is a
+// time-based game, so the server reports sort:"asc" and ArcadeShell formats
+// values as MM:SS.mmm and treats a lower time as better.
+//
+// The local formatTime() defined above stays -- it drives the in-game HUD timer,
+// which is gameplay rather than wrapper.
 
-function saveLocalLeaderboard(board) {
-  localStorage.setItem('bloom-leaderboard', JSON.stringify(board));
-}
-
-async function fetchLeaderboard() {
-  try {
-    var r = await fetch('/api/scores?game=bloom');
-    if (!r.ok) throw new Error();
-    var d = await r.json();
-    var board = d.scores.map(function (s) { return {name: s.name, time: s.value}; });
-    saveLocalLeaderboard(board);
-    return board;
-  } catch (e) {
-    return getLeaderboard();
-  }
-}
+var lbBoard = null;   // last board fetched, kept for ArcadeShell.qualifies
 
 async function showLeaderboard() {
-  var board = await fetchLeaderboard();
+  lbBoard = await ArcadeShell.fetchScores('bloom');
   var nameEntry = document.getElementById('nameEntrySection');
 
-  var isTopScore = board.length < 10 || finalTime < board[board.length - 1].time;
-
-  if (isTopScore) {
+  if (ArcadeShell.qualifies(Math.round(finalTime), lbBoard)) {
     nameEntry.style.display = 'block';
     document.getElementById('nameInput').value = '';
     document.getElementById('nameInput').focus();
@@ -1239,63 +1222,26 @@ async function showLeaderboard() {
     nameEntry.style.display = 'none';
   }
 
-  renderLeaderboard(board, -1);
+  ArcadeShell.renderLeaderboard('#leaderboardSection', lbBoard, { title: 'LEADERBOARD' });
 }
 
 async function saveScore() {
   var input = document.getElementById('nameInput');
   var name = (input.value.trim() || 'ANON').toUpperCase().slice(0, 12);
-  var board;
-  try {
-    var r = await fetch('/api/scores', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({game: 'bloom', name: name, value: Math.round(finalTime)})});
-    if (!r.ok) throw new Error();
-    var d = await r.json();
-    board = d.scores.map(function (s) { return {name: s.name, time: s.value}; });
-    saveLocalLeaderboard(board);
-  } catch (e) {
-    board = getLeaderboard();
-    board.push({name: name, time: Math.round(finalTime)});
-    board.sort(function (a, b) { return a.time - b.time; });
-    if (board.length > 10) board.length = 10;
-    saveLocalLeaderboard(board);
-  }
+
+  lbBoard = await ArcadeShell.submit('bloom', name, Math.round(finalTime));
   document.getElementById('nameEntrySection').style.display = 'none';
-
-  var playerIdx = board.findIndex(function (e) { return e.time === Math.round(finalTime) && e.name === name; });
-  renderLeaderboard(board, playerIdx);
+  ArcadeShell.renderLeaderboard('#leaderboardSection', lbBoard, {
+    title: 'LEADERBOARD', highlight: name
+  });
 }
 
-function renderLeaderboard(board, highlightIdx) {
-  var section = document.getElementById('leaderboardSection');
-  if (board.length === 0) {
-    section.innerHTML = '<div class="leaderboard-title">LEADERBOARD</div><div style="color:#555;font-size:13px;padding:8px 0;">No scores yet. Be the first!</div>';
-    return;
-  }
-  var html = '<div class="leaderboard-title">LEADERBOARD</div>';
-  board.forEach(function (entry, i) {
-    var cls = i === highlightIdx ? 'lb-row highlight' : 'lb-row';
-    html += '<div class="' + cls + '">' +
-            '<span>' + (i + 1) + '. ' + entry.name + '</span>' +
-            '<span>' + formatTime(entry.time) + '</span></div>';
+// Title-screen board, padded out to ten so it reads as a full board.
+ArcadeShell.fetchScores('bloom').then(function (data) {
+  lbBoard = data;
+  ArcadeShell.renderLeaderboard('#titleLeaderboard', data, {
+    title: 'LEADERBOARD', fill: true
   });
-  section.innerHTML = html;
-}
-
-// Load leaderboard on title screen
-fetchLeaderboard().then(function (board) {
-  var el = document.getElementById('titleLeaderboard');
-  if (!el) return;
-  var html = '<div class="lb-title">LEADERBOARD</div>';
-  if (board.length === 0) {
-    html += '<div class="lb-empty">No scores yet. Be the first!</div>';
-  }
-  board.forEach(function (entry, i) {
-    html += '<div class="lb-row"><span>' + (i + 1) + '. ' + entry.name + '</span><span>' + formatTime(entry.time) + '</span></div>';
-  });
-  for (var i = board.length; i < 10; i++) {
-    html += '<div class="lb-row placeholder"><span>' + (i + 1) + '. ---</span><span>-</span></div>';
-  }
-  el.innerHTML = html;
 });
 
 // Game ideas for kids

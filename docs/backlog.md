@@ -139,19 +139,31 @@ title screen / pause / leaderboard / game over each time, and delete the name
 from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
 grow.
 
-**Done 2026-07-26:** magnet-lab (43 lines lighter) and late-shift (46
-lighter), both verified in a browser. Nine left.
+**Done 2026-07-26:** magnet-lab (43 lines lighter), late-shift (46) and
+bloom (50), all verified in a browser. Eight left.
 
-Remaining, simplest first: space-dodge, dodgeball, bloom, descent, az-cipher,
+Remaining, simplest first: space-dodge, dodgeball, descent, az-cipher,
 marble-run, letterbox (folder game), cat-vs-mouse, corrupted.
 
-Two things learned from the first one, worth repeating:
+When migrating, also flip the game's `shell` flag in
+`e2e/title-leaderboard.spec.js` -- migrated games render `.ezaz-lb-*` and
+`#1 NAME`, pre-shell ones `.lb-*` and `1. NAME`.
+
+Things learned so far, worth repeating:
 - Leave a canvas-drawn pause alone. The shell's pause is an HTML overlay;
   converting a canvas pause is a gameplay change, not a wrapper one.
 - If the game centres overlay children with `align-items`, give any
   intermediate wrapper an explicit width, or the shell's `width: 100%`
   resolves against a shrink-wrapped parent and the leaderboard rows collapse
   on top of each other. This is only visible in a browser, not in tests.
+- Keep the game's own board heading where it has one (late-shift's "TOP SHELF
+  STACKERS") by passing `title: null`, rather than replacing it with the
+  generic "HIGH SCORES".
+- A game's own `formatTime` may drive its in-game HUD as well as its board
+  (bloom). Only the board moves to ArcadeShell.
+- Check `e2e/title-leaderboard.spec.js` covers the game before and after. It
+  asserts on markup the migration changes, and it is not run by CI, so it will
+  not warn you.
 
 Related: ADR 011, BL-001.
 
