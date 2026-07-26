@@ -43,9 +43,28 @@ class Score < ApplicationRecord
 
   before_validation :normalize_name
 
-  scope :top_10, ->(game) {
-    where(game: game).order(value: GAME_SORT.fetch(game, :desc)).limit(10)
-  }
+  # The top ten *players*, not the top ten attempts -- one row each, showing
+  # their personal best.
+  #
+  # Without this a kid who plays a lot takes the whole board: on production
+  # space-dodge, one player held 9 of the 10 slots, so nobody else could see
+  # themselves on it. Nothing is lost by collapsing them, because a signed-in
+  # player's own attempt history is returned separately as `my_scores`.
+  #
+  # Returns an Array rather than a relation on purpose: the query is grouped,
+  # and `.count` on a grouped relation returns a Hash per group, which is a
+  # trap for callers expecting a number.
+  def self.top_10(game)
+    direction = GAME_SORT.fetch(game, :desc)
+    agg       = direction == :asc ? "MIN" : "MAX"
+
+    where(game: game)
+      .select("name, #{agg}(value) AS value")
+      .group(:name)
+      .order(Arel.sql("#{agg}(value) #{direction == :asc ? 'ASC' : 'DESC'}"))
+      .limit(10)
+      .to_a
+  end
 
   private
 

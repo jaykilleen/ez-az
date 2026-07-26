@@ -140,4 +140,58 @@ class ScoreTest < ActiveSupport::TestCase
     assert_equal 1, results.count
     assert_equal "AAA", results.first.name
   end
+
+  # ── One row per player ────────────────────────────────────────────────────
+
+  test "top_10 shows a player once, at their best" do
+    Score.create!(game: "space-dodge", name: "ZANDER", value: 5110)
+    Score.create!(game: "space-dodge", name: "ZANDER", value: 6066)
+    Score.create!(game: "space-dodge", name: "ZANDER", value: 5124)
+
+    results = Score.top_10("space-dodge")
+    assert_equal 1, results.count
+    assert_equal 6066, results.first.value
+  end
+
+  test "top_10 uses the lowest value as best for time-based games" do
+    Score.create!(game: "bloom", name: "LILY", value: 89521)
+    Score.create!(game: "bloom", name: "LILY", value: 45390)
+    Score.create!(game: "bloom", name: "LILY", value: 62000)
+
+    results = Score.top_10("bloom")
+    assert_equal 1, results.count
+    assert_equal 45390, results.first.value
+  end
+
+  # The case this was built for: on production space-dodge, one player held 9
+  # of the 10 slots and nobody else could see themselves on the board.
+  test "a prolific player no longer crowds everyone else off the board" do
+    9.times { |i| Score.create!(game: "space-dodge", name: "ZANDER", value: 5100 + i * 100) }
+    Score.create!(game: "space-dodge", name: "COOPER", value: 5116)
+    Score.create!(game: "space-dodge", name: "LACHIE", value: 4000)
+    Score.create!(game: "space-dodge", name: "GUY", value: 3000)
+
+    names = Score.top_10("space-dodge").map(&:name)
+    assert_equal %w[ZANDER COOPER LACHIE GUY], names
+    assert_equal 1, names.count("ZANDER"), "ZANDER should appear exactly once"
+  end
+
+  test "top_10 still ranks players against each other by their best" do
+    Score.create!(game: "space-dodge", name: "AAA", value: 100)
+    Score.create!(game: "space-dodge", name: "AAA", value: 900)
+    Score.create!(game: "space-dodge", name: "BBB", value: 500)
+
+    results = Score.top_10("space-dodge")
+    assert_equal %w[AAA BBB], results.map(&:name)
+    assert_equal [ 900, 500 ], results.map(&:value)
+  end
+
+  test "top_10 returns ten distinct players when more than ten have played" do
+    12.times { |i| Score.create!(game: "space-dodge", name: "P#{i}", value: (i + 1) * 100) }
+    12.times { |i| Score.create!(game: "space-dodge", name: "P#{i}", value: 1) }
+
+    results = Score.top_10("space-dodge")
+    assert_equal 10, results.count
+    assert_equal results.map(&:name).uniq.length, results.count, "expected distinct players"
+  end
 end

@@ -30,6 +30,7 @@ that convention and don't have them yet; they pick it up if they're touched.
 | **Shared design system** | 011 |
 | **TV / closed-screen resilience** | 012 |
 | **Store hours & opening times** | 012, 013 |
+| **Leaderboards & scores** | 014 |
 
 ## All ADRs (chronological)
 
@@ -48,11 +49,12 @@ that convention and don't have them yet; they pick it up if they're touched.
 | 011 | Shared Design System (ez-az-shell.css) | Accepted | 2026-06-12 |
 | 012 | Self-Refreshing Idle TV Screens | Accepted | 2026-07-25 |
 | 013 | The Server Is Authoritative for Store Hours | Accepted | 2026-07-26 |
+| 014 | Leaderboards Rank Players, Not Attempts | Accepted | 2026-07-26 |
 
 ## Maintenance
 
 When adding a new ADR:
-1. Use the next number in sequence (currently next: **014**)
+1. Use the next number in sequence (currently next: **015**)
 2. Add `Triggers:` and `Topics:` near the top
 3. Add a row to the chronological table above
 4. Add the ADR number to relevant topic rows above

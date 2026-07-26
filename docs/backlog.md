@@ -126,6 +126,19 @@ games they submitted. Gives kids somewhere on EZ-AZ that is theirs.
 Build once at least one game has a known author to test against. Model
 checklist applies to new columns. Related: ADR 002.
 
+### BL-015 — Merge player name variants on leaderboards
+Production boards carry the same kid under more than one name: `COOPER` and
+`COOPER KILLE`, `LACHIE` and `PRO LACHIE`. Since ADR 014 ranks players rather
+than attempts, each variant now takes its own slot.
+
+Merging automatically is not safe -- `GUY` and `CHEESE` might be anyone, and
+two kids could legitimately pick similar names. Options: let a signed-in
+player claim past scores posted under a chosen name, or give Jay a small admin
+merge action. Signing in already avoids the problem going forward, because the
+server overrides the posted name with the player's username.
+
+Related: ADR 014, BL-004.
+
 ### BL-005 — Trivia theme picker
 Pick a theme before the game starts (Animals, Science, Australia, Sports)
 instead of one mixed pool. `TriviaChannel#build_session` filters QUESTIONS by
