@@ -1,9 +1,13 @@
 module EzAz
-  # COMMIT is the last substantive commit, not the release commit that carries
-  # this file -- the release commit is always the one immediately after it.
-  # /api/version reporting a SHA one behind HEAD is expected, not a bug.
+  # Written by bin/release, which takes COMMIT straight from git. Do not patch
+  # this file with sed -- a pattern that does not match fails silently, which
+  # is how COMMIT drifted five releases behind on 2026-07-26. VersionTest
+  # guards against it recurring.
+  #
+  # COMMIT is the commit the release was cut from, so it is the one
+  # immediately before the "Release ..." commit that carries this file.
   module Version
-    STRING = "20260726.12"
-    COMMIT = "257515e"
+    STRING = "20260726.13"
+    COMMIT = "75c1529"
   end
 end
