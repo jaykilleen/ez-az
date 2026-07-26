@@ -225,4 +225,44 @@ class Api::ScoresControllerTest < ActionDispatch::IntegrationTest
     data = JSON.parse(response.body)
     assert_equal "JAYKILL", data["scores"][0]["name"]
   end
+
+  # ── Sort direction is served, not duplicated client-side ──────────────────
+  #
+  # The shelf used to keep its own `timeGames` map of which games rank
+  # ascending. It listed two of the four, so hacker-pro's times rendered as
+  # "N pts". Clients now read the direction off the response instead.
+
+  test "get scores reports the sort direction for a points game" do
+    get "/api/scores", params: { game: "space-dodge" }
+    assert_equal "desc", JSON.parse(response.body)["sort"]
+  end
+
+  test "get scores reports the sort direction for a time game" do
+    get "/api/scores", params: { game: "bloom" }
+    assert_equal "asc", JSON.parse(response.body)["sort"]
+  end
+
+  test "post also reports the sort direction" do
+    post "/api/scores", params: { game: "hacker-pro", name: "GUY", value: 900 }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    assert_response :created
+    assert_equal "asc", JSON.parse(response.body)["sort"]
+  end
+
+  test "every registered game reports a usable sort direction" do
+    Score::GAME_SORT.each_key do |slug|
+      get "/api/scores", params: { game: slug }
+      sort = JSON.parse(response.body)["sort"]
+      assert_includes %w[asc desc], sort, "#{slug} reported sort=#{sort.inspect}"
+      assert_equal Score::GAME_SORT[slug].to_s, sort, "#{slug} reported the wrong direction"
+    end
+  end
+
+  test "the shelf does not keep its own copy of the sort table" do
+    shelf = File.read(Rails.root.join("public", "index.html"))
+    refute_match(/timeGames/, shelf,
+      "public/index.html has reintroduced a local map of time-based games. " \
+      "Use the `sort` field from /api/scores instead -- the local copy drifted " \
+      "from Score::GAME_SORT and mis-formatted hacker-pro.")
+  end
 end

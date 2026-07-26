@@ -3341,7 +3341,6 @@
         'golden-goal': 'Golden Goal'
       };
 
-      var timeGames = { bloom: true, descent: true };
 
       function formatTime(ms) {
         var totalSec = Math.max(0, ms / 1000);
@@ -3353,11 +3352,13 @@
                String(millis).padStart(3, '0');
       }
 
-      function renderScores(scores, game, myBest, myScores, playerName) {
+      function renderScores(scores, game, myBest, myScores, playerName, sort) {
         var body = document.getElementById('scoresBody');
         scores   = scores   || [];
         myScores = myScores || [];
-        var isTime = timeGames[game];
+        // The server tells us how this game ranks, so there is no local copy
+        // of GAME_SORT here to drift out of date.
+        var isTime = sort === 'asc';
 
         function fmtVal(v) {
           return isTime ? formatTime(v) : v + ' pts';
@@ -3411,8 +3412,8 @@
 
           fetch('/api/scores?game=' + game)
             .then(function (r) { return r.json(); })
-            .then(function (d) { renderScores(d.scores, game, d.my_best, d.my_scores, d.player); })
-            .catch(function () { renderScores([], game, null, [], null); });
+            .then(function (d) { renderScores(d.scores, game, d.my_best, d.my_scores, d.player, d.sort); })
+            .catch(function () { renderScores([], game, null, [], null, 'desc'); });
         });
       });
 

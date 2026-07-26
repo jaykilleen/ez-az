@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+  EZ-AZ new game template.
+
+  Copy this to public/games/<your-slug>.html and fill in the three marked
+  sections. Everything outside them -- the store banner, title screen,
+  leaderboard, pause overlay, game over and the trip back to the store -- comes
+  from /ez-az-shell.css and /arcade-shell.js. Do not hand-roll those; if
+  something is missing from the shell, add it to the shell.
+
+  Before it works end to end, register the slug (see CLAUDE.md):
+    1. app/models/score.rb   — GAME_SORT (:desc for points, :asc for times)
+    2. app/models/game.rb    — GAMES entry with title, creators, tagline, path
+    3. public/index.html     — a shelf card, plus gameNames if it links High Scores
+  Then run: bin/rails test test/models/game_test.rb
+
+  This file lives in docs/ rather than public/games/ on purpose -- everything in
+  public/games/ is a real game on the shelf.
+-->
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOUR GAME — EZ-AZ</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+
+<style>
+  /* ─────────────────────────────────────────────────────────────────────
+     SECTION 1 of 3 — your game's own look.
+     Only styles for the game itself belong here. The wrapper is already
+     styled by ez-az-shell.css. Set --ez-title-colour to theme the title.
+     ───────────────────────────────────────────────────────────────────── */
+  :root { --ez-title-colour: var(--ez-teal); }
+
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--ez-bg);
+    overflow: hidden;
+  }
+
+  #game {
+    display: block;
+    margin: 0 auto;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title screen. Standard structure; swap the copy for your game. -->
+<div class="ezaz-title" id="titleScreen">
+  <div class="ezaz-title-name">YOUR GAME</div>
+  <div class="ezaz-title-tag">One line on what the player does.</div>
+
+  <p class="ezaz-hint">Arrow keys to move &nbsp;|&nbsp; ESC to pause</p>
+
+  <button class="ezaz-btn-primary" id="startBtn">START</button>
+
+  <div class="ezaz-lb-wrap" id="titleLb"></div>
+</div>
+
+<!-- Game over. Name entry only appears if the score makes the board. -->
+<div class="ezaz-title hidden" id="overScreen">
+  <div class="ezaz-title-name">GAME OVER</div>
+  <div class="ezaz-go-score" id="finalScore"></div>
+
+  <div id="nameEntry" style="display:none;">
+    <span class="ezaz-label">Your name</span>
+    <input class="ezaz-lb-name-input" id="nameInput" maxlength="12" placeholder="NAME"
+           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <button class="ezaz-btn-save" id="saveBtn">SAVE</button>
+  </div>
+
+  <div class="ezaz-lb-wrap" id="overLb"></div>
+
+  <button class="ezaz-btn-primary" id="againBtn">PLAY AGAIN</button>
+  <a href="/" class="ezaz-btn-outline">BACK TO STORE</a>
+</div>
+
+<canvas id="game" width="960" height="540"></canvas>
+
+<script src="/arcade-shell.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // Must match the slug registered in app/models/score.rb.
+  var GAME = 'your-slug';
+
+  var titleScreen = document.getElementById('titleScreen');
+  var overScreen  = document.getElementById('overScreen');
+  var board       = null;   // last leaderboard we fetched
+  var running     = false;
+  var score       = 0;
+
+  ArcadeShell.banner();
+
+  // Escape pauses, but only while actually playing.
+  ArcadeShell.pause({
+    enabled:  function () { return running; },
+    onPause:  function () { running = false; },
+    onResume: function () { running = true; loop(); }
+  });
+
+  // Show the board on the title screen, and keep it for `qualifies` later.
+  ArcadeShell.leaderboard('#titleLb', GAME).then(function (data) { board = data; });
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('againBtn').addEventListener('click', start);
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    var name = document.getElementById('nameInput').value.trim();
+    if (!name) { return; }
+    ArcadeShell.submit(GAME, name, score).then(function (data) {
+      board = data;
+      document.getElementById('nameEntry').style.display = 'none';
+      ArcadeShell.renderLeaderboard('#overLb', data, { highlight: name.toUpperCase() });
+    });
+  });
+
+  function start() {
+    score = 0;
+    titleScreen.classList.add('hidden');
+    overScreen.classList.add('hidden');
+    running = true;
+    loop();
+  }
+
+  function gameOver() {
+    running = false;
+    document.getElementById('finalScore').textContent = ArcadeShell.format(score, board && board.sort);
+    document.getElementById('nameEntry').style.display =
+      ArcadeShell.qualifies(score, board) ? '' : 'none';
+    ArcadeShell.renderLeaderboard('#overLb', board);
+    overScreen.classList.remove('hidden');
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // SECTION 2 of 3 — your game loop.
+  // Call gameOver() when the player is done. That is the only contract.
+  // ───────────────────────────────────────────────────────────────────────
+  var ctx = document.getElementById('game').getContext('2d');
+
+  function loop() {
+    if (!running) { return; }
+
+    // update();
+    ctx.fillStyle = '#0a0a12';
+    ctx.fillRect(0, 0, 960, 540);
+    // draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // SECTION 3 of 3 — your input handling.
+  // ───────────────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (!running) { return; }
+    // if (e.key === 'ArrowLeft')  { ... }
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -126,6 +126,40 @@ games they submitted. Gives kids somewhere on EZ-AZ that is theirs.
 Build once at least one game has a known author to test against. Model
 checklist applies to new columns. Related: ADR 002.
 
+### BL-016 — Migrate the eleven pre-shell games onto the shared wrapper
+`ez-az-shell.css` + `arcade-shell.js` now cover the whole wrapper, and
+`docs/game-template.html` means new games get it for free. Eleven existing
+games still hand-roll their own banner, leaderboard, pause and name entry;
+`ShellAdoptionTest::PRE_SHELL_GAMES` lists them.
+
+Deliberately not done in one sweep: these are large self-contained files
+(23k–93k) and gameplay cannot be automatically playtested, so a bad edit costs
+a working game. Do them one at a time, wrapper only, with a browser check on
+title screen / pause / leaderboard / game over each time, and delete the name
+from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
+grow.
+
+Suggested order, simplest first: magnet-lab, late-shift, space-dodge,
+dodgeball, bloom, descent, az-cipher, marble-run, letterbox (folder game),
+cat-vs-mouse, corrupted.
+
+Related: ADR 011, BL-001.
+
+### BL-017 — Shared shell assets are cached for an hour, unversioned
+`/ez-az-shell.css` and `/arcade-shell.js` are static files under `public/`, so
+they are served `cache-control: public, max-age=3600` with no fingerprint.
+Every game links them unversioned. A change to the shared wrapper therefore
+takes up to an hour to reach a browser that already has it — this bit during
+development and needed a manual cache-buster to verify.
+
+That matters more now the shell is shared: the whole point is that one edit
+updates every game. Options: shorten `max-age` for these two paths, move them
+into `app/assets` so Propshaft fingerprints them (needs the static game files
+to learn the digested URL somehow), or stamp a version query string at deploy
+time.
+
+Related: ADR 012 (the TV self-refresh does not bust the HTTP cache).
+
 ### BL-015 — Merge player name variants on leaderboards
 Production boards carry the same kid under more than one name: `COOPER` and
 `COOPER KILLE`, `LACHIE` and `PRO LACHIE`. Since ADR 014 ranks players rather

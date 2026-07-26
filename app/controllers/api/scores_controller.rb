@@ -12,7 +12,8 @@ module Api
       my_scores = my_personal_scores(game)
 
       response.headers["Cache-Control"] = "no-store"
-      render json: { scores: top, my_best: my_best, my_scores: my_scores, player: current_player&.username }
+      render json: { scores: top, my_best: my_best, my_scores: my_scores,
+                     player: current_player&.username, sort: sort_for(game) }
     end
 
     def create
@@ -39,10 +40,19 @@ module Api
       my_best  = my_best_score(game)
       my_scores = my_personal_scores(game)
 
-      render json: { scores: top, my_best: my_best, my_scores: my_scores, player: current_player&.username }, status: :created
+      render json: { scores: top, my_best: my_best, my_scores: my_scores,
+                     player: current_player&.username, sort: sort_for(game) }, status: :created
     end
 
     private
+
+    # Which way this game ranks: "asc" for time-based games (lowest wins),
+    # "desc" for points. Returned so clients can format and rank without
+    # keeping their own copy of GAME_SORT -- the shelf used to, and it had
+    # drifted, showing hacker-pro's times as "N pts".
+    def sort_for(game)
+      Score::GAME_SORT.fetch(game, :desc).to_s
+    end
 
     def my_best_score(game)
       return nil unless current_player

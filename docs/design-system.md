@@ -1,8 +1,83 @@
 # EZ-AZ Design System
 
-The shared design system for EZ-AZ lives in `public/ez-az-shell.css`. It defines the design tokens and reusable shell components that wrap every game. All shared classes use the `.ezaz-` prefix to avoid collisions with game-specific styles.
+The shell is the part of EZ-AZ that is **not** the game: the store banner, how a
+game is reached, the title screen, the leaderboard, pausing, quitting and game
+over. It is shared so that when a new game drops we only write the game.
 
-Game-specific layout, canvas, and gameplay UI belongs in each game file. This system only touches the surfaces around the game.
+Two files own it:
+
+| File | Owns |
+|---|---|
+| `public/ez-az-shell.css` | How the wrapper **looks** — tokens and `.ezaz-` components |
+| `public/arcade-shell.js` | How the wrapper **behaves** — `ArcadeShell` runtime |
+
+Plus two siblings for multiplayer, which are a separate concern:
+`public/arcade-cable.js` (ActionCable subscribe / exit / host-start) and
+`public/arcade-tv.js` (session codes, phone-to-TV input).
+
+**Start a new game from `docs/game-template.html`.** Copy it to
+`public/games/<slug>.html` and fill in the three marked sections. Everything
+else is already wired.
+
+Game-specific layout, canvas, and gameplay UI belongs in each game file. This
+system only touches the surfaces around the game. If a wrapper piece is
+missing, add it to the shell rather than to your game.
+
+---
+
+## The `ArcadeShell` runtime
+
+Include after the stylesheet:
+
+```html
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
+```
+
+Every method is independent — take only what you need.
+
+| Call | Does |
+|---|---|
+| `ArcadeShell.banner()` | Injects the store banner. Idempotent. |
+| `ArcadeShell.leaderboard(target, game, opts)` | Fetch **and** render. Resolves with the data. |
+| `ArcadeShell.fetchScores(game)` | Fetch only. Falls back to `localStorage` when offline. |
+| `ArcadeShell.renderLeaderboard(target, data, opts)` | Render data you already hold. |
+| `ArcadeShell.submit(game, name, value)` | POST a score, resolves with the refreshed board. |
+| `ArcadeShell.qualifies(value, data)` | Would this score make the top ten? |
+| `ArcadeShell.format(value, sort)` | `"1480 pts"` or `"00:45.390"`. |
+| `ArcadeShell.pause(opts)` | Wires Escape to the standard pause overlay. |
+
+`opts` for the leaderboard renderers: `highlight` (name to mark as the player's
+row) and `title` (heading, default `HIGH SCORES`).
+
+`opts` for `pause`: `onPause` / `onResume` to stop and restart your loop, and
+`enabled` — return `false` to ignore Escape, e.g. on the title screen.
+
+```javascript
+ArcadeShell.banner();
+
+ArcadeShell.pause({
+  enabled:  function () { return running; },
+  onPause:  function () { running = false; },
+  onResume: function () { running = true; loop(); }
+});
+
+var board;
+ArcadeShell.leaderboard('#titleLb', 'late-shift').then(function (d) { board = d; });
+
+// on game over
+if (ArcadeShell.qualifies(score, board)) { showNameEntry(); }
+ArcadeShell.submit('late-shift', name, score).then(function (d) {
+  ArcadeShell.renderLeaderboard('#overLb', d, { highlight: name.toUpperCase() });
+});
+```
+
+### Never keep a local copy of the sort direction
+
+`/api/scores` returns `sort` (`"asc"` for time-based games, `"desc"` for
+points) and `ArcadeShell` uses it. Do not add your own table of which games are
+time-based — the shelf used to have one, it listed two of the four ascending
+games, and hacker-pro's times rendered as `"N pts"` for months.
 
 ---
 
@@ -253,31 +328,76 @@ sorted.forEach(function(p, i) {
 
 ---
 
-## Applying the System to a New Game
+## Pause Overlay
 
-1. Add the shared stylesheet link after any Google Fonts link:
-   ```html
-   <link rel="stylesheet" href="/ez-az-shell.css">
-   ```
+Built and wired by `ArcadeShell.pause()`. Games should not hand-roll it.
 
-2. Use `.ezaz-store-banner` on both the TV game and the phone join page.
+```html
+<!-- created for you; shown here only so the structure is documented -->
+<div class="ezaz-pause">
+  <div class="ezaz-pause-inner">
+    <div class="ezaz-pause-title">PAUSED</div>
+    <button class="ezaz-btn-primary" data-ezaz-resume>RESUME</button>
+    <a href="/" class="ezaz-btn-outline">QUIT TO STORE</a>
+  </div>
+</div>
+```
 
-3. Wire the exit button on every phone screen using `.ezaz-exit-btn` and `ArcadeCable.attachExit`.
+## Title / Game Over Screen
 
-4. Use `.ezaz-btn-primary` for the JOIN button, overriding `--ez-btn-bg` and `--ez-btn-fg` to match the game's accent colour.
+A full-screen overlay that stops the game auto-playing, and the same structure
+again for game over. Add `.hidden` to hide one. Theme the heading with
+`--ez-title-colour`.
 
-5. Use `.ezaz-btn-outline` for all secondary navigation buttons (back to lobby, back to store).
-
-6. Use the TV primitives (QR box, slot cards, leaderboard, score cards) with the standard class names so the shared CSS renders them consistently.
+```html
+<div class="ezaz-title" id="titleScreen">
+  <div class="ezaz-title-name">YOUR GAME</div>
+  <div class="ezaz-title-tag">One line on what the player does.</div>
+  <p class="ezaz-hint">Arrow keys to move &nbsp;|&nbsp; ESC to pause</p>
+  <button class="ezaz-btn-primary" id="startBtn">START</button>
+  <div class="ezaz-lb-wrap" id="titleLb"></div>
+</div>
+```
 
 ---
 
-## Covered Games
+## Applying the System to a New Game
 
-| Game | TV file | Phone join |
+**Copy `docs/game-template.html` to `public/games/<slug>.html`.** It already has
+all of the below. Then:
+
+1. Fill in the three marked sections: your styles, your loop, your input.
+2. Call `gameOver()` when the run ends — that is the only contract the wrapper
+   needs from your game.
+3. Register the slug in `app/models/score.rb`, `app/models/game.rb` and the
+   shelf in `public/index.html` (see CLAUDE.md), then run
+   `bin/rails test test/models/game_test.rb`.
+
+For a phone-controlled party game, additionally use `.ezaz-exit-btn` with
+`ArcadeCable.attachExit` on every phone screen (Phone Contract clause 4), and
+`.ezaz-btn-primary` for JOIN, overriding `--ez-btn-bg` / `--ez-btn-fg` to your
+accent colour.
+
+---
+
+## Adoption
+
+`ShellAdoptionTest` enforces this for new games and holds an explicit list of
+the games that predate it. The list is allowed to shrink and nothing may be
+added to it.
+
+| Game | Shell CSS | `ArcadeShell` |
 |---|---|---|
-| Snake Pit Royale | `public/games/snake-pit-royale.html` | `app/views/snake_pit/join.html.erb` |
-| Golden Goal | `public/games/golden-goal.html` | `app/views/golden_goal/join.html.erb` |
-| Dino Jump | `public/games/dino-jump.html` | `app/views/dino_jump/join.html.erb` |
+| Snake Pit Royale | yes | not yet |
+| Golden Goal | yes | not yet |
+| Dino Jump | yes | not yet |
+| The other ten in `public/games/` | no | no |
 
-Games predating the system (Family Trivia, Spotlight, Treasure Hunt) served as the design reference. Their existing primitives were extracted into this shared file.
+Games predating the system (Family Trivia, Spotlight, Treasure Hunt) served as
+the design reference; their primitives were extracted into the shared CSS.
+
+Migrating the remaining games is deliberately a separate pass — it means
+editing large, self-contained game files that cannot be automatically
+playtested, so it should be done one game at a time with a browser check each
+time. The wrapper being shared matters most for the *next* game; the existing
+ones already work.

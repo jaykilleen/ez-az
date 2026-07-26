@@ -422,3 +422,74 @@
   font-family: 'Press Start 2P', var(--ez-font);
   line-height: 1.7;
 }
+
+
+/* ── Pause Overlay ─────────────────────────────────────────────────────── */
+/*
+ * The standard Escape-to-pause screen: Resume and Quit to Store, per the
+ * standard game features in CLAUDE.md. Built and wired by
+ * ArcadeShell.pause() in /arcade-shell.js -- games do not hand-roll it.
+ */
+.ezaz-pause {
+  position: fixed; inset: 0; z-index: 200;
+  display: none;
+  align-items: center; justify-content: center;
+  background: rgba(10,10,18,0.88);
+  backdrop-filter: blur(3px);
+  font-family: var(--ez-font);
+}
+.ezaz-pause.open { display: flex; }
+
+.ezaz-pause-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 32px 40px;
+  background: var(--ez-surface);
+  border: 1px solid var(--ez-border);
+  border-radius: 14px;
+  min-width: 260px;
+  text-align: center;
+}
+
+.ezaz-pause-title {
+  font-family: 'Press Start 2P', var(--ez-font);
+  font-size: 18px;
+  color: var(--ez-teal);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+
+/* ── TV: Title Screen ──────────────────────────────────────────────────── */
+/*
+ * The start overlay that stops a game auto-playing. Sits above the canvas and
+ * holds the game title, controls, leaderboard and start button. Clears the
+ * fixed store banner so the two never overlap.
+ */
+.ezaz-title {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 56px 20px 28px;
+  background: var(--ez-bg);
+  overflow-y: auto;
+  font-family: var(--ez-font);
+  text-align: center;
+}
+.ezaz-title.hidden { display: none; }
+
+.ezaz-title-name {
+  font-family: 'Press Start 2P', var(--ez-font);
+  font-size: clamp(20px, 4.5vw, 40px);
+  letter-spacing: 0.06em;
+  color: var(--ez-title-colour, var(--ez-teal));
+  text-shadow: 0 0 18px rgba(0,255,200,0.35);
+  margin-bottom: 2px;
+}
+
+.ezaz-title-tag {
+  color: #8a8aa0;
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 10px;
+}
