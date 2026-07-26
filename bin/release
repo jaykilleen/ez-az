@@ -12,7 +12,12 @@ set -euo pipefail
 #   2. Runs the test suite
 #   3. Bumps the version in lib/ez_az/version.rb
 #   4. Commits the bump, pushes to main
-#   5. Polls https://ez-az.net/api/version until Hatchbox deploys the new commit
+#   5. Polls https://ez-az.net/api/version until GitHub Actions deploys it
+#
+# Use this rather than hand-editing lib/ez_az/version.rb. Patching that file
+# with sed silently no-ops when the pattern does not match, which is how
+# COMMIT drifted five releases behind on 2026-07-26. This script rewrites the
+# file wholesale and takes COMMIT straight from git.
 
 VERSION_FILE="lib/ez_az/version.rb"
 PRODUCTION_URL="https://ez-az.net/api/version"
@@ -64,6 +69,10 @@ if ! bin/rails test 2>&1; then
 fi
 echo "Tests passed."
 echo ""
+echo "Note: CI also gates the deploy on the Playwright suite (npx playwright"
+echo "test, needs a dev server on 5003 with EZAZ_E2E=1). This script does not"
+echo "run it -- a red e2e job will block the deploy after the push."
+echo ""
 
 # --- Version bump ---
 NEW_COMMIT=$(git rev-parse --short HEAD)
@@ -83,7 +92,7 @@ git push origin main
 
 NEW_COMMIT=$(git rev-parse --short HEAD)
 echo ""
-echo "Pushed. Waiting for Hatchbox to deploy ${NEW_VERSION} (${NEW_COMMIT})..."
+echo "Pushed. Waiting for GitHub Actions to deploy ${NEW_VERSION} (${NEW_COMMIT})..."
 echo ""
 
 # --- Poll for deployment ---
@@ -111,7 +120,7 @@ while [ $ELAPSED -lt $POLL_TIMEOUT ]; do
 done
 
 echo ""
-echo "Warning: timed out after ${POLL_TIMEOUT}s. Check Hatchbox for deploy status."
+echo "Warning: timed out after ${POLL_TIMEOUT}s. Check the GitHub Actions run."
 echo "  Expected: ${NEW_VERSION}"
 echo "  Got:      ${DEPLOYED_VERSION:-unknown}"
 exit 1
