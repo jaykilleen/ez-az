@@ -203,6 +203,19 @@ hour expires.
 
 Related: ADR 012 (the TV self-refresh does not bust the HTTP cache).
 
+### BL-018 — Two open copy nits on the What's New page
+Raised at the end of the 2026-07-26 session, left for Jay rather than decided:
+
+- The Cipher entry opens "Rawr, a few small ones I'd let slide", then the next
+  paragraph says the bug-reporting gap "actually mattered". The lede
+  contradicts its own entry. One-line fix, needs a data migration like
+  `20260726024849_unwrap_july_2026_announcements.rb`.
+- The first paragraph of each entry sits tighter under its title (8px, from
+  `.entry-title`'s own margin) than the gap between paragraphs (0.9em, from
+  `.entry-body-text p`). Reads as a deliberate lede, but it was not deliberate.
+
+Both cosmetic. Bundle them if either is worth a release.
+
 ### BL-015 — Merge player name variants on leaderboards
 Production boards carry the same kid under more than one name: `COOPER` and
 `COOPER KILLE`, `LACHIE` and `PRO LACHIE`. Since ADR 014 ranks players rather
