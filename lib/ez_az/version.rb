@@ -3,7 +3,7 @@ module EzAz
   # this file -- the release commit is always the one immediately after it.
   # /api/version reporting a SHA one behind HEAD is expected, not a bug.
   module Version
-    STRING = "20260726.9"
-    COMMIT = "146420a"
+    STRING = "20260726.10"
+    COMMIT = "257515e"
   end
 end
