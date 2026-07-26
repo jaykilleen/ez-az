@@ -139,11 +139,11 @@ title screen / pause / leaderboard / game over each time, and delete the name
 from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
 grow.
 
-**magnet-lab done 2026-07-26** as the worked example (43 lines lighter,
-verified in a browser: title board, gameplay, zero console errors). Ten left.
+**Done 2026-07-26:** magnet-lab (43 lines lighter) and late-shift (46
+lighter), both verified in a browser. Nine left.
 
-Remaining, simplest first: late-shift, space-dodge, dodgeball, bloom, descent,
-az-cipher, marble-run, letterbox (folder game), cat-vs-mouse, corrupted.
+Remaining, simplest first: space-dodge, dodgeball, bloom, descent, az-cipher,
+marble-run, letterbox (folder game), cat-vs-mouse, corrupted.
 
 Two things learned from the first one, worth repeating:
 - Leave a canvas-drawn pause alone. The shell's pause is an HTML overlay;
@@ -155,7 +155,7 @@ Two things learned from the first one, worth repeating:
 
 Related: ADR 011, BL-001.
 
-### BL-017 — Shared shell assets are cached for an hour, unversioned
+### BL-017 — Shared shell assets cached for an hour ~~(DONE 2026-07-26)~~
 `/ez-az-shell.css` and `/arcade-shell.js` are static files under `public/`, so
 they are served `cache-control: public, max-age=3600` with no fingerprint.
 Every game links them unversioned. A change to the shared wrapper therefore
@@ -167,6 +167,12 @@ updates every game. Options: shorten `max-age` for these two paths, move them
 into `app/assets` so Propshaft fingerprints them (needs the static game files
 to learn the digested URL somehow), or stamp a version query string at deploy
 time.
+
+**Fixed 2026-07-26.** `StaticCacheHeaders::ALWAYS_FRESH` now serves the
+shared shell, cable, TV and opening-hours scripts `no-cache` (revalidate to a
+304, not refetch); cover art and audio keep the hour. Caveat: this only applies
+from the next fetch, so a browser already holding a copy keeps it until its own
+hour expires.
 
 Related: ADR 012 (the TV self-refresh does not bust the HTTP cache).
 
