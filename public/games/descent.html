@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <title>Descent - EZ-AZ</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,9 +19,7 @@
   #wrap { position: relative; }
   canvas { display: block; }
   .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; z-index: 10; padding: 20px; overflow-y: auto; }
-  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
-  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
-  .store-banner a:hover { opacity: 1; }
+  /* Store banner comes from ez-az-shell.css (.ezaz-store-banner). */
 
   #titleScreen h1 { font-family: 'Press Start 2P', monospace; font-size: 32px; margin-bottom: 12px; color: #aaa; letter-spacing: 4px; }
   #titleScreen .subtitle { font-size: 14px; color: #666; margin-bottom: 20px; font-style: italic; }
@@ -62,11 +62,7 @@
 
   /* Leaderboard */
   .leaderboard, .title-leaderboard { margin: 16px auto; max-width: 360px; text-align: left; }
-  .leaderboard-title, .lb-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #ffe44d; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
-  .lb-empty { color: #555; font-size: 13px; padding: 8px 0; text-align: center; }
-  .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 13px; color: #aaa; font-family: 'Press Start 2P', monospace; }
-  .lb-row.placeholder { color: #333; }
-  .lb-row.highlight { color: #00ffc8; background: rgba(0, 255, 200, 0.08); border-radius: 4px; }
+  /* Leaderboard title/rows/placeholders come from ez-az-shell.css (.ezaz-lb-*). */
   .lb-name-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 10px; font-size: 14px; border-radius: 6px; width: 140px; font-family: 'Press Start 2P', monospace; margin-right: 8px; text-transform: uppercase; }
   .lb-name-input::placeholder { color: rgba(255,255,255,0.3); font-size: 10px; }
   .btn-small { margin-top: 10px; padding: 8px 20px; font-size: 12px; border: none; border-radius: 8px; cursor: pointer; background: rgba(255,228,77,0.15); color: #ffe44d; font-weight: bold; transition: transform 0.1s, background 0.2s; }
@@ -74,7 +70,7 @@
 </style>
 </head>
 <body>
-<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
 
 <div id="wrap">
 <div id="titleScreen" class="overlay">
@@ -937,89 +933,43 @@ function endGame() {
 }
 
 // ===== LEADERBOARD =====
+//
+// Fetching (with its offline fallback), rendering, submitting and the "did I
+// make the board" check come from ArcadeShell (/arcade-shell.js). Descent is
+// time-based, so the server reports sort:"asc" and ArcadeShell formats values
+// as MM:SS.mmm and treats a lower time as better.
+//
+// The local formatTime() stays -- it drives the in-game and pause-screen
+// clocks, which are gameplay rather than wrapper.
+
+var board = null;   // last board fetched, kept for ArcadeShell.qualifies
+
 function fetchLeaderboard(isEndScreen) {
-  var targetEl = isEndScreen ? 'leaderboardSection' : 'titleLeaderboard';
-  var container = document.getElementById(targetEl);
+  var target = isEndScreen ? '#leaderboardSection' : '#titleLeaderboard';
 
-  fetch('/api/scores?game=descent')
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      try { localStorage.setItem('descent-scores', JSON.stringify(d.scores)); } catch(e) {}
-      renderLeaderboard(d.scores, isEndScreen);
-    })
-    .catch(function() {
-      var cached = [];
-      try { cached = JSON.parse(localStorage.getItem('descent-scores') || '[]'); } catch(e) {}
-      renderLeaderboard(cached, isEndScreen);
-    });
-}
+  return ArcadeShell.fetchScores('descent').then(function(data) {
+    board = data;
+    ArcadeShell.renderLeaderboard(target, data, { title: 'FASTEST RUNS', fill: true });
 
-function renderLeaderboard(scores, isEndScreen) {
-  var targetEl = isEndScreen ? 'leaderboardSection' : 'titleLeaderboard';
-  var container = document.getElementById(targetEl);
-  scores = scores || [];
-
-  var html = '<div class="lb-title">FASTEST RUNS</div>';
-  if (scores.length === 0) {
-    html += '<div class="lb-empty">No scores yet. Be the first!</div>';
-  }
-  for (var i = 0; i < Math.max(scores.length, 10); i++) {
-    if (i < scores.length) {
-      var val = formatTime(scores[i].value);
-      html += '<div class="lb-row"><span>' + (i + 1) + '. ' + scores[i].name + '</span><span>' + val + '</span></div>';
-    } else {
-      html += '<div class="lb-row placeholder"><span>' + (i + 1) + '. ---</span><span>-</span></div>';
-    }
-  }
-  container.innerHTML = html;
-
-  // Show name entry if qualifies
-  if (isEndScreen) {
-    var qualifies = scores.length < 10 || finalTime < scores[scores.length - 1].value;
-    if (qualifies) {
+    if (isEndScreen && ArcadeShell.qualifies(Math.floor(finalTime), data)) {
       document.getElementById('nameEntrySection').style.display = '';
       document.getElementById('nameInput').focus();
     }
-  }
+    return data;
+  });
 }
 
 function saveScore() {
   var nameInput = document.getElementById('nameInput');
-  var name = nameInput.value.trim();
-  var btn = nameInput.nextElementSibling;
+  var name = (nameInput.value.trim() || 'ANON').toUpperCase().slice(0, 12);
 
-  fetch('/api/scores', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ game: 'descent', name: name, value: Math.floor(finalTime) })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
+  ArcadeShell.submit('descent', name, Math.floor(finalTime)).then(function(data) {
+    board = data;
     document.getElementById('nameEntrySection').style.display = 'none';
-    try { localStorage.setItem('descent-scores', JSON.stringify(d.scores)); } catch(e) {}
-    renderEndLeaderboard(d.scores, name.toUpperCase() || 'ANON');
-  })
-  .catch(function() {
-    document.getElementById('nameEntrySection').style.display = 'none';
+    ArcadeShell.renderLeaderboard('#leaderboardSection', data, {
+      title: 'FASTEST RUNS', fill: true, highlight: name
+    });
   });
-}
-
-function renderEndLeaderboard(scores, playerName) {
-  var container = document.getElementById('leaderboardSection');
-  scores = scores || [];
-  var html = '<div class="lb-title">FASTEST RUNS</div>';
-  var highlighted = false;
-  for (var i = 0; i < Math.max(scores.length, 10); i++) {
-    if (i < scores.length) {
-      var val = formatTime(scores[i].value);
-      var isPlayer = !highlighted && scores[i].name === playerName.substring(0, 12) && scores[i].value === Math.floor(finalTime);
-      if (isPlayer) highlighted = true;
-      html += '<div class="lb-row' + (isPlayer ? ' highlight' : '') + '"><span>' + (i + 1) + '. ' + scores[i].name + '</span><span>' + val + '</span></div>';
-    } else {
-      html += '<div class="lb-row placeholder"><span>' + (i + 1) + '. ---</span><span>-</span></div>';
-    }
-  }
-  container.innerHTML = html;
 }
 
 // ===== RENDERING =====

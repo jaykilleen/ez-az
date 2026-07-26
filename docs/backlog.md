@@ -140,14 +140,19 @@ from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
 grow.
 
 **Done 2026-07-26:** magnet-lab (43 lines lighter), late-shift (46),
-bloom (50) and dodgeball (35), all verified in a browser. Seven left.
+bloom (50), dodgeball (35) and descent (46), all verified in a browser.
+Six left.
 
-Remaining, simplest first: space-dodge, descent, az-cipher, marble-run,
-letterbox (folder game), cat-vs-mouse, corrupted.
+Remaining, simplest first: az-cipher, marble-run, letterbox (folder game),
+cat-vs-mouse, corrupted, space-dodge.
 
-space-dodge is the flagship and most played, and it is referenced by four
-e2e specs. Worth doing carefully with time to spare, not at the end of a
-session.
+**space-dodge deliberately last.** It is the flagship and most played, four
+e2e specs reference it, and unlike the others its `leaderboardCache[0].score`
+feeds the in-game HUD "Best:" readout -- so migrating it touches gameplay,
+not just the wrapper. It also has two different board renderers (an `<ol>`
+game-over list and a `.lb-*` title board) and its e2e specs assert on the
+`charlieLeaderboard` localStorage key. Give it a session with room, not the
+tail end of one.
 
 Noticed while migrating dodgeball, pre-existing rather than caused by the
 migration: with a padded ten-row board, rows #9 and #10 overhang the bottom of

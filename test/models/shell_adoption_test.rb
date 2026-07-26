@@ -16,7 +16,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
     az-cipher
     cat-vs-mouse
     corrupted
-    descent
     letterbox
     marble-run
     space-dodge
