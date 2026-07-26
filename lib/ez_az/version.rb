@@ -7,7 +7,7 @@ module EzAz
   # COMMIT is the commit the release was cut from, so it is the one
   # immediately before the "Release ..." commit that carries this file.
   module Version
-    STRING = "20260726.13"
-    COMMIT = "75c1529"
+    STRING = "20260726.14"
+    COMMIT = "01c5d35"
   end
 end
