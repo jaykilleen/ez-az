@@ -109,6 +109,11 @@
       color: #888;
       line-height: 1.65;
     }
+
+    /* simple_format wraps each paragraph in a <p>. Without a margin they run
+       together and a multi-paragraph entry reads as one wall of text. */
+    .entry-body-text p { margin: 0 0 0.9em; }
+    .entry-body-text p:last-child { margin-bottom: 0; }
   </style>
 </head>
 <body>
