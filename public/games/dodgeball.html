@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <title>Dodgeball - World Championship 1988</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,23 +30,17 @@
   .btn-quit { background: linear-gradient(135deg, #c44, #a22); }
   .info { font-size: 11px; color: #666; margin-top: 10px; line-height: 1.8; }
   .title-leaderboard { margin: 16px auto; max-width: 360px; text-align: left; }
-  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #ffe44d; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
-  .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 12px; color: #aaa; font-family: 'Press Start 2P', monospace; }
-  .lb-row.highlight { color: #0f0; background: rgba(0,255,0,0.08); border-radius: 4px; }
-  .lb-row.placeholder { color: #333; }
-  .lb-empty { color: #555; font-size: 13px; padding: 8px 0; text-align: center; }
+  /* Leaderboard rows/title/placeholders come from ez-az-shell.css (.ezaz-lb-*). */
   .lb-name-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 10px; font-size: 14px; border-radius: 6px; width: 140px; font-family: 'Press Start 2P', monospace; margin-right: 8px; text-transform: uppercase; }
   .lb-name-input::placeholder { color: rgba(255,255,255,0.3); font-size: 9px; }
-  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
-  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
-  .store-banner a:hover { opacity: 1; }
+  /* Store banner comes from ez-az-shell.css (.ezaz-store-banner). */
   .player-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0; }
   .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; text-align: left; max-width: 460px; margin: 10px auto; font-size: 11px; color: #ccc; line-height: 1.6; }
   .controls-grid span.label { color: #ffe44d; font-weight: bold; }
 </style>
 </head>
 <body>
-<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
 
 <div id="titleScreen" class="overlay">
   <h1 style="color:#ffe44d;">DODGEBALL</h1>
@@ -204,54 +200,21 @@ function stopBGM() {
 }
 
 // ===== LEADERBOARD =====
-var leaderboardCache = [];
-function getLB() { try { return JSON.parse(localStorage.getItem('dodgeballLeaderboard')) || []; } catch(e) { return []; } }
-function saveLB(lb) { localStorage.setItem('dodgeballLeaderboard', JSON.stringify(lb)); }
-async function fetchLB() {
-  try {
-    var r = await fetch('/api/scores?game=dodgeball');
-    if (!r.ok) throw new Error();
-    var d = await r.json();
-    leaderboardCache = d.scores.map(function(s) { return {name:s.name, score:s.value}; });
-    saveLB(leaderboardCache);
-  } catch(e) { leaderboardCache = getLB(); }
-  return leaderboardCache;
-}
-function qualifies(s) { return leaderboardCache.length < 10 || s > leaderboardCache[leaderboardCache.length-1].score; }
-async function addLB(name, s) {
-  name = (name || 'LACHIE').toUpperCase().slice(0,12);
-  try {
-    var r = await fetch('/api/scores', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:'dodgeball',name:name,value:s})});
-    if (!r.ok) throw new Error();
-    var d = await r.json();
-    leaderboardCache = d.scores.map(function(e) { return {name:e.name, score:e.value}; });
-    saveLB(leaderboardCache);
-  } catch(e) {
-    leaderboardCache.push({name:name,score:s});
-    leaderboardCache.sort(function(a,b) { return b.score-a.score; });
-    leaderboardCache = leaderboardCache.slice(0,10);
-    saveLB(leaderboardCache);
-  }
-}
-function renderLBHTML(scores, highlightName, highlightScore) {
-  var html = '';
-  if (!scores || scores.length === 0) {
-    html += '<div class="lb-empty">No scores yet. Be the first!</div>';
-  }
-  (scores || []).forEach(function(s, i) {
-    var cls = (highlightName && s.name === highlightName && s.score === highlightScore) ? ' highlight' : '';
-    html += '<div class="lb-row'+cls+'"><span>'+(i+1)+'. '+s.name+'</span><span>'+s.score+' pts</span></div>';
-  });
-  for (var i = (scores||[]).length; i < 10; i++) {
-    html += '<div class="lb-row placeholder"><span>'+(i+1)+'. ---</span><span>-</span></div>';
-  }
-  return html;
+//
+// Fetching (with its offline fallback), rendering, submitting and the "did I
+// make the board" check come from ArcadeShell (/arcade-shell.js). See
+// docs/design-system.md and ADR 015.
+
+var SLUG = 'dodgeball';
+var board = null;   // last board fetched, kept for ArcadeShell.qualifies
+
+function refreshBoard() {
+  return ArcadeShell.fetchScores(SLUG).then(function(data) { board = data; return data; });
 }
 
-// Show leaderboard on title screen
-fetchLB().then(function(scores) {
-  var el = document.getElementById('titleLeaderboard');
-  if (el) el.innerHTML = '<div class="lb-title">HIGH SCORES</div>' + renderLBHTML(scores);
+// Title board, padded out to ten so it reads as a full board.
+refreshBoard().then(function(data) {
+  ArcadeShell.renderLeaderboard('#titleLeaderboard', data, { fill: true });
 });
 
 // ===== GAME STATE =====
@@ -948,7 +911,7 @@ function startCountdown() {
 async function showGameOver() {
   gameState = 'gameOver';
   stopBGM();
-  await fetchLB(); // refresh leaderboard before checking qualification
+  await refreshBoard(); // refresh the board before checking qualification
   var screen = document.getElementById('gameOverScreen');
   var matchResult = scores[0] >= 2 ? TEAM_COLORS[0].name + ' TEAM WINS!' : TEAM_COLORS[1].name + ' TEAM WINS!';
   if (playerCount === 1 && matchNum >= maxMatches && scores[0] >= 2) {
@@ -959,30 +922,32 @@ async function showGameOver() {
   html += '<h2 style="color:#ccc;">' + matchResult + '</h2>';
   html += '<p>Score: <span style="color:#ffe44d;font-weight:bold;">' + totalScore + ' pts</span></p>';
 
-  if (qualifies(totalScore) && totalScore > 0) {
+  var madeTheBoard = totalScore > 0 && ArcadeShell.qualifies(totalScore, board);
+
+  if (madeTheBoard) {
     html += '<p style="color:#0f0;">NEW HIGH SCORE!</p>';
     html += '<div style="margin:12px 0;"><input class="lb-name-input" id="nameInput" maxlength="12" placeholder="YOUR NAME" /></div>';
     html += '<button class="btn btn-green" id="submitScoreBtn">SAVE SCORE</button><br>';
-    html += '<div class="title-leaderboard" id="endLeaderboard">' + renderLBHTML(leaderboardCache) + '</div>';
-    html += '<button class="btn btn-gold" id="playAgainBtn">PLAY AGAIN</button>';
-    html += '<button class="btn btn-quit" id="quitBtn" style="margin-left:8px;">BACK TO STORE</button>';
+  }
+  html += '<div class="title-leaderboard" id="endLeaderboard"></div>';
+  html += '<button class="btn btn-gold" id="playAgainBtn">PLAY AGAIN</button>';
+  html += '<button class="btn btn-quit" id="quitBtn" style="margin-left:8px;">BACK TO STORE</button>';
 
-    screen.innerHTML = html;
-    screen.style.display = '';
+  screen.innerHTML = html;
+  screen.style.display = '';
 
+  // The element only exists once innerHTML is assigned, so render into it here
+  // rather than building the rows into the string.
+  ArcadeShell.renderLeaderboard('#endLeaderboard', board, { fill: true });
+
+  if (madeTheBoard) {
     document.getElementById('submitScoreBtn').onclick = async function() {
-      var name = document.getElementById('nameInput').value.trim() || 'LACHIE';
-      await addLB(name, totalScore);
-      document.getElementById('endLeaderboard').innerHTML = renderLBHTML(leaderboardCache, name.toUpperCase().slice(0,12), totalScore);
+      var name = (document.getElementById('nameInput').value.trim() || 'LACHIE').toUpperCase().slice(0, 12);
+      board = await ArcadeShell.submit(SLUG, name, totalScore);
+      ArcadeShell.renderLeaderboard('#endLeaderboard', board, { fill: true, highlight: name });
       document.getElementById('submitScoreBtn').style.display = 'none';
       document.getElementById('nameInput').style.display = 'none';
     };
-  } else {
-    html += '<div class="title-leaderboard" id="endLeaderboard">' + renderLBHTML(leaderboardCache) + '</div>';
-    html += '<button class="btn btn-gold" id="playAgainBtn">PLAY AGAIN</button>';
-    html += '<button class="btn btn-quit" id="quitBtn" style="margin-left:8px;">BACK TO STORE</button>';
-    screen.innerHTML = html;
-    screen.style.display = '';
   }
 
   document.getElementById('playAgainBtn').onclick = function() {

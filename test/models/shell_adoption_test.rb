@@ -17,7 +17,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
     cat-vs-mouse
     corrupted
     descent
-    dodgeball
     letterbox
     marble-run
     space-dodge

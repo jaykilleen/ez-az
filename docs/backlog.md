@@ -139,11 +139,19 @@ title screen / pause / leaderboard / game over each time, and delete the name
 from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
 grow.
 
-**Done 2026-07-26:** magnet-lab (43 lines lighter), late-shift (46) and
-bloom (50), all verified in a browser. Eight left.
+**Done 2026-07-26:** magnet-lab (43 lines lighter), late-shift (46),
+bloom (50) and dodgeball (35), all verified in a browser. Seven left.
 
-Remaining, simplest first: space-dodge, dodgeball, descent, az-cipher,
-marble-run, letterbox (folder game), cat-vs-mouse, corrupted.
+Remaining, simplest first: space-dodge, descent, az-cipher, marble-run,
+letterbox (folder game), cat-vs-mouse, corrupted.
+
+space-dodge is the flagship and most played, and it is referenced by four
+e2e specs. Worth doing carefully with time to spare, not at the end of a
+session.
+
+Noticed while migrating dodgeball, pre-existing rather than caused by the
+migration: its title overlay clips the padded board at roughly #10 and does
+not scroll. Worth a look when that game is next touched.
 
 When migrating, also flip the game's `shell` flag in
 `e2e/title-leaderboard.spec.js` -- migrated games render `.ezaz-lb-*` and
