@@ -149,27 +149,41 @@
 
   // Renders the standard HIGH SCORES block using the shared .ezaz-lb-* classes.
   //   opts.highlight — name to mark as the current player's row
-  //   opts.title     — heading text (default "HIGH SCORES")
+  //   opts.title     — heading text (default "HIGH SCORES"); pass null for none
+  //   opts.fill      — pad out to ten rows with dashes, so a title screen shows
+  //                    the shape of a full board rather than one lonely entry
   function renderLeaderboard(target, data, opts) {
     var el = resolve(target);
     if (!el) { return; }
     opts = opts || {};
 
-    var title = '<div class="ezaz-lb-title">' + escapeHtml(opts.title || 'HIGH SCORES') + '</div>';
+    var title = opts.title === null ? ''
+      : '<div class="ezaz-lb-title">' + escapeHtml(opts.title || 'HIGH SCORES') + '</div>';
 
-    if (!data || !data.scores.length) {
+    var scores = (data && data.scores) ? data.scores.slice(0, 10) : [];
+
+    if (!scores.length && !opts.fill) {
       el.innerHTML = title + '<div class="ezaz-lb-empty">No scores yet. Be the first!</div>';
       return;
     }
 
     var html = title;
-    data.scores.slice(0, 10).forEach(function (row, i) {
+    scores.forEach(function (row, i) {
       var mine = opts.highlight && row.name === opts.highlight ? ' highlight' : '';
       html += '<div class="ezaz-lb-row' + mine + '">' +
                 '<span>#' + (i + 1) + ' ' + escapeHtml(row.name) + '</span>' +
                 '<span>' + escapeHtml(format(row.value, data.sort)) + '</span>' +
               '</div>';
     });
+
+    if (opts.fill) {
+      for (var i = scores.length; i < 10; i++) {
+        html += '<div class="ezaz-lb-row placeholder">' +
+                  '<span>#' + (i + 1) + ' ---</span><span>-</span>' +
+                '</div>';
+      }
+    }
+
     el.innerHTML = html;
   }
 

@@ -19,7 +19,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
     corrupted
     descent
     dodgeball
-    late-shift
     letterbox
     marble-run
     space-dodge

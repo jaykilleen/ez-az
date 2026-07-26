@@ -374,6 +374,8 @@
   color: #9ab;
   font-family: 'Press Start 2P', var(--ez-font);
 }
+/* Empty slots on a board padded out to ten (renderLeaderboard fill). */
+.ezaz-lb-row.placeholder { color: #34324f; }
 .ezaz-lb-row.highlight {
   color: var(--ez-teal);
   background: rgba(0,255,200,0.08);

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Az's Late Shift — EZ-AZ</title>
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -15,15 +17,9 @@
     -webkit-user-select: none; user-select: none;
     touch-action: none;
   }
-  .store-banner {
-    position: fixed; top: 0; left: 0; z-index: 50;
-    padding: 6px 12px;
-    font-weight: bold; font-size: 0.8rem; letter-spacing: 2px;
-  }
-  .store-banner a {
-    color: #2ee06a; text-decoration: none;
-    text-shadow: 0 0 8px rgba(46,224,106,0.7);
-  }
+  /* Store banner comes from ez-az-shell.css (.ezaz-store-banner). It keeps the
+     brand gradient rather than this game's green, per ADR 011. */
+
   #stage {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -85,15 +81,11 @@
   .btn-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
   /* Leaderboard */
+  /* This game keeps its own board heading ("TOP SHELF STACKERS"), so the
+     shared renderer is called with title:null. The rows themselves are
+     .ezaz-lb-* from ez-az-shell.css. */
   .lb-title { color: #ffd23b; font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-bottom: 8px; }
-  .lb-row {
-    display: flex; justify-content: space-between;
-    font-size: 0.85rem; padding: 3px 6px; border-radius: 4px;
-    color: #cfcef0;
-  }
-  .lb-row.highlight { background: rgba(255,210,59,0.22); color: #fff; font-weight: bold; }
-  .lb-row.placeholder { color: #44426a; }
-  .lb-empty { color: #66648c; font-size: 0.82rem; padding: 8px 0; }
+  #titleLeaderboard, #overLeaderboard { width: 100%; }
   .score-big { font-size: 2.4rem; color: #2ee06a; font-weight: bold; text-shadow: 0 0 14px rgba(46,224,106,0.6); }
   .score-detail { color: #9a98c8; font-size: 0.85rem; margin-bottom: 8px; }
   .newhigh { color: #ffd23b; font-weight: bold; letter-spacing: 2px; margin: 8px 0; animation: blink 0.8s steps(2) infinite; }
@@ -132,7 +124,7 @@
 </style>
 </head>
 <body>
-  <div class="store-banner"><a href="/">EZ-AZ</a></div>
+  <div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
   <button id="muteBtn" title="Mute">🔊</button>
 
   <div id="stage">
@@ -718,40 +710,12 @@
   }
 
   // ── Leaderboard ─────────────────────────────────────────────────────
-  function getLocalLB() {
-    try { return JSON.parse(localStorage.getItem(SLUG + '-lb') || '[]'); }
-    catch (e) { return []; }
-  }
-  function saveLocalLB(board) {
-    try { localStorage.setItem(SLUG + '-lb', JSON.stringify(board)); } catch (e) {}
-  }
-  function fetchLB() {
-    return fetch('/api/scores?game=' + SLUG)
-      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-      .then(function (d) {
-        var board = (d.scores || []).map(function (s) { return { name: s.name, score: s.value }; });
-        saveLocalLB(board);
-        return board;
-      })
-      .catch(function () { return getLocalLB(); });
-  }
+  //
+  // Fetching (with its offline fallback), rendering, submitting and the
+  // "did I make the board" check all come from ArcadeShell
+  // (/arcade-shell.js). See docs/design-system.md.
 
-  function renderLB(el, board, highlightIdx, fill) {
-    board = board || [];
-    var html = '';
-    if (board.length === 0) html += '<div class="lb-empty">No scores yet. Be the first!</div>';
-    board.forEach(function (e, i) {
-      var cls = i === highlightIdx ? 'lb-row highlight' : 'lb-row';
-      html += '<div class="' + cls + '"><span>' + (i + 1) + '. ' + esc(e.name) + '</span><span>' + e.score + ' pts</span></div>';
-    });
-    if (fill) {
-      for (var i = board.length; i < 10; i++) {
-        html += '<div class="lb-row placeholder"><span>' + (i + 1) + '. ---</span><span>-</span></div>';
-      }
-    }
-    el.innerHTML = html;
-  }
-  function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); }
+  var board = null;   // last board fetched, kept for ArcadeShell.qualifies
 
   function showGameOver() {
     document.getElementById('finalScore').textContent = score;
@@ -760,10 +724,10 @@
     document.getElementById('newHigh').classList.add('hidden');
     document.getElementById('lbPanel').classList.remove('hidden');
 
-    fetchLB().then(function (board) {
-      var isTop = score > 0 && (board.length < 10 || score > board[board.length - 1].score);
-      renderLB(document.getElementById('overLeaderboard'), board, -1, false);
-      if (isTop) {
+    ArcadeShell.fetchScores(SLUG).then(function (data) {
+      board = data;
+      ArcadeShell.renderLeaderboard('#overLeaderboard', data, { title: null });
+      if (score > 0 && ArcadeShell.qualifies(score, data)) {
         document.getElementById('newHigh').classList.remove('hidden');
         document.getElementById('nameRow').classList.remove('hidden');
         var ni = document.getElementById('nameInput');
@@ -774,27 +738,11 @@
 
   function saveScore() {
     var name = (document.getElementById('nameInput').value.trim() || 'AZ').toUpperCase().slice(0, 12);
-    fetch('/api/scores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ game: SLUG, name: name, value: score })
-    })
-      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-      .then(function (d) { return (d.scores || []).map(function (s) { return { name: s.name, score: s.value }; }); })
-      .catch(function () {
-        var board = getLocalLB();
-        board.push({ name: name, score: score });
-        board.sort(function (a, b) { return b.score - a.score; });
-        if (board.length > 10) board.length = 10;
-        saveLocalLB(board);
-        return board;
-      })
-      .then(function (board) {
-        saveLocalLB(board);
-        var idx = board.findIndex(function (e) { return e.score === score && e.name === name; });
-        document.getElementById('nameRow').classList.add('hidden');
-        renderLB(document.getElementById('overLeaderboard'), board, idx, false);
-      });
+    ArcadeShell.submit(SLUG, name, score).then(function (data) {
+      board = data;
+      document.getElementById('nameRow').classList.add('hidden');
+      ArcadeShell.renderLeaderboard('#overLeaderboard', data, { title: null, highlight: name });
+    });
   }
 
   // ── Wire UI ─────────────────────────────────────────────────────────
@@ -808,9 +756,11 @@
     if (e.key === 'Enter') { e.preventDefault(); saveScore(); }
   });
 
-  // title leaderboard on load
-  fetchLB().then(function (board) {
-    renderLB(document.getElementById('titleLeaderboard'), board, -1, true);
+  // Title board, padded out to ten so the shelf looks like a shelf. Kept in
+  // `board` so game over can tell whether the score makes the top ten.
+  ArcadeShell.fetchScores(SLUG).then(function (data) {
+    board = data;
+    ArcadeShell.renderLeaderboard('#titleLeaderboard', data, { title: null, fill: true });
   });
 
   // keep layout sane if rotated (canvas is fixed res, CSS scales it)
