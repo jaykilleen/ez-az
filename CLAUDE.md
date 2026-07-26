@@ -228,4 +228,9 @@ Run tests: `bin/rails test`
 
 Deployed via Kamal to a Linode server at https://ez-az.net. After deploy, poll `/api/version` until the new version is confirmed live.
 
-`.github/workflows/deploy.yml` runs the test suite first and the deploy job only runs if it passes (`needs: test`), so a red suite blocks production. Tests also run on pull requests; the deploy job is skipped there. Before this gate existed the suite never ran in CI at all, which quietly made every guard in it advisory.
+`.github/workflows/deploy.yml` runs two suites before deploying, and the deploy job only runs if both pass (`needs: [test, e2e]`), so a red suite blocks production. Both also run on pull requests; the deploy job is skipped there.
+
+- `test` — `bin/rails test`
+- `e2e` — the Playwright specs in `e2e/`, driving the real games in a real browser. Run them locally with `npx playwright test` against a dev server started as `EZAZ_E2E=1 bin/rails server -p 5003` (that env var makes the dev server render the real 404 page instead of Rails' debug page). One retry in CI only; none locally.
+
+Neither suite ran in CI originally, and the e2e config pointed at port 3000 (TXTavern), so every spec was hitting the wrong app.

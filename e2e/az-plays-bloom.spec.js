@@ -71,11 +71,14 @@ test.describe("Az plays Bloom", () => {
     // Verify leaderboard shows Az's entry
     await expect(page.locator("#leaderboardSection")).toContainText("AZ");
 
-    // Verify localStorage has the entry
-    const lb = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("bloom-leaderboard"))
+    // Verify the offline cache has the entry. Bloom is on the shared wrapper
+    // now, so this lives under ArcadeShell's key (ezaz.scores.<slug>) with a
+    // {scores:[{name,value}], sort} shape, not the game's old
+    // "bloom-leaderboard" array of {name,time}.
+    const cached = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("ezaz.scores.bloom"))
     );
-    expect(lb).toEqual(
+    expect(cached.scores).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "AZ" }),
       ])

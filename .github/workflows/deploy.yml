@@ -31,11 +31,65 @@ jobs:
       - name: Run tests
         run: bin/rails test
 
+  e2e:
+    # Drives the real games in a real browser. The Rails suite cannot see a
+    # game whose title screen renders wrong, and migrating games onto the
+    # shared shell (BL-016) changes exactly the markup these specs assert on.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.2"
+          bundler-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Prepare the development database
+        run: bin/rails db:prepare
+
+      - name: Start the app
+        # EZAZ_E2E makes the dev server render the real error pages rather than
+        # Rails' debug page, so the 404 spec sees what production serves.
+        run: |
+          EZAZ_E2E=1 bin/rails server -p 5003 -b 127.0.0.1 &
+          for i in $(seq 1 30); do
+            if curl -sf --max-time 2 http://127.0.0.1:5003/api/version > /dev/null; then
+              echo "app is up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "app did not start within 30s"; exit 1
+
+      - name: Run end-to-end specs
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
   deploy:
-    # Nothing reaches ez-az.net unless the suite is green. This is what makes
-    # the store-hours drift and expiry guards in StoreHoursTest load-bearing
-    # rather than advisory -- see ADR 013.
-    needs: test
+    # Nothing reaches ez-az.net unless both suites are green. This is what
+    # makes the store-hours drift and expiry guards in StoreHoursTest
+    # load-bearing rather than advisory -- see ADR 013 -- and what stops a
+    # shell migration silently breaking a game's title screen.
+    needs: [ test, e2e ]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     runs-on: ubuntu-latest

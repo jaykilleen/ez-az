@@ -50,9 +50,12 @@ test.describe("Game page banner", () => {
     await expect(page).toHaveURL("/");
   });
 
+  // Bloom is on the shared wrapper, so its banner is .ezaz-store-banner from
+  // ez-az-shell.css rather than a per-game .store-banner. Games still to
+  // migrate (BL-016) keep the old class.
   test("Bloom has EZ-AZ banner linking back to store", async ({ page }) => {
     await page.goto("/games/bloom.html");
-    const banner = page.locator(".store-banner a");
+    const banner = page.locator(".ezaz-store-banner a");
     await expect(banner).toBeVisible();
     await expect(banner).toHaveAttribute("href", "/");
     await banner.click();
