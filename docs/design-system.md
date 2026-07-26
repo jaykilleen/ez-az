@@ -388,10 +388,21 @@ added to it.
 
 | Game | Shell CSS | `ArcadeShell` |
 |---|---|---|
+| Magnet Lab | yes | yes — banner, leaderboard, submit, qualifies |
 | Snake Pit Royale | yes | not yet |
 | Golden Goal | yes | not yet |
 | Dino Jump | yes | not yet |
-| The other ten in `public/games/` | no | no |
+| The other ten | no | no |
+
+Magnet Lab is the worked example. It lost 43 lines: its own copy of the banner
+CSS, `loadLeaderboard`, `renderLB`, a private `escape()` and a hand-rolled
+POST. Its canvas-drawn pause was deliberately left alone — the shell's pause is
+an HTML overlay, and a canvas game drawing its own is a legitimate choice.
+
+One gotcha found doing it: if a game centres overlay children with
+`align-items`, an intermediate wrapper shrink-wraps and the shell's
+`width: 100%` resolves against it, collapsing the leaderboard rows. Give the
+wrapper an explicit width.
 
 Games predating the system (Family Trivia, Spotlight, Treasure Hunt) served as
 the design reference; their primitives were extracted into the shared CSS.

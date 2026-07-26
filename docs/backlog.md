@@ -139,9 +139,19 @@ title screen / pause / leaderboard / game over each time, and delete the name
 from `PRE_SHELL_GAMES` as each lands. The list is asserted to shrink and never
 grow.
 
-Suggested order, simplest first: magnet-lab, late-shift, space-dodge,
-dodgeball, bloom, descent, az-cipher, marble-run, letterbox (folder game),
-cat-vs-mouse, corrupted.
+**magnet-lab done 2026-07-26** as the worked example (43 lines lighter,
+verified in a browser: title board, gameplay, zero console errors). Ten left.
+
+Remaining, simplest first: late-shift, space-dodge, dodgeball, bloom, descent,
+az-cipher, marble-run, letterbox (folder game), cat-vs-mouse, corrupted.
+
+Two things learned from the first one, worth repeating:
+- Leave a canvas-drawn pause alone. The shell's pause is an HTML overlay;
+  converting a canvas pause is a gameplay change, not a wrapper one.
+- If the game centres overlay children with `align-items`, give any
+  intermediate wrapper an explicit width, or the shell's `width: 100%`
+  resolves against a shrink-wrapped parent and the leaderboard rows collapse
+  on top of each other. This is only visible in a browser, not in tests.
 
 Related: ADR 011, BL-001.
 

@@ -21,7 +21,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
     dodgeball
     late-shift
     letterbox
-    magnet-lab
     marble-run
     space-dodge
   ].freeze

@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <title>Magnet Lab - by JAYKILL</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,23 +32,7 @@
     box-shadow: 0 0 40px rgba(0, 200, 255, 0.15);
   }
 
-  .store-banner {
-    position: fixed; top: 0; left: 0; width: 100%;
-    text-align: center; padding: 6px 0; z-index: 30;
-    background: rgba(0,0,0,0.6);
-  }
-  .store-banner a {
-    text-decoration: none;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-  }
-  .store-banner a:hover { opacity: 1; }
+  /* Store banner comes from ez-az-shell.css (.ezaz-store-banner). */
 
   #overlay {
     position: fixed; inset: 0;
@@ -123,34 +109,20 @@
     letter-spacing: 2px;
   }
   #overlay input[type="text"]:focus { outline: none; border-color: #ffee50; }
-  #overlay .lb {
-    width: 100%; max-width: 420px;
-    margin-top: 14px;
-    border: 1px solid rgba(0, 200, 255, 0.2);
-    border-radius: 8px;
-    padding: 12px 14px;
-    background: rgba(0, 100, 180, 0.06);
-  }
-  #overlay .lb-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.7rem;
-    color: #00ccff;
-    text-align: center;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-  }
-  #overlay .lb-row {
-    display: flex; justify-content: space-between;
-    font-size: 0.85rem; color: #ccd;
-    padding: 4px 6px;
-  }
-  #overlay .lb-row.is-me { color: #ffee50; }
-  #overlay .lb-empty { color: #557; text-align: center; font-size: 0.8rem; }
+
+  /* Leaderboard styling comes from ez-az-shell.css (.ezaz-lb-*). Only the
+     width it sits in is game-specific. #overlay centres its children with
+     align-items, so these wrappers need an explicit width or the shell's
+     `width:100%` resolves against a shrink-wrapped parent and the rows
+     collapse onto themselves. */
+  #overlay #leaderboardWrap,
+  #overlay #overlayExtra { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  #overlay .ezaz-lb-wrap { width: 100%; max-width: 420px; margin-top: 14px; }
 </style>
 </head>
 <body>
 
-<div class="store-banner"><a href="/">EZ-AZ</a></div>
+<div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
 
 <div id="overlay">
   <h1>MAGNET LAB</h1>
@@ -643,28 +615,17 @@
   loop();
 
   // ── Game over + leaderboard ──
-  function loadLeaderboard() {
-    return fetch('/api/scores?game=magnet-lab')
-      .then(function (r) { return r.ok ? r.json() : { scores: [] }; })
-      .catch(function () { return { scores: [] }; });
-  }
+  //
+  // Fetching, rendering, submitting and "did I make the board" all come from
+  // ArcadeShell (/arcade-shell.js). See docs/design-system.md.
 
-  function renderLB(scores, myBest) {
-    if (!scores.length) return '<div class="lb-empty">No scores yet. Be the first!</div>';
-    return scores.slice(0, 10).map(function (s, i) {
-      var isMe = myBest && s.name === myBest.name && s.value === myBest.value;
-      return '<div class="lb-row' + (isMe ? ' is-me' : '') + '">' +
-             '<span>' + (i + 1) + '. ' + escape(s.name) + '</span>' +
-             '<span>' + s.value + '</span></div>';
-    }).join('');
-  }
-
-  function escape(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  var GAME = 'magnet-lab';
+  var board = null;   // last board we fetched, kept for ArcadeShell.qualifies
 
   function showGameOver() {
-    var qualifies = score > 0;
+    // Previously this offered name entry for any score above zero. The shared
+    // helper checks the score against the actual board instead.
+    var qualifies = ArcadeShell.qualifies(score, board);
     instructions.style.display = 'none';
 
     var html =
@@ -673,7 +634,7 @@
     if (qualifies) {
       html += '<input type="text" id="lbName" placeholder="ENTER NAME" maxlength="12" />';
     }
-    html += '<div class="lb"><div class="lb-title">High Scores</div><div id="lbBody">Loading…</div></div>';
+    html += '<div class="ezaz-lb-wrap" id="lbBody"></div>';
 
     var existingExtra = document.getElementById('overlayExtra');
     if (existingExtra) existingExtra.remove();
@@ -686,30 +647,23 @@
     startBtn.removeEventListener('click', startGame);
     startBtn.addEventListener('click', restartGame);
 
-    loadLeaderboard().then(function (data) {
-      document.getElementById('lbBody').innerHTML = renderLB(data.scores || []);
-    });
+    ArcadeShell.leaderboard('#lbBody', GAME).then(function (data) { board = data; });
 
     if (qualifies) {
       var nameInput = document.getElementById('lbName');
       if (nameInput) {
         nameInput.focus();
         var posted = false;
-        function maybePost() {
+        var maybePost = function () {
           if (posted) return;
           var name = (nameInput.value || '').trim().toUpperCase().slice(0, 12);
           if (!name) return;
           posted = true;
-          fetch('/api/scores', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ game: 'magnet-lab', name: name, value: score })
-          }).then(function () {
-            return loadLeaderboard();
-          }).then(function (data) {
-            document.getElementById('lbBody').innerHTML = renderLB(data.scores || [], { name: name, value: score });
-          }).catch(function () {});
-        }
+          ArcadeShell.submit(GAME, name, score).then(function (data) {
+            board = data;
+            ArcadeShell.renderLeaderboard('#lbBody', data, { highlight: name });
+          });
+        };
         nameInput.addEventListener('keydown', function (e) {
           if (e.key === 'Enter') maybePost();
         });
@@ -728,12 +682,15 @@
     startGame();
   }
 
-  loadLeaderboard().then(function (data) {
+  // Title-screen board. Kept in `board` so game over can tell whether the
+  // player's score actually makes the top ten.
+  ArcadeShell.fetchScores(GAME).then(function (data) {
+    board = data;
     if (state !== 'title') return;
     var titleLB = document.createElement('div');
-    titleLB.className = 'lb';
-    titleLB.innerHTML = '<div class="lb-title">High Scores</div>' + renderLB(data.scores || []);
+    titleLB.className = 'ezaz-lb-wrap';
     leaderboardWrap.appendChild(titleLB);
+    ArcadeShell.renderLeaderboard(titleLB, data);
   });
 })();
 </script>
