@@ -150,8 +150,10 @@ e2e specs. Worth doing carefully with time to spare, not at the end of a
 session.
 
 Noticed while migrating dodgeball, pre-existing rather than caused by the
-migration: its title overlay clips the padded board at roughly #10 and does
-not scroll. Worth a look when that game is next touched.
+migration: with a padded ten-row board, rows #9 and #10 overhang the bottom of
+the teal arena border and render over the crowd sprites. Nothing is truncated
+and no ancestor clips -- all ten rows are legible, they just sit outside the
+frame. Cosmetic. Worth a look when that game is next touched.
 
 When migrating, also flip the game's `shell` flag in
 `e2e/title-leaderboard.spec.js` -- migrated games render `.ezaz-lb-*` and
