@@ -22,7 +22,7 @@ set -euo pipefail
 VERSION_FILE="lib/ez_az/version.rb"
 PRODUCTION_URL="https://ez-az.net/api/version"
 POLL_INTERVAL=15
-POLL_TIMEOUT=300  # 5 minutes
+POLL_TIMEOUT=600  # 10 minutes -- CI (test + e2e + deploy) has run past 5 before
 
 # --- Determine new version ---
 TODAY=$(date +%Y%m%d)
@@ -45,8 +45,13 @@ if [ "$BRANCH" != "main" ]; then
   exit 1
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
+# .claude/audio/ is TTS cache churn from the harness, not load-bearing work --
+# it's dirty on basically every real session, so it's excluded here rather
+# than forcing a commit/stash dance before every release.
+DIRTY=$(git status --porcelain -- . ':!.claude/audio')
+if [ -n "$DIRTY" ]; then
   echo "Error: working tree is dirty. Commit or stash changes first."
+  echo "$DIRTY"
   exit 1
 fi
 
