@@ -171,6 +171,15 @@ class Game
       path: "/games/magnet-lab.html",
       icon: "magnet",
       tv_optimised: false
+    },
+    {
+      slug: "laser-turtle",
+      title: "Laser Turtle",
+      creators: "Torrin",
+      tagline: "Ride Shelldon through the reef and zap every shark before your five hearts run out.",
+      path: "/games/laser-turtle.html",
+      icon: "laser-turtle",
+      tv_optimised: false
     }
   ].freeze
 

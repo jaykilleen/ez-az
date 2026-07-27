@@ -19,7 +19,8 @@ class Score < ApplicationRecord
     "dino-jump"  => :desc,
     "late-shift" => :desc,
     "snake-pit-royale" => :desc,
-    "golden-goal" => :desc
+    "golden-goal" => :desc,
+    "laser-turtle" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -34,7 +35,8 @@ class Score < ApplicationRecord
     "magnet-lab" => "JAYKILL",
     "late-shift" => "AZ",
     "snake-pit-royale" => "AZ",
-    "golden-goal" => "AZ"
+    "golden-goal" => "AZ",
+    "laser-turtle" => "TORRIN"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }
