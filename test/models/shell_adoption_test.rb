@@ -113,4 +113,9 @@ class ShellAdoptionTest < ActiveSupport::TestCase
       "docs/game-template.html has been copied into public/games -- everything " \
       "there is a real game on the shelf."
   end
+
+  test "space-dodge does not use the Speech Synthesis API" do
+    refute_match(/speechSynthesis/, source("space-dodge"),
+      "space-dodge.html must not use speechSynthesis -- the robot voice was removed")
+  end
 end

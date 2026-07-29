@@ -59,7 +59,6 @@ The first game in the EZ-AZ collection. A two-player co-op space shooter with:
 - Final boss (Void King) with two health bars, tentacles and dark magic
 - Power-ups: shield, slow-mo, speed boost, mega blast, mega gun, revive
 - Leaderboard with name entry
-- Robot voice sings original lyrics during gameplay
 - Boss fight music changes per phase
 
 ## Standard game features

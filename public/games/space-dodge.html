@@ -210,7 +210,7 @@ function startGame(count) {
   boss=null; activePowerups={}; megaGunTimer=0;
   score=0; speed=2; frame=0; started=true; paused=false;
   currentWorld=0; nextBossScore=1000; gamePhase='PLAYING'; warningTimer=0; transitionTimer=0;
-  sungBars={}; musicMode='normal';
+  musicMode='normal';
   startMusic();
   loop();
 }
@@ -325,25 +325,6 @@ function showMsg(t,c,d){messageText=t;messageColour=c;messageTimer=d;}
 function spawnParticles(x,y,col,n){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=1+Math.random()*4;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,size:2+Math.random()*3,colour:col});}}
 function cc(x1,y1,r1,x2,y2,r2){const dx=x1-x2,dy=y1-y2;return dx*dx+dy*dy<(r1+r2)*(r1+r2);}
 
-// ===== LYRICS + SINGING =====
-const LYRICS=[
-  {text:"Charlie and Cooper, flying through space",bar:0},{text:"Dodging the monsters, winning the race",bar:2},
-  {text:"Shoot down the rocks, collect all the stars",bar:4},{text:"Nothing can stop us, we're heading to Mars!",bar:6},
-  {text:"Shields up! Blast off! We're going so fast",bar:8},{text:"Speed boost activated, the danger won't last",bar:10},
-  {text:"Mega blast coming, watch them explode",bar:12},{text:"Charlie and Cooper own this space road!",bar:14},
-  {text:"Eyes in the darkness are watching us fly",bar:16},{text:"Demons and skulls but we won't even cry",bar:18},
-  {text:"Side by side rockets lighting up the night",bar:20},{text:"Two best mates together, we'll win this fight!",bar:22},
-  {text:"Stars getting faster, the beat's getting loud",bar:24},{text:"Charlie and Cooper making everyone proud",bar:26},
-  {text:"Highscore hunters from outer space",bar:28},{text:"No one in the galaxy can keep up our pace!",bar:30},
-];
-const LYR_LOOP=32;
-let currentLyric='',lyricAlpha=0,lyricTarget='';
-let speechVoice=null, sungBars={};
-const hasSpeech='speechSynthesis' in window;
-if(hasSpeech){const lv=()=>{const v=speechSynthesis.getVoices();if(!v.length)return;speechVoice=v.find(x=>/google.*english/i.test(x.name))||v.find(x=>x.lang.startsWith('en'))||v[0];};lv();speechSynthesis.onvoiceschanged=lv;}
-function singLine(text,t){if(!hasSpeech||!musicPlaying)return;const d=Math.max(0,(t-audioCtx.currentTime)*1000);setTimeout(()=>{if(!musicPlaying)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.pitch=1.4;u.rate=1.05;u.volume=0.85;if(speechVoice)u.voice=speechVoice;speechSynthesis.speak(u);},d);}
-function updateLyrics(){const b=currentBar%LYR_LOOP;let f='';for(const l of LYRICS)if(b>=l.bar&&b<l.bar+2){f=l.text;break;}if(f!==lyricTarget){lyricTarget=f;currentLyric=f;lyricAlpha=f?1:0;}if(!f&&lyricAlpha>0)lyricAlpha-=0.02;}
-
 // ===== MUSIC =====
 let audioCtx=null,musicPlaying=false,musicTimeout=null,musicGain=null;
 function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();musicGain=audioCtx.createGain();musicGain.gain.value=0.35;musicGain.connect(audioCtx.destination);}
@@ -452,12 +433,10 @@ function scheduleBar(bn,st){
     }
   }
 
-  // Only sing during normal gameplay
-  if(musicMode==='normal' && !sungBars[bn]){const ly=LYRICS.find(l=>l.bar===bn%LYR_LOOP);if(ly){sungBars[bn]=true;singLine(ly.text,st);}}
 }
 function musicSched(){if(!musicPlaying)return;const n=audioCtx.currentTime;while(scheduledUntil<n+0.15){scheduleBar(currentBar,scheduledUntil);scheduledUntil+=16*ST;currentBar++;}musicTimeout=setTimeout(musicSched,50);}
 function startMusic(){initAudio();if(audioCtx.state==='suspended')audioCtx.resume();musicPlaying=true;currentBar=0;scheduledUntil=audioCtx.currentTime+0.05;musicGain.gain.setValueAtTime(0.35,audioCtx.currentTime);musicSched();}
-function stopMusic(){musicPlaying=false;if(musicTimeout){clearTimeout(musicTimeout);musicTimeout=null;}if(musicGain&&audioCtx){musicGain.gain.setValueAtTime(musicGain.gain.value,audioCtx.currentTime);musicGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.5);}if(hasSpeech)speechSynthesis.cancel();}
+function stopMusic(){musicPlaying=false;if(musicTimeout){clearTimeout(musicTimeout);musicTimeout=null;}if(musicGain&&audioCtx){musicGain.gain.setValueAtTime(musicGain.gain.value,audioCtx.currentTime);musicGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.5);}}
 
 // ===== SFX =====
 function playExplosionSFX(){if(!audioCtx)return;const t=audioCtx.currentTime;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(20,t+0.6);g.gain.setValueAtTime(0.4,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.6);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+0.6);}
@@ -731,7 +710,6 @@ function update() {
       // Switch music - check if this is the final boss (world 5 = index 5)
       const nextWorldIdx = currentWorld % WORLDS.length;
       musicMode = (nextWorldIdx === 5) ? 'finalboss' : 'boss';
-      if(hasSpeech) speechSynthesis.cancel();
     }
     // Normal spawning
     const sr=Math.max(22,42-Math.floor(frame/250));
@@ -847,7 +825,6 @@ function update() {
   if(anyAlive&&frame%10===0)score++;
   if(screenFlash>0)screenFlash--;
   if(messageTimer>0)messageTimer--;
-  updateLyrics();
 }
 
 function killPlayer(p){
@@ -908,8 +885,6 @@ function draw() {
   // Message
   if(messageTimer>0&&gamePhase!=='WORLD_TRANSITION'){ctx.save();ctx.globalAlpha=Math.min(1,messageTimer/15);ctx.fillStyle=messageColour;ctx.font='bold 32px sans-serif';ctx.textAlign='center';ctx.shadowBlur=15;ctx.shadowColor=messageColour;ctx.fillText(messageText,W/2,H/2-60);ctx.shadowBlur=0;ctx.restore();}
 
-  // Lyrics
-  if(lyricAlpha>0&&currentLyric){ctx.save();ctx.globalAlpha=lyricAlpha*0.9;ctx.textAlign='center';ctx.shadowBlur=12;ctx.shadowColor='#f0f';ctx.font='bold 19px sans-serif';ctx.fillStyle='#fff';ctx.fillText(currentLyric,W/2,H-34);ctx.shadowBlur=0;ctx.restore();}
 }
 
 function loop(){if(!started||paused)return;update();draw();if(players.some(p=>p.alive)||particles.length>0)requestAnimationFrame(loop);}
