@@ -77,12 +77,19 @@ concept. Skip it, note why, and move on to the next candidate.
    design gate — not attempted unattended."`) so it doesn't get silently
    passed over run after run without Jay knowing why.
 
-4. **Pick.** A `priority:next-up` loop outranks everything else — Jay
-   tagging it that way is a direct instruction. Otherwise, the oldest
-   `build`-tagged loop that survived step 3's filter. Pick at most one.
-   `hex-cli loops claim <id>` before you touch anything; if you end up
-   building nothing or the pick fails a hard gate, `hex-cli loops release
-   <id>` so it doesn't sit locked.
+4. **Pick — tagged loops only, no exceptions.** A `priority:next-up` loop
+   outranks everything else — Jay tagging it that way is a direct
+   instruction. Otherwise, the oldest `build`-tagged loop that survived step
+   3's filter. **If nothing in the survey carries either tag, build nothing
+   this run and say so plainly in step 8** — do not pick an untagged loop
+   just because it looks small, old, clearly wanted, or "obviously fine."
+   The tag IS the pre-approval; a loop without one hasn't been greenlit for
+   unattended action yet, no matter how reasonable it looks. Step 3's "fair
+   game" language is about what KIND of change this command may attempt
+   (small fixes vs a new game) — it does not waive step 4's tag
+   requirement. Pick at most one. `hex-cli loops claim <id>` before you
+   touch anything; if you end up building nothing or the pick fails a hard
+   gate, `hex-cli loops release <id>` so it doesn't sit locked.
 
 5. **Announce.** `hex-cli builds update "$HEX_BUILD_ID" --announcement
    "Building: <what and why>"` — before any Write/Edit/migration.
