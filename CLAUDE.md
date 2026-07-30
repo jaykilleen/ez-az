@@ -61,6 +61,10 @@ The first game in the EZ-AZ collection. A two-player co-op space shooter with:
 - Leaderboard with name entry
 - Boss fight music changes per phase
 
+### Mutant Mile
+
+An auto-scroll permadeath speedrunner by Jaykill (`public/games/mutant-mile.html`). 1-player. Every run generates a brand new mutant dino (random look, name and one perk — Double Jump, Featherfall, Magnetic, Slim or Adrenaline) and a procedurally generated gauntlet of spikes, pits, crawlers and duck-under beams that gets harder in tiers the longer you survive. One hit ends the run. Score is distance plus crystal pickups. Points-based scoring (DESC leaderboard).
+
 ## Standard game features
 
 Every game on EZ-AZ should follow these patterns unless the game is a "chill" game (no scoring, exploration only, meditative). Chill games can skip leaderboards and scoring.

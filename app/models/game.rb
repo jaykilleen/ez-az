@@ -180,6 +180,15 @@ class Game
       path: "/games/laser-turtle.html",
       icon: "laser-turtle",
       tv_optimised: false
+    },
+    {
+      slug: "mutant-mile",
+      title: "Mutant Mile",
+      creators: "Jaykill",
+      tagline: "Every run mutates a new dino. One hit and it's over — how far can you drag it into Mars?",
+      path: "/games/mutant-mile.html",
+      icon: "mutant-mile",
+      tv_optimised: false
     }
   ].freeze
 

@@ -1314,6 +1314,21 @@
         </div>
       </a>
 
+      <a href="/games/mutant-mile.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="mutantMileCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Mutant Mile</div>
+          <div class="game-box-creators">By Jaykill</div>
+          <div class="game-box-desc">
+            Every run mutates a new dino. One hit and it's over — how far can you drag it into Mars?
+          </div>
+          <span class="game-box-badge">1 PLAYER</span><br>
+          <span class="game-box-scores" data-game="mutant-mile">High Scores</span>
+        </div>
+      </a>
+
       <a href="/games/corrupted.html" class="game-box">
         <div class="game-box-art">
           <canvas id="corruptedCover" width="220" height="280"></canvas>
@@ -3322,6 +3337,119 @@
       ctx.fillText('LASER TURTLE', W / 2, GAME_H + TITLE_H / 2);
       ctx.restore();
     })();
+
+    // ── Mutant Mile cover ──
+    (function () {
+      var canvas = document.getElementById('mutantMileCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height; // 220 x 280
+
+      var TITLE_H = 44;
+      var GAME_H  = H - TITLE_H;
+
+      // Mars sky
+      var sky = ctx.createLinearGradient(0, 0, 0, GAME_H);
+      sky.addColorStop(0, '#4a1c66'); sky.addColorStop(0.55, '#2a0f3d'); sky.addColorStop(1, '#170b23');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GAME_H);
+
+      // Glitch scanlines
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      [18, 90, 160].forEach(function (x, i) {
+        ctx.globalAlpha = 0.05;
+        ctx.fillStyle = '#ff2f8f';
+        ctx.beginPath();
+        ctx.moveTo(x, -10); ctx.lineTo(x + 20, -10); ctx.lineTo(x + 46, GAME_H); ctx.lineTo(x - 8, GAME_H);
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.restore();
+
+      // Distant peaks
+      ctx.fillStyle = '#1a0a28';
+      [[-10, 60], [70, 90], [150, 55]].forEach(function (m) {
+        ctx.beginPath(); ctx.moveTo(m[0], GAME_H); ctx.lineTo(m[0] + 55, GAME_H - m[1]); ctx.lineTo(m[0] + 110, GAME_H);
+        ctx.closePath(); ctx.fill();
+      });
+      ctx.fillStyle = '#100719';
+      [[-20, 34], [90, 44], [175, 30]].forEach(function (m) {
+        ctx.beginPath(); ctx.moveTo(m[0], GAME_H); ctx.lineTo(m[0] + 40, GAME_H - m[1]); ctx.lineTo(m[0] + 80, GAME_H);
+        ctx.closePath(); ctx.fill();
+      });
+
+      // Ground with a gap
+      ctx.fillStyle = '#0d0614';
+      ctx.fillRect(0, GAME_H - 18, 96, 18);
+      ctx.fillRect(150, GAME_H - 18, W - 150, 18);
+      var pitGlow = ctx.createLinearGradient(0, GAME_H - 18, 0, GAME_H - 18 + 14);
+      pitGlow.addColorStop(0, 'rgba(255,47,143,.5)'); pitGlow.addColorStop(1, 'rgba(255,47,143,0)');
+      ctx.fillStyle = pitGlow;
+      ctx.fillRect(96, GAME_H - 18, 54, 14);
+
+      // A spike guarding the far ledge
+      var spikeG = ctx.createLinearGradient(0, GAME_H - 42, 0, GAME_H - 18);
+      spikeG.addColorStop(0, '#ffce3d'); spikeG.addColorStop(1, '#8a4bff');
+      ctx.fillStyle = spikeG;
+      ctx.beginPath();
+      ctx.moveTo(160, GAME_H - 18); ctx.lineTo(174, GAME_H - 42); ctx.lineTo(188, GAME_H - 18);
+      ctx.closePath(); ctx.fill();
+
+      // Mutant mid-leap over the gap
+      ctx.save();
+      ctx.translate(112, GAME_H - 58);
+      ctx.rotate(-0.1);
+      var bodyG = ctx.createRadialGradient(-4, -6, 3, 0, 0, 26);
+      bodyG.addColorStop(0, '#c8ff8f'); bodyG.addColorStop(1, '#a6ff5e');
+      ctx.fillStyle = bodyG;
+      ctx.beginPath(); ctx.ellipse(0, 0, 17, 14, 0, 0, Math.PI * 2); ctx.fill();
+      // spikes on back
+      ctx.fillStyle = '#4f8a24';
+      [-8, 0, 8].forEach(function (t) {
+        ctx.beginPath(); ctx.moveTo(t - 4, -10); ctx.lineTo(t + 4, -10); ctx.lineTo(t, -20); ctx.closePath(); ctx.fill();
+      });
+      // legs tucked mid-jump
+      ctx.strokeStyle = '#4f8a24'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-6, 10); ctx.lineTo(-10, 20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6, 10); ctx.lineTo(10, 20); ctx.stroke();
+      // head
+      ctx.fillStyle = '#a6ff5e';
+      ctx.beginPath(); ctx.ellipse(16, -3, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(20, -6, 2.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#101018';
+      ctx.beginPath(); ctx.arc(20.8, -6.6, 1.1, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // Motion glow trail
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = '#a6ff5e'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(74, GAME_H - 42); ctx.lineTo(98, GAME_H - 56); ctx.stroke();
+      ctx.restore();
+
+      // Bonus crystal
+      ctx.save(); ctx.shadowColor = '#ffce3d'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ffce3d';
+      ctx.beginPath();
+      for (var i = 0; i < 8; i++) {
+        var a = i / 8 * Math.PI * 2 - Math.PI / 2, r = (i % 2) ? 3 : 7;
+        ctx[i ? 'lineTo' : 'moveTo'](150 + Math.cos(a) * r, GAME_H - 90 + Math.sin(a) * r);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+
+      // Title bar
+      ctx.fillStyle = '#170b23';
+      ctx.fillRect(0, GAME_H, W, TITLE_H);
+      ctx.fillStyle = 'rgba(166,255,94,0.2)';
+      ctx.fillRect(0, GAME_H, W, 2);
+      ctx.save();
+      ctx.shadowColor = '#ff2f8f'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#a6ff5e';
+      ctx.font = 'bold 11px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('MUTANT MILE', W / 2, GAME_H + TITLE_H / 2);
+      ctx.restore();
+    })();
   </script>
 
   <script>
@@ -3461,7 +3589,8 @@
         'late-shift': 'Late Shift',
         'snake-pit-royale': 'Snake Pit Royale',
         'golden-goal': 'Golden Goal',
-        'laser-turtle': 'Laser Turtle'
+        'laser-turtle': 'Laser Turtle',
+        'mutant-mile': 'Mutant Mile'
       };
 
 

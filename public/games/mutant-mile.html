@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en-AU"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Mutant Mile — EZ-AZ</title>
+<script src="/opening-hours.js"></script>
+<script src="/error-reporter.js"></script>
+<link rel="stylesheet" href="/ez-az-shell.css">
+<style>
+  :root{
+    --void:#170b23;
+    --deep:#2a0f3d;
+    --acid:#a6ff5e;
+    --hot:#ff2f8f;
+    --violet:#8a4bff;
+    --foam:#f3ecff;
+    --warn:#ffce3d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background: radial-gradient(120% 90% at 50% 0%, #3a1655 0%, #170b23 70%);
+    color:var(--foam);
+    font-family:"Trebuchet MS","Verdana",sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    min-height:100%;padding:14px;overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #shell{width:100%;max-width:980px}
+  #frame{
+    position:relative;width:100%;aspect-ratio:16/9;
+    border-radius:14px;overflow:hidden;
+    border:3px solid rgba(166,255,94,.28);
+    box-shadow:0 0 0 6px rgba(23,11,35,.9), 0 24px 60px rgba(0,0,0,.6);
+    background:#170b23;
+  }
+  #game{display:block;width:100%;height:100%;touch-action:none}
+  .screen{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:12px;text-align:center;
+    background:rgba(23,11,35,.86);backdrop-filter:blur(3px);padding:20px;
+    overflow-y:auto;
+  }
+  .screen.hidden{display:none}
+  .eyebrow{
+    font-size:clamp(9px,1.4vw,12px);letter-spacing:.42em;text-transform:uppercase;
+    color:var(--acid);opacity:.9;
+  }
+  h1{
+    font-size:clamp(26px,6vw,58px);line-height:.95;letter-spacing:-.02em;
+    text-transform:uppercase;font-weight:900;
+    color:var(--foam);text-shadow:0 0 24px rgba(255,47,143,.55), 0 5px 0 #4a1360;
+  }
+  h1 em{font-style:normal;color:var(--hot);display:block}
+  .sub{font-size:clamp(12px,1.9vw,16px);max-width:48ch;line-height:1.5;color:#d8c9ee}
+  .keys{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+  .key{
+    border:1px solid rgba(166,255,94,.35);border-radius:7px;padding:5px 10px;
+    font-size:clamp(9px,1.4vw,12px);letter-spacing:.1em;text-transform:uppercase;color:#d8c9ee;
+    background:rgba(166,255,94,.06);
+  }
+  .key b{color:var(--warn);font-weight:700}
+  button{
+    font-family:inherit;font-weight:900;text-transform:uppercase;letter-spacing:.14em;
+    font-size:clamp(13px,2.1vw,18px);padding:13px 30px;border:none;border-radius:999px;
+    background:linear-gradient(180deg,#c9ff8f,var(--acid));color:#0f2405;cursor:pointer;
+    box-shadow:0 5px 0 #4f8a24, 0 12px 26px rgba(166,255,94,.3);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  button:hover{transform:translateY(-2px);box-shadow:0 7px 0 #4f8a24,0 16px 30px rgba(166,255,94,.38)}
+  button:active{transform:translateY(3px);box-shadow:0 2px 0 #4f8a24}
+  button:focus-visible{outline:3px solid var(--warn);outline-offset:4px}
+  .stat{font-size:clamp(14px,2.6vw,22px);color:var(--warn);font-weight:900;letter-spacing:.05em}
+  .stat span{color:#d8c9ee;font-weight:400;font-size:.7em;letter-spacing:.2em;text-transform:uppercase}
+  footer{
+    margin-top:8px;text-align:center;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(216,201,238,.45);
+  }
+  .ezaz-lb-wrap{margin-top:2px}
+  #nameEntry{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap}
+  .back-link{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(216,201,238,.6);
+    text-decoration:none;border-bottom:1px solid rgba(216,201,238,.3);padding-bottom:1px;
+  }
+  .back-link:hover{color:var(--foam)}
+  #mutantPreview{
+    display:block;width:180px;height:180px;
+    background:radial-gradient(circle at 50% 40%, rgba(138,75,255,.35), rgba(23,11,35,.1) 70%);
+    border:1px solid rgba(166,255,94,.3);border-radius:14px;
+  }
+  #mutantName{
+    font-size:clamp(16px,2.6vw,22px);color:var(--acid);font-weight:900;letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  #mutantPerk{font-size:13px;color:#d8c9ee;max-width:40ch}
+  #mutantPerk b{color:var(--warn)}
+  @media (prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head><body><div id="shell">
+  <div id="frame">
+    <canvas id="game" width="960" height="540"></canvas>
+
+    <div class="screen" id="titleScreen">
+      <div class="eyebrow">Speedrun · Permadeath · Mars</div>
+      <h1>Mutant<em>Mile</em></h1>
+      <p class="sub">Every run mutates a brand new dino. The ground drops out, the ceiling comes down, and one hit ends it all. How far can you drag your mutant before Mars gets it?</p>
+      <div class="key" id="dailyTag" style="border:none;background:none;color:#a6ff5e">Today's mutant is the same for everyone — beat it before midnight.</div>
+      <div class="keys">
+        <div class="key"><b>Left / Right</b> — move</div>
+        <div class="key"><b>Space / Up</b> — jump (hold for higher)</div>
+        <div class="key"><b>Down</b> — duck</div>
+        <div class="key"><b>Esc</b> — pause</div>
+      </div>
+      <button id="startBtn">Mutate &amp; Run</button>
+      <div class="ezaz-lb-wrap" id="titleLb"></div>
+    </div>
+
+    <div class="screen hidden" id="mutateScreen">
+      <div class="eyebrow">Mutation complete</div>
+      <canvas id="mutantPreview" width="220" height="220"></canvas>
+      <div id="mutantName">—</div>
+      <div id="mutantPerk">—</div>
+      <button id="dropBtn">Drop In</button>
+    </div>
+
+    <div class="screen hidden" id="overScreen">
+      <div class="eyebrow" id="overTag">Mars wins this one</div>
+      <h1 style="font-size:clamp(22px,5vw,44px)">Game Over</h1>
+      <div class="stat" id="finalScore">0 <span>points</span></div>
+      <div class="stat" id="finalDist" style="font-size:clamp(12px,2vw,16px)">Made it 0m into the mutation zone</div>
+      <div id="nameEntry" style="display:none">
+        <span class="key" style="border:none;background:none;padding:0">Made the board! Your name:</span>
+        <input id="nameInput" maxlength="12" placeholder="NAME" autocomplete="off" autocorrect="off"
+               autocapitalize="characters" spellcheck="false"
+               style="font-family:inherit;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+                      padding:8px 12px;border-radius:8px;border:1px solid rgba(166,255,94,.4);
+                      background:rgba(23,11,35,.6);color:var(--foam);width:140px">
+        <button id="saveBtn" style="padding:8px 20px;font-size:13px">Save</button>
+      </div>
+      <div class="ezaz-lb-wrap" id="overLb"></div>
+      <button id="againBtn">Go again</button>
+      <a class="back-link" href="/">Back to store</a>
+    </div>
+  </div>
+  <footer>Built at EZ-AZ by Jaykill</footer>
+</div>
+
+<script src="/arcade-shell.js"></script>
+<script>
+(function(){
+"use strict";
+
+var GAME="mutant-mile";
+var W=960,H=540;
+var GROUND_Y=430;
+var PLAYER_X=210;
+var GRAVITY=2400;
+var canvas=document.getElementById("game");
+var ctx=canvas.getContext("2d");
+var previewCanvas=document.getElementById("mutantPreview");
+var previewCtx=previewCanvas.getContext("2d");
+var titleScreen=document.getElementById("titleScreen");
+var mutateScreen=document.getElementById("mutateScreen");
+var overScreen=document.getElementById("overScreen");
+
+/* ---------- state ---------- */
+var state="title"; // title, mutate, playing, over
+var paused=false;
+var keys={};
+var time=0,last=0;
+var muted=false;
+var board=null;
+
+var mutant=null;
+var player,hazards,pits,platforms,orbs,parts,rings,telegraphs,popups;
+var scrollSpeed,runTime,spawnGapPx,distancePx,orbPts,tier,bannerT,bannerText,shake,lastMilestone;
+var deathCamT=0,deathCamX=0,deathCamY=0;
+var groundOffset=0;
+var mountains1=[],mountains2=[],debris=[];
+
+/* ---------- shell wiring ---------- */
+ArcadeShell.banner();
+ArcadeShell.leaderboard("#titleLb", GAME).then(function(data){ board=data; });
+
+ArcadeShell.pause({
+  enabled:function(){ return state==="playing"; },
+  onPause:function(){ paused=true; },
+  onResume:function(){ paused=false; }
+});
+
+/* ---------- audio ---------- */
+var actx=null;
+function audio(){
+  if(muted) return null;
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(actx.state==="suspended") actx.resume();
+  return actx;
+}
+function blip(freq,freq2,dur,type,vol){
+  var a=audio(); if(!a) return;
+  var o=a.createOscillator(),g=a.createGain();
+  o.type=type||"square";
+  o.frequency.setValueAtTime(freq,a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30,freq2),a.currentTime+dur);
+  g.gain.setValueAtTime(vol||0.09,a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+dur);
+  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+dur);
+}
+function noise(dur,vol){
+  var a=audio(); if(!a) return;
+  var n=Math.floor(a.sampleRate*dur);
+  var buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+  for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  var s=a.createBufferSource(); s.buffer=buf;
+  var g=a.createGain(); g.gain.value=vol||0.12;
+  s.connect(g); g.connect(a.destination); s.start();
+}
+var sfx={
+  jump:function(){ blip(340,620,0.14,"square",0.06); },
+  duck:function(){ blip(220,120,0.1,"triangle",0.05); },
+  orb:function(){ blip(600,1100,0.14,"triangle",0.08); },
+  tier:function(){ blip(260,760,0.35,"sawtooth",0.07); },
+  miss:function(){ blip(500,900,0.09,"triangle",0.05); },
+  death:function(){ noise(0.4,0.14); blip(220,40,0.5,"sawtooth",0.12); }
+};
+
+/* ---------- daily seed ---------- */
+// Every mutation and hazard draw goes through `rng`, reseeded from today's
+// date each time a run starts. Same day -> same mutant, same opening hazard
+// sequence, so the leaderboard is comparing a run against today's challenge
+// instead of against whatever luck a random mutant happened to get. Frame
+// timing still drifts run to run, so late-run hazards aren't guaranteed
+// bit-identical -- close enough for a family arcade, not a TAS.
+function hashStr(s){
+  var h=0;
+  for(var i=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0; }
+  return h;
+}
+function mulberry32(seed){
+  var a=seed>>>0;
+  return function(){
+    a=a+0x6D2B79F5|0;
+    var t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function todaysSeed(){
+  var d=new Date();
+  return hashStr(d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+}
+var rng=mulberry32(todaysSeed());
+
+/* ---------- helpers ---------- */
+function rnd(a,b){ return a+rng()*(b-a); }
+function pick(arr){ return arr[Math.floor(rng()*arr.length)]; }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function overlap(ax,ay,aw,ah,bx,by,bw,bh){ return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by; }
+
+/* ---------- mutant generation ---------- */
+var PERKS=[
+  {id:"double", name:"Double Jump", desc:"One extra jump in mid-air."},
+  {id:"feather", name:"Featherfall", desc:"Floatier arcs, easier to place jumps."},
+  {id:"magnet", name:"Magnetic", desc:"Pulls in crystals from further away."},
+  {id:"slim", name:"Slim", desc:"Smaller hitbox — easier to thread the gaps."},
+  {id:"adrenaline", name:"Adrenaline", desc:"+25% score. No safety net."}
+];
+var NAME_A=["Zor","Glib","Krax","Vex","Nuk","Plor","Ska","Drex","Mog","Fliz","Grak","Snex","Yor","Blix"];
+var NAME_B=["tik","nak","zor","ple","dris","gun","vok","mash","zil","fon","rax","dane"];
+var NAME_C=["","","-9","-X","zz",""];
+function randomName(){
+  return pick(NAME_A)+pick(NAME_B)+pick(NAME_C);
+}
+
+function generateMutant(){
+  var perk=pick(PERKS);
+  var hue=Math.floor(rnd(0,360));
+  var bodyScale=rnd(0.85,1.18);
+  var eyesN=1+Math.floor(rnd(0,3));
+  var spikesN=Math.floor(rnd(0,5));
+  var m={
+    name: randomName(),
+    perk: perk,
+    hue: hue,
+    color: "hsl("+hue+",78%,58%)",
+    dark: "hsl("+hue+",68%,32%)",
+    glow: "hsl("+hue+",95%,74%)",
+    bodyScale: bodyScale,
+    eyes: eyesN,
+    spikes: spikesN,
+    maxJumps: perk.id==="double" ? 2 : 1,
+    gravityMult: perk.id==="feather" ? 0.82 : 1,
+    jumpVel: perk.id==="feather" ? -700 : -770,
+    hitboxMult: perk.id==="slim" ? 0.84 : 1,
+    magnetRadius: perk.id==="magnet" ? 190 : 60,
+    // Cosmetic rolls aren't just flavour: more back-spikes toughen the score
+    // multiplier a little, more eyes buy a longer hazard telegraph. The reveal
+    // screen isn't just a look -- it's telling you something about the run.
+    scoreMult: (perk.id==="adrenaline" ? 1.25 : 1) * (1+spikesN*0.02),
+    telegraph: 0.28+eyesN*0.06
+  };
+  m.baseW=42*bodyScale*m.hitboxMult;
+  m.baseH=58*bodyScale*m.hitboxMult;
+  m.duckH=m.baseH*0.5;
+  m.airtime=(2*Math.abs(m.jumpVel))/(GRAVITY*m.gravityMult);
+  m.apex=(m.jumpVel*m.jumpVel)/(2*GRAVITY*m.gravityMult);
+  return m;
+}
+
+/* ---------- setup ---------- */
+function reset(){
+  player={x:PLAYER_X,y:GROUND_Y-mutant.baseH,vx:0,vy:0,ducking:false,onGround:true,jumpsUsed:0,dying:false};
+  hazards=[]; pits=[]; platforms=[]; orbs=[]; parts=[]; rings=[]; telegraphs=[]; popups=[];
+  scrollSpeed=360; runTime=0; spawnGapPx=280; distancePx=0; orbPts=0; tier=0; lastMilestone=0;
+  bannerT=0; bannerText=""; shake=0; deathCamT=0;
+  mountains1=[]; mountains2=[]; debris=[];
+  for(var i=0;i<7;i++) mountains1.push({x:i*220,h:rnd(40,90)});
+  for(var i=0;i<9;i++) mountains2.push({x:i*170,h:rnd(20,50)});
+  for(var i=0;i<26;i++) debris.push({x:rnd(0,W),y:rnd(0,GROUND_Y-20),s:rnd(6,20),w:rnd(0.3,1.1)});
+}
+
+/* ---------- difficulty tiers ---------- */
+function tierAt(t){ return Math.min(4, Math.floor(t/14)); }
+var GAP_RANGE=[
+  [1.3,1.9],[1.05,1.55],[0.85,1.3],[0.7,1.05],[0.6,0.9]
+];
+var PATTERN_POOL=[
+  ["spike","pitSmall"],
+  ["spike","pitSmall","spikeRow","crawler","platformSingle"],
+  ["spike","pitSmall","spikeRow","crawler","beam","pitOrb","platformChain"],
+  ["spike","pitSmall","spikeRow","crawler","beam","pitOrb","comboPitSpike","platformChain"],
+  ["spikeRow","crawler","beam","pitOrb","comboPitSpike","comboBeamSpike","pitWide","platformChain"]
+];
+
+/* ---------- patterns ---------- */
+function spawnLow(width,height,type){
+  hazards.push({cat:"low",type:type,x:W+30,width:width,height:height,phase:rnd(0,6.28)});
+}
+function spawnHigh(width,type){
+  var bottom=GROUND_Y-mutant.duckH-2;
+  hazards.push({cat:"high",type:type,x:W+30,width:width,bottom:bottom,phase:rnd(0,6.28)});
+}
+function spawnPit(width,withOrb){
+  pits.push({x:W+30,width:width});
+  if(withOrb){
+    orbs.push({x:W+30+width/2-9,y:GROUND_Y-mutant.baseH-mutant.apex*0.55,r:9,value:60,big:true,t:0});
+  }
+  return width;
+}
+function jumpablePit(mult){
+  return clamp(scrollSpeed*mutant.airtime*rnd(0.4,mult||0.68), 90, 480);
+}
+
+var PATTERNS={
+  spike:function(){ spawnLow(30,rnd(36,54),"spike"); return 60; },
+  spikeRow:function(){ var n=2+Math.floor(rnd(0,2)); spawnLow(34*n,rnd(46,64),"spikeRow"); return 34*n+40; },
+  crawler:function(){ spawnLow(34,34,"crawler"); return 60; },
+  pitSmall:function(){ return spawnPit(jumpablePit(0.58),rng()<0.3); },
+  pitWide:function(){ return spawnPit(jumpablePit(0.78),rng()<0.55); },
+  pitOrb:function(){ return spawnPit(jumpablePit(0.66),true); },
+  beam:function(){ spawnHigh(110,"beam"); return 130; },
+  comboPitSpike:function(){
+    var w=spawnPit(jumpablePit(0.55));
+    spawnLow(28,rnd(34,44),"spike"); // lands right into a spike unless timed well
+    hazards[hazards.length-1].x=W+30+w+70;
+    return w+140;
+  },
+  comboBeamSpike:function(){
+    spawnLow(26,rnd(34,44),"spike");
+    spawnHigh(100,"beam");
+    hazards[hazards.length-1].x=W+30+90;
+    return 220;
+  },
+  platformChain:function(){
+    // Tier 2 (this pattern's first appearance) is capped at exactly 2 stones
+    // -- one practice rep harder than the single-platform intro -- before
+    // tier 3+ opens up the full 2-3 random chain. Skipping straight to a
+    // 3-stone chain the first time a player sees ANY chain at all was the
+    // reported difficulty spike.
+    var n = tier>=3 ? 2+Math.floor(rnd(0,2)) : 2;
+    var platformWidth=rnd(60,95);
+    var gap=jumpablePit(0.55);
+    var startX=W+30;
+    var cursor=startX;
+    for(var i=0;i<n;i++){
+      var h=rnd(mutant.apex*0.28,mutant.apex*0.62);
+      platforms.push({x:cursor,y:GROUND_Y-h-16,width:platformWidth,height:16});
+      cursor+=platformWidth+gap;
+    }
+    var pitWidth=cursor-startX;
+    spawnPit(pitWidth,false);
+    return pitWidth+120;
+  },
+  // A single generous stepping stone -- introduced a tier before
+  // platformChain so players get the "land on a floating platform" rep in
+  // isolation before facing a multi-hop chain of them.
+  platformSingle:function(){
+    var platformWidth=rnd(110,150);
+    var gap=jumpablePit(0.45);
+    var h=rnd(mutant.apex*0.25,mutant.apex*0.45);
+    platforms.push({x:W+30,y:GROUND_Y-h-16,width:platformWidth,height:16});
+    var pitWidth=platformWidth+gap;
+    spawnPit(pitWidth,false);
+    return pitWidth+120;
+  }
+};
+
+function spawnNext(){
+  tier=tierAt(runTime);
+  var pool=PATTERN_POOL[tier];
+  var name=pick(pool);
+  var telegraphDur=clamp(mutant.telegraph-tier*0.05,0.12,0.6);
+  telegraphs.push({t:telegraphDur,max:telegraphDur});
+  var consumed=PATTERNS[name]();
+  var range=GAP_RANGE[tier];
+  spawnGapPx=Math.max(consumed, scrollSpeed*rnd(range[0],range[1]));
+  // occasional free-floating bonus orb in the clear stretch
+  if(rng()<0.5){
+    orbs.push({x:W+30+consumed+rnd(40,120),y:GROUND_Y-mutant.baseH-rnd(10,mutant.apex*0.7),r:7,value:15,big:false,t:0});
+  }
+}
+
+/* ---------- input ---------- */
+function doJump(){
+  if(state!=="playing"||paused) return;
+  if(player.onGround || player.jumpsUsed<mutant.maxJumps){
+    player.vy=mutant.jumpVel*(player.onGround?1:0.9);
+    player.onGround=false;
+    player.jumpsUsed++;
+    sfx.jump();
+    burst(player.x,GROUND_Y-4,8,mutant.glow,120,3);
+  }
+}
+window.addEventListener("keydown",function(e){
+  var k=e.key.toLowerCase();
+  if(["arrowup","arrowdown","arrowleft","arrowright"," ","w","s"].indexOf(k)>=0) e.preventDefault();
+  if(keys[k]) { keys[k]=true; return; }
+  keys[k]=true;
+  if(k==="m"){ muted=!muted; }
+  if((k===" "||k==="arrowup"||k==="w") && state==="playing") doJump();
+  if(k==="arrowdown"||k==="s"){
+    // Not gated on onGround: holding Down before you land should already be
+    // ducked the instant you touch down, not require a second press after
+    // landing. curH already reads player.ducking every frame regardless of
+    // airborne state, so this also lets you duck under a beam mid-jump.
+    if(state==="playing"){ player.ducking=true; sfx.duck(); }
+  }
+  if(k===" " && state==="title"){ beginMutation(); }
+  if(k===" " && state==="mutate"){ begin(); }
+  if(k==="enter" && state==="over"){ quickRestart(); }
+});
+window.addEventListener("keyup",function(e){
+  var k=e.key.toLowerCase();
+  keys[k]=false;
+  if((k===" "||k==="arrowup"||k==="w") && player.vy<0){ player.vy*=0.45; }
+  if(k==="arrowdown"||k==="s"){ if(player) player.ducking=false; }
+});
+
+document.getElementById("startBtn").onclick=beginMutation;
+document.getElementById("dropBtn").onclick=begin;
+document.getElementById("againBtn").onclick=quickRestart;
+document.getElementById("saveBtn").onclick=function(){
+  var name=document.getElementById("nameInput").value.trim();
+  if(!name) return;
+  var finalScore=computeScore();
+  ArcadeShell.submit(GAME,name,finalScore).then(function(data){
+    board=data;
+    document.getElementById("nameEntry").style.display="none";
+    ArcadeShell.renderLeaderboard("#overLb",data,{highlight:name.toUpperCase()});
+  });
+};
+
+function beginMutation(){
+  audio();
+  rng=mulberry32(todaysSeed()); // same day -> same mutant, same opening hazards
+  mutant=generateMutant();
+  document.getElementById("mutantName").textContent=mutant.name;
+  var extra=[];
+  if(mutant.spikes>0) extra.push("+"+Math.round(mutant.spikes*2)+"% score from spikes");
+  extra.push(mutant.eyes+" eye"+(mutant.eyes>1?"s":"")+" — "+mutant.telegraph.toFixed(2)+"s hazard warning");
+  document.getElementById("mutantPerk").innerHTML="<b>"+mutant.perk.name+"</b> — "+mutant.perk.desc+"<br><span style=\"opacity:.7;font-size:11px\">"+extra.join(" · ")+"</span>";
+  drawMutantPortrait();
+  state="mutate";
+  titleScreen.classList.add("hidden");
+  overScreen.classList.add("hidden");
+  mutateScreen.classList.remove("hidden");
+}
+
+function begin(){
+  reset();
+  state="playing";
+  paused=false;
+  mutateScreen.classList.add("hidden");
+  overScreen.classList.add("hidden");
+}
+
+// Restart flow for repeat plays: skip the blocking reveal screen (already
+// seen once this session) and toast the new mutant's name/perk over the
+// opening seconds of gameplay instead, so "one more go" stays fast.
+function quickRestart(){
+  audio();
+  rng=mulberry32(todaysSeed());
+  mutant=generateMutant();
+  drawMutantPortrait();
+  reset();
+  bannerText=mutant.name.toUpperCase()+" — "+mutant.perk.name.toUpperCase();
+  bannerT=2.2;
+  state="playing";
+  paused=false;
+  mutateScreen.classList.add("hidden");
+  overScreen.classList.add("hidden");
+}
+
+/* ---------- particles ---------- */
+function burst(x,y,n,col,spd,size){
+  for(var i=0;i<n;i++){
+    var a=rnd(0,Math.PI*2),s=rnd(spd*0.3,spd);
+    parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rnd(0.3,0.8),max:0.8,col:col,r:rnd(size*0.4,size)});
+  }
+}
+function ring(x,y,col,max){ rings.push({x:x,y:y,r:4,max:max||70,life:1,col:col}); }
+function popup(x,y,text,col){ popups.push({x:x,y:y,text:text,life:1,col:col||"#ffce3d"}); }
+
+/* ---------- score ---------- */
+function computeScore(){
+  return Math.round((distancePx*0.09+orbPts)*mutant.scoreMult);
+}
+
+/* ---------- update ---------- */
+function update(dt){
+  time+=dt;
+  for(var d=0;d<debris.length;d++){
+    var db=debris[d];
+    db.x-=db.w*scrollSpeed*0.06*dt*20;
+    if(db.x<-10){ db.x=W+10; db.y=rnd(0,GROUND_Y-20); }
+  }
+  if(shake>0) shake=Math.max(0,shake-dt*3.4);
+  if(deathCamT>0) deathCamT=Math.max(0,deathCamT-dt/1.8);
+  for(var r=rings.length-1;r>=0;r--){
+    var rg=rings[r]; rg.life-=dt*2.2; rg.r+=(rg.max-rg.r)*dt*7;
+    if(rg.life<=0) rings.splice(r,1);
+  }
+  for(var p=parts.length-1;p>=0;p--){
+    var pt=parts[p];
+    pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=0.94; pt.vy=pt.vy*0.94-24*dt;
+    pt.life-=dt; if(pt.life<=0) parts.splice(p,1);
+  }
+  for(var pu=popups.length-1;pu>=0;pu--){
+    popups[pu].life-=dt*1.1;
+    if(popups[pu].life<=0) popups.splice(pu,1);
+  }
+  if(state!=="playing"||paused) return;
+  if(bannerT>0) bannerT-=dt;
+  for(var tg=telegraphs.length-1;tg>=0;tg--){
+    telegraphs[tg].t-=dt;
+    if(telegraphs[tg].t<=0) telegraphs.splice(tg,1);
+  }
+
+  runTime+=dt;
+  var newTier=tierAt(runTime);
+  if(newTier>tier){ tier=newTier; bannerText="MUTATION TIER "+(tier+1); bannerT=2; sfx.tier(); }
+  scrollSpeed=clamp(360+runTime*9,360,900);
+  distancePx+=scrollSpeed*dt;
+  var metresNow=Math.floor(distancePx/12);
+  if(metresNow>=lastMilestone+250){
+    lastMilestone=Math.floor(metresNow/250)*250;
+    if(bannerT<=0){ bannerText=lastMilestone+"M"; bannerT=1.4; sfx.tier(); }
+  }
+
+  mountains1.forEach(function(m){ m.x-=scrollSpeed*0.15*dt; if(m.x<-220) m.x+=220*mountains1.length; });
+  mountains2.forEach(function(m){ m.x-=scrollSpeed*0.32*dt; if(m.x<-170) m.x+=170*mountains2.length; });
+  groundOffset=(groundOffset-scrollSpeed*dt)%40;
+
+  /* --- player horizontal movement --- */
+  var moveX=0;
+  if(keys.arrowleft||keys.a) moveX-=1;
+  if(keys.arrowright||keys.d) moveX+=1;
+  // Standing still isn't free: the world scrolls forward regardless, so
+  // doing nothing means passively slipping backward at the same rate --
+  // matching the ground's own retreat, not holding position. Holding Right
+  // has to actively overcome that to make real forward progress; holding
+  // Left adds to it for a retreat faster than the passive drift. Ease vx
+  // toward a target rather than accel+friction, so the "rest state" can be
+  // a moving target (-scrollSpeed) without fighting a separate decay term.
+  var targetVx = moveX>0 ? 460 : (moveX<0 ? -640 : -scrollSpeed);
+  var easeRate = moveX>0 ? 2400 : 3600;
+  var vxDiff = targetVx-player.vx;
+  var vxStep = easeRate*dt;
+  player.vx += clamp(vxDiff,-vxStep,vxStep);
+  player.x=clamp(player.x+player.vx*dt,mutant.baseW/2+6,W-mutant.baseW/2-6);
+
+  /* --- player vertical physics --- */
+  var curH=player.ducking?mutant.duckH:mutant.baseH;
+  var pLeft=player.x-mutant.baseW/2, pRight=player.x+mutant.baseW/2;
+  var overGap=false;
+  for(var i=0;i<pits.length;i++){
+    var pit=pits[i];
+    if(pRight>pit.x && pLeft<pit.x+pit.width){ overGap=true; break; }
+  }
+  var support=null;
+  if(!overGap){
+    support=GROUND_Y;
+  } else {
+    for(var pf=0;pf<platforms.length;pf++){
+      var plat=platforms[pf];
+      if(pRight>plat.x && pLeft<plat.x+plat.width){ support=plat.y; break; }
+    }
+  }
+
+  if(support!==null && player.onGround){
+    // resting on ground/platform -- snap instantly so a duck toggle takes effect
+    // the same frame, instead of drifting down over a few frames of gravity.
+    player.y=support-curH;
+    player.vy=0;
+  } else {
+    player.vy+=GRAVITY*mutant.gravityMult*dt;
+    var newY=player.y+player.vy*dt;
+    // The tolerance above `support` matters: a pit is a moving world object,
+    // not a bottomless one. If we let ANY reappearing support catch the
+    // player, a slow fall can outlast the pit scrolling past their x, and
+    // solid ground "reappears" underneath them mid-fall -- they bounce back
+    // up as if they'd landed normally instead of dying. Once they've sunk
+    // well past the surface they're committed to the fall.
+    if(support!==null && player.vy>=0 && newY+curH>=support && newY+curH<=support+40){
+      player.y=support-curH;
+      player.vy=0;
+      player.onGround=true;
+      player.jumpsUsed=0;
+    } else {
+      player.y=newY;
+      player.onGround=false;
+    }
+  }
+  if(player.y>H+120){ triggerDeath(); return; }
+
+  /* --- hazards --- */
+  for(var h=hazards.length-1;h>=0;h--){
+    var hz=hazards[h];
+    hz.x-=scrollSpeed*dt;
+    // Near-miss tracking: while a low hazard's x-range overlaps the player
+    // and they're airborne (jumping it, not colliding), remember the
+    // smallest clearance seen. Resolved the moment the player fully clears
+    // it -- not when it scrolls off-screen, which would pop the "CLOSE
+    // CALL" text somewhere off the left edge nobody sees.
+    if(hz.cat==="low" && !player.onGround && pRight>hz.x && pLeft<hz.x+hz.width){
+      var clearance=(GROUND_Y-hz.height)-(player.y+curH);
+      if(hz.minGap===undefined || clearance<hz.minGap) hz.minGap=clearance;
+    }
+    if(!hz.resolved && hz.cat==="low" && pLeft>hz.x+hz.width){
+      hz.resolved=true;
+      if(hz.minGap!==undefined && hz.minGap>=0 && hz.minGap<18){
+        orbPts+=15;
+        popup(hz.x+hz.width/2,GROUND_Y-hz.height-14,"CLOSE CALL +15","#ffce3d");
+        sfx.miss();
+      }
+    }
+    if(hz.x+hz.width<-10){ hazards.splice(h,1); continue; }
+    var px=player.x-mutant.baseW/2, py=player.ducking?player.y:player.y, pw=mutant.baseW, ph=curH;
+    var hit=false;
+    if(hz.cat==="low"){
+      hit=overlap(px,py,pw,ph, hz.x,GROUND_Y-hz.height,hz.width,hz.height);
+    } else {
+      hit=overlap(px,py,pw,ph, hz.x,0,hz.width,hz.bottom);
+    }
+    if(hit){ triggerDeath(); return; }
+  }
+
+  /* --- pits scroll --- */
+  for(var q=pits.length-1;q>=0;q--){
+    pits[q].x-=scrollSpeed*dt;
+    if(pits[q].x+pits[q].width<-10) pits.splice(q,1);
+  }
+
+  /* --- platforms scroll --- */
+  for(var pf2=platforms.length-1;pf2>=0;pf2--){
+    platforms[pf2].x-=scrollSpeed*dt;
+    if(platforms[pf2].x+platforms[pf2].width<-10) platforms.splice(pf2,1);
+  }
+
+  /* --- orbs --- */
+  for(var o=orbs.length-1;o>=0;o--){
+    var ob=orbs[o];
+    ob.t+=dt;
+    ob.x-=scrollSpeed*dt;
+    ob.y+=Math.sin(ob.t*3)*10*dt;
+    var cx=player.x, cy=player.y+curH/2;
+    var dx=ob.x-cx, dy=ob.y-cy, dist=Math.hypot(dx,dy);
+    if(dist<mutant.magnetRadius && dist>4){
+      ob.x-=dx/dist*220*dt; ob.y-=dy/dist*220*dt;
+    }
+    if(dist<(ob.big?24:16)+mutant.baseW*0.3){
+      orbPts+=ob.value;
+      ring(ob.x,ob.y,mutant.glow,40);
+      sfx.orb();
+      orbs.splice(o,1);
+      continue;
+    }
+    if(ob.x<-20) orbs.splice(o,1);
+  }
+
+  /* --- spawn --- */
+  spawnGapPx-=scrollSpeed*dt;
+  if(spawnGapPx<=0) spawnNext();
+}
+
+function triggerDeath(){
+  if(state!=="playing") return;
+  state="over";
+  paused=false;
+  shake=1;
+  deathCamT=1; deathCamX=player.x; deathCamY=player.y+mutant.baseH/2;
+  burst(player.x,player.y+mutant.baseH/2,50,mutant.glow,300,6);
+  ring(player.x,player.y+mutant.baseH/2,"#ff2f8f",200);
+  sfx.death();
+  var finalScore=computeScore();
+  var metres=Math.floor(distancePx/12);
+  document.getElementById("finalScore").innerHTML=finalScore.toLocaleString()+' <span>points</span>';
+  document.getElementById("finalDist").textContent="Made it "+metres+"m into the mutation zone as "+mutant.name;
+  var madeBoard = finalScore>0 && ArcadeShell.qualifies(finalScore,board);
+  document.getElementById("overTag").textContent = madeBoard ? "New high score!" : "Mars wins this one";
+  document.getElementById("nameEntry").style.display = madeBoard ? "" : "none";
+  document.getElementById("nameInput").value = "";
+  ArcadeShell.renderLeaderboard("#overLb", board);
+  setTimeout(function(){ overScreen.classList.remove("hidden"); },1400);
+}
+
+/* ---------- mutant drawing ---------- */
+function drawMutant(g,cx,cy,scale,m,legPhase,ducking){
+  g.save();
+  g.translate(cx,cy);
+  g.scale(scale,scale);
+  var duck=ducking?0.55:1;
+  // legs
+  g.strokeStyle=m.dark; g.lineWidth=6; g.lineCap="round";
+  g.beginPath(); g.moveTo(-8,20*duck); g.lineTo(-8+Math.sin(legPhase)*10,34*duck); g.stroke();
+  g.beginPath(); g.moveTo(8,20*duck); g.lineTo(8+Math.sin(legPhase+3.14)*10,34*duck); g.stroke();
+  // tail
+  g.beginPath(); g.moveTo(-16,4*duck); g.quadraticCurveTo(-34,-6*duck,-30,-22*duck); g.stroke();
+  // body
+  var bg=g.createRadialGradient(-6,-10*duck,4,0,0,34);
+  bg.addColorStop(0,m.glow); bg.addColorStop(1,m.color);
+  g.fillStyle=bg;
+  g.beginPath(); g.ellipse(0,0,24,20*duck,0,0,6.2832); g.fill();
+  // spikes
+  g.fillStyle=m.dark;
+  for(var i=0;i<m.spikes;i++){
+    var t=(i/(Math.max(1,m.spikes-1)||1))*1.6-0.8;
+    g.save(); g.translate(t*14,-16*duck);
+    g.beginPath(); g.moveTo(-5,0); g.lineTo(5,0); g.lineTo(0,-14); g.closePath(); g.fill();
+    g.restore();
+  }
+  // head
+  g.fillStyle=m.color;
+  g.beginPath(); g.ellipse(22,-4*duck,15,12*duck,0,0,6.2832); g.fill();
+  // eyes
+  g.fillStyle="#fff";
+  for(var e=0;e<m.eyes;e++){
+    var ey=-8*duck+e*7*duck;
+    g.beginPath(); g.arc(28,ey,3.4,0,6.2832); g.fill();
+    g.fillStyle="#101018";
+    g.beginPath(); g.arc(29,ey,1.6,0,6.2832); g.fill();
+    g.fillStyle="#fff";
+  }
+  g.restore();
+}
+function drawMutantPortrait(){
+  previewCtx.clearRect(0,0,220,220);
+  drawMutant(previewCtx,110,130,2.2,mutant,0,false);
+}
+
+/* ---------- drawing ---------- */
+function drawSky(){
+  var g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#4a1c66"); g.addColorStop(0.5,"#2a0f3d"); g.addColorStop(1,"#170b23");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  ctx.save(); ctx.globalCompositeOperation="lighter";
+  for(var i=0;i<5;i++){
+    var x=(i*220+Math.sin(time*0.2+i)*30)%(W+300)-140;
+    ctx.globalAlpha=0.04+Math.sin(time*0.5+i)*0.015;
+    ctx.fillStyle="#ff2f8f";
+    ctx.beginPath();
+    ctx.moveTo(x,-20); ctx.lineTo(x+60,-20); ctx.lineTo(x+160,H); ctx.lineTo(x-20,H);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.fillStyle="#1a0a28";
+  mountains2.forEach(function(m){
+    ctx.beginPath(); ctx.moveTo(m.x,GROUND_Y);
+    ctx.lineTo(m.x+85,GROUND_Y-m.h); ctx.lineTo(m.x+170,GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  });
+  ctx.fillStyle="#100719";
+  mountains1.forEach(function(m){
+    ctx.beginPath(); ctx.moveTo(m.x,GROUND_Y);
+    ctx.lineTo(m.x+110,GROUND_Y-m.h); ctx.lineTo(m.x+220,GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  });
+
+  ctx.fillStyle="rgba(166,255,94,.35)";
+  for(var d=0;d<debris.length;d++){
+    var db=debris[d];
+    ctx.beginPath(); ctx.arc(db.x,db.y,db.s*0.06,0,6.2832); ctx.fill();
+  }
+}
+
+function drawGround(){
+  ctx.fillStyle="#0d0614";
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  ctx.strokeStyle="rgba(166,255,94,.5)"; ctx.lineWidth=3;
+  ctx.beginPath();
+  var gapAt=null;
+  for(var x=-40;x<W+40;x+=40){
+    var inPit=false;
+    for(var i=0;i<pits.length;i++){
+      if(x+groundOffset>pits[i].x-40 && x+groundOffset<pits[i].x+pits[i].width) inPit=true;
+    }
+    if(!inPit){
+      ctx.moveTo(x,GROUND_Y); ctx.lineTo(x+40,GROUND_Y);
+    }
+  }
+  ctx.stroke();
+  // pit shading
+  ctx.fillStyle="#170b23";
+  for(var p=0;p<pits.length;p++){
+    ctx.fillRect(pits[p].x,GROUND_Y,pits[p].width,H-GROUND_Y);
+    var pg=ctx.createLinearGradient(0,GROUND_Y,0,GROUND_Y+30);
+    pg.addColorStop(0,"rgba(255,47,143,.5)"); pg.addColorStop(1,"rgba(255,47,143,0)");
+    ctx.fillStyle=pg;
+    ctx.fillRect(pits[p].x,GROUND_Y,pits[p].width,30);
+    ctx.fillStyle="#170b23";
+  }
+}
+
+function drawHazard(hz){
+  if(hz.cat==="low"){
+    if(hz.type==="crawler"){
+      ctx.save(); ctx.translate(hz.x+hz.width/2,GROUND_Y-hz.height/2+Math.sin(time*8+hz.phase)*3);
+      ctx.fillStyle="#ff2f8f";
+      ctx.beginPath(); ctx.ellipse(0,0,hz.width/2,hz.height/2,0,0,6.2832); ctx.fill();
+      ctx.fillStyle="#fff";
+      ctx.beginPath(); ctx.arc(6,-4,2.6,0,6.2832); ctx.fill();
+      ctx.restore();
+    } else {
+      // spikes (single or row)
+      var n=Math.max(1,Math.round(hz.width/34));
+      var w=hz.width/n;
+      for(var i=0;i<n;i++){
+        var sx=hz.x+i*w;
+        var grad=ctx.createLinearGradient(sx,GROUND_Y-hz.height,sx,GROUND_Y);
+        grad.addColorStop(0,"#ffce3d"); grad.addColorStop(1,"#8a4bff");
+        ctx.fillStyle=grad;
+        ctx.beginPath();
+        ctx.moveTo(sx+2,GROUND_Y); ctx.lineTo(sx+w/2,GROUND_Y-hz.height); ctx.lineTo(sx+w-2,GROUND_Y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  } else {
+    var pulse=0.7+Math.sin(time*6+hz.phase)*0.15;
+    ctx.save(); ctx.globalAlpha=pulse;
+    var g=ctx.createLinearGradient(0,0,0,hz.bottom);
+    g.addColorStop(0,"rgba(138,75,255,0)"); g.addColorStop(0.7,"rgba(138,75,255,.55)"); g.addColorStop(1,"#ff2f8f");
+    ctx.fillStyle=g;
+    ctx.fillRect(hz.x,0,hz.width,hz.bottom);
+    ctx.restore();
+    ctx.fillStyle="#ff2f8f";
+    ctx.fillRect(hz.x,hz.bottom-6,hz.width,6);
+  }
+}
+
+function drawOrb(ob){
+  ctx.save(); ctx.translate(ob.x,ob.y);
+  var pulse=1+Math.sin(ob.t*6)*0.15;
+  ctx.scale(pulse,pulse);
+  ctx.shadowBlur=ob.big?22:12;
+  ctx.shadowColor=ob.big?"#ffce3d":mutant.glow;
+  ctx.fillStyle=ob.big?"#ffce3d":mutant.glow;
+  ctx.beginPath();
+  var rr=ob.big?13:8;
+  for(var i=0;i<8;i++){
+    var a=i/8*6.2832-Math.PI/2, r2=(i%2)?rr*0.5:rr;
+    ctx[i?"lineTo":"moveTo"](Math.cos(a)*r2,Math.sin(a)*r2);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPlatform(p){
+  ctx.save();
+  var g=ctx.createLinearGradient(0,p.y,0,p.y+p.height);
+  g.addColorStop(0,"#c8ff8f"); g.addColorStop(1,"#4f8a24");
+  ctx.fillStyle=g;
+  ctx.fillRect(p.x,p.y,p.width,p.height);
+  ctx.fillStyle="rgba(166,255,94,.6)";
+  ctx.fillRect(p.x,p.y,p.width,2);
+  ctx.restore();
+}
+
+function drawHUD(){
+  ctx.font="900 22px Trebuchet MS, sans-serif";
+  ctx.textAlign="right"; ctx.fillStyle="#ffce3d";
+  ctx.fillText(computeScore().toLocaleString(),W-20,30);
+  ctx.font="700 10px Trebuchet MS, sans-serif";
+  ctx.fillStyle="rgba(216,201,238,.6)";
+  ctx.fillText("POINTS",W-20,44);
+  ctx.textAlign="center";
+  ctx.font="700 11px Trebuchet MS, sans-serif";
+  ctx.fillStyle="rgba(216,201,238,.75)";
+  ctx.fillText(mutant.name.toUpperCase()+" · TIER "+(tier+1)+(muted?" · MUTED":""),W/2,24);
+
+  if(bannerT>0){
+    var a=Math.min(1,bannerT/0.5);
+    ctx.save(); ctx.globalAlpha=a; ctx.textAlign="center";
+    ctx.font="900 36px Trebuchet MS, sans-serif";
+    ctx.fillStyle="#a6ff5e"; ctx.shadowColor="#ff2f8f"; ctx.shadowBlur=22;
+    ctx.fillText(bannerText,W/2,H/2-40);
+    ctx.restore();
+  }
+}
+
+function render(){
+  ctx.save();
+  if(shake>0){
+    var s=shake*11;
+    ctx.translate(rnd(-s,s),rnd(-s,s));
+  }
+  if(deathCamT>0){
+    var zoomAmt=1-deathCamT; // 0 right at death -> 1 as the cam settles
+    var camScale=1+zoomAmt*0.55;
+    ctx.translate(deathCamX,deathCamY);
+    ctx.scale(camScale,camScale);
+    ctx.translate(-deathCamX,-deathCamY);
+  }
+  drawSky();
+  drawGround();
+
+  ctx.save(); ctx.globalCompositeOperation="lighter";
+  for(var r=0;r<rings.length;r++){
+    var rg=rings[r];
+    ctx.globalAlpha=Math.max(0,rg.life)*0.6;
+    ctx.strokeStyle=rg.col; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(rg.x,rg.y,rg.r,0,6.2832); ctx.stroke();
+  }
+  ctx.restore();
+
+  for(var pd=0;pd<platforms.length;pd++) drawPlatform(platforms[pd]);
+  for(var o=0;o<orbs.length;o++) drawOrb(orbs[o]);
+  for(var h=0;h<hazards.length;h++) drawHazard(hazards[h]);
+
+  if(state==="playing"||state==="over"){
+    var curH=player.ducking?mutant.duckH:mutant.baseH;
+    drawMutant(ctx,player.x,player.y+curH/2,mutant.bodyScale*mutant.hitboxMult*0.9,mutant,time*10,player.ducking);
+  }
+
+  ctx.save(); ctx.globalCompositeOperation="lighter";
+  for(var p=0;p<parts.length;p++){
+    var pt=parts[p];
+    ctx.globalAlpha=Math.max(0,pt.life/pt.max);
+    ctx.fillStyle=pt.col;
+    ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,6.2832); ctx.fill();
+  }
+  ctx.restore();
+
+  for(var pu=0;pu<popups.length;pu++){
+    var P=popups[pu];
+    ctx.save();
+    ctx.globalAlpha=Math.max(0,P.life);
+    ctx.fillStyle=P.col;
+    ctx.font="900 13px Trebuchet MS, sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(P.text,P.x,P.y-(1-P.life)*40);
+    ctx.restore();
+  }
+
+  ctx.restore();
+
+  var vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(10,0,20,.55)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+
+  if(state==="playing"){ drawHUD(); drawTelegraphs(); }
+}
+
+function drawTelegraphs(){
+  for(var i=0;i<telegraphs.length;i++){
+    var tg=telegraphs[i];
+    var a=tg.t/tg.max;
+    ctx.save();
+    ctx.globalAlpha=0.35+Math.sin(time*22)*0.2*a;
+    ctx.fillStyle="#ff2f8f";
+    ctx.fillRect(W-8,H*0.5-40*a,5,80*a);
+    ctx.restore();
+  }
+}
+
+/* ---------- loop ---------- */
+function loop(t){
+  if(!last) last=t;
+  var dt=Math.min((t-last)/1000,0.05);
+  last=t;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+mutant=generateMutant();
+reset();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body></html>
