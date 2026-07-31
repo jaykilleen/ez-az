@@ -33,10 +33,10 @@ test.describe("Store homepage", () => {
     await expect(page.getByRole("heading", { name: "Submit your game", level: 1 })).toBeVisible();
   });
 
-  test("help link on homepage works", async ({ page }) => {
+  test("submit-your-game link on homepage works", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "Find out how" }).click();
-    await expect(page).toHaveURL("/help.html");
+    await page.getByRole("link", { name: "Submit your game" }).click();
+    await expect(page).toHaveURL("/submit");
   });
 });
 
