@@ -94,6 +94,7 @@ Rails.application.routes.draw do
   end
 
   get "/whats-new", to: "whats_new#index"
+  get "/submit",    to: "submit#new"
 
   get "/code",     to: "code#index"
   get "/code/view", to: "code#show"

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0a12">
+  <title>Submit Your Game — EZ-AZ</title>
+  <link rel="icon" type="image/png" href="<%= asset_path("icons/az-192.png") %>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: #0a0a12;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    a { color: inherit; }
+
+    .store-banner {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      background: rgba(10,10,18,0.96);
+      border-bottom: 1px solid rgba(0,255,200,0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .store-banner a {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.7rem;
+      color: #00ffc8;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(16px, 4vw, 22px);
+      color: #ff6ec7;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .sub {
+      color: #999;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #1a1a2e;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 10px;
+      text-align: center;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #666;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      line-height: 1.6;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: #00ffc8;
+      border-bottom-color: #00ffc8;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #aaa;
+      margin: 18px 0 6px;
+    }
+
+    label .hint { color: #555; font-weight: normal; }
+
+    input[type=text], input[type=email], textarea, select {
+      width: 100%;
+      background: #13131f;
+      border: 1px solid #2a2a3e;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    input[type=file] {
+      width: 100%;
+      color: #aaa;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .checkbox-row input { width: auto; }
+    .checkbox-row label { margin: 0; }
+
+    .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; }
+    .radio-group input { width: auto; }
+
+    button.submit-btn {
+      display: block;
+      width: 100%;
+      margin-top: 28px;
+      padding: 14px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: #0a0a12;
+      background: #00ffc8;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button.submit-btn:disabled { opacity: 0.5; cursor: default; }
+    button.submit-btn:hover:not(:disabled) { box-shadow: 0 4px 20px rgba(0,255,200,0.3); }
+
+    .result {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .result.ok    { display: block; background: rgba(46,213,115,0.1); border: 1px solid #2ed573; }
+    .result.error { display: block; background: rgba(255,71,87,0.1); border: 1px solid #ff4757; }
+
+    .safety-note {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #1a1a2e;
+      color: #555;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="store-banner"><a href="/">← EZ-AZ</a></div>
+
+  <main>
+    <h1>Put your game on the shelf</h1>
+    <p class="sub">
+      Got an idea for a game, or already built one? Pick whichever's true right now —
+      Jay reviews every submission personally and will email you either way.
+    </p>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="prompt">I have an idea</button>
+      <button type="button" class="tab" data-tab="html">I built the game</button>
+    </div>
+
+    <form id="submitForm">
+      <div class="panel active" data-panel="prompt">
+        <label for="ideaPrompt">Describe your game idea<span class="hint"> — what do you do, how do you win?</span></label>
+        <textarea id="ideaPrompt" name="idea_prompt" maxlength="2000" placeholder="You're a dinosaur running from a volcano. Jump over cracks in the ground. The longer you survive, the higher your score."></textarea>
+      </div>
+
+      <div class="panel" data-panel="html">
+        <label for="gameFile">Your game file<span class="hint"> — a single .html file, under 1MB</span></label>
+        <input type="file" id="gameFile" name="game_file" accept=".html,.htm">
+
+        <label for="slug">Game URL name<span class="hint"> — lowercase, hyphens only, e.g. dragon-jump</span></label>
+        <input type="text" id="slug" name="slug" maxlength="24" placeholder="dragon-jump">
+
+        <label for="tagline">One-line description</label>
+        <input type="text" id="tagline" name="tagline" maxlength="200" placeholder="Hop the dragon over the lava — how far can you go?">
+
+        <label>How does scoring work?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="score_direction" value="desc" checked> Highest score wins</label>
+          <label><input type="radio" name="score_direction" value="asc"> Fastest time wins</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="isChill" name="is_chill" value="true">
+          <label for="isChill">No scoring — it's just chill exploration</label>
+        </div>
+      </div>
+
+      <label for="title">Game title</label>
+      <input type="text" id="title" name="title" maxlength="60" required placeholder="Dragon Jump">
+
+      <label for="creators">Made by</label>
+      <input type="text" id="creators" name="creators" maxlength="80" required placeholder="Your name(s)">
+
+      <label for="contactEmail">A grown-up's email<span class="hint"> — so Jay can reply about your submission</span></label>
+      <input type="email" id="contactEmail" name="contact_email" required placeholder="parent@example.com">
+
+      <label for="notes">Anything else Jay should know? <span class="hint">(optional)</span></label>
+      <textarea id="notes" name="notes" maxlength="2000" style="min-height: 60px;"></textarea>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Submit</button>
+      <div class="result" id="result"></div>
+    </form>
+
+    <p class="safety-note">
+      Every submission is reviewed by a person before it ever appears on the store —
+      nothing is published automatically. Uploaded games run in a locked-down preview
+      while Jay checks them, and only get copied onto the live site once approved.
+    </p>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+    var form = document.getElementById('submitForm');
+    var tabs = document.querySelectorAll('.tab');
+    var panels = document.querySelectorAll('.panel');
+    var result = document.getElementById('result');
+    var submitBtn = document.getElementById('submitBtn');
+    var activeKind = 'prompt';
+    var MAX_HTML_BYTES = 1000000;
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        activeKind = tab.dataset.tab;
+        tabs.forEach(function (t) { t.classList.toggle('active', t === tab); });
+        panels.forEach(function (p) { p.classList.toggle('active', p.dataset.panel === activeKind); });
+        result.className = 'result';
+      });
+    });
+
+    function showResult(kind, message) {
+      result.textContent = message;
+      result.className = 'result ' + kind;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      result.className = 'result';
+
+      var title = document.getElementById('title').value.trim();
+      var creators = document.getElementById('creators').value.trim();
+      var contactEmail = document.getElementById('contactEmail').value.trim();
+      if (!title || !creators || !contactEmail) {
+        showResult('error', 'Please fill in the game title, who made it, and a contact email.');
+        return;
+      }
+
+      var data = new FormData();
+      data.append('kind', activeKind);
+      data.append('title', title);
+      data.append('creators', creators);
+      data.append('contact_email', contactEmail);
+      data.append('notes', document.getElementById('notes').value.trim());
+
+      if (activeKind === 'prompt') {
+        var idea = document.getElementById('ideaPrompt').value.trim();
+        if (!idea) {
+          showResult('error', 'Tell us a bit about your game idea first.');
+          return;
+        }
+        data.append('idea_prompt', idea);
+      } else {
+        var file = document.getElementById('gameFile').files[0];
+        var slug = document.getElementById('slug').value.trim();
+        var tagline = document.getElementById('tagline').value.trim();
+        if (!file) {
+          showResult('error', 'Choose your .html game file first.');
+          return;
+        }
+        if (!/\.html?$/i.test(file.name)) {
+          showResult('error', 'That file needs to end in .html or .htm.');
+          return;
+        }
+        if (file.size > MAX_HTML_BYTES) {
+          showResult('error', 'That file is too big — games need to be under 1MB.');
+          return;
+        }
+        if (!slug || !tagline) {
+          showResult('error', 'Please fill in the game URL name and a one-line description.');
+          return;
+        }
+        data.append('game_file', file);
+        data.append('slug', slug);
+        data.append('tagline', tagline);
+        var scoreDir = form.querySelector('input[name="score_direction"]:checked');
+        data.append('score_direction', scoreDir ? scoreDir.value : 'desc');
+        data.append('is_chill', document.getElementById('isChill').checked ? 'true' : 'false');
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+
+      fetch('/api/submissions', { method: 'POST', body: data })
+        .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+        .then(function (res) {
+          if (res.ok) {
+            showResult('ok', res.body.message || 'Submission received!');
+            form.reset();
+          } else {
+            showResult('error', res.body.error || 'Something went wrong — try again.');
+          }
+        })
+        .catch(function () {
+          showResult('error', 'Could not reach the server. Check your connection and try again.');
+        })
+        .then(function () {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit';
+        });
+    });
+  })();
+  </script>
+</body>
+</html>

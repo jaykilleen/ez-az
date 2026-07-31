@@ -95,9 +95,9 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/games/space-dodge.html"'
   end
 
-  test "index has help link" do
+  test "index has submit-your-game link" do
     get "/"
-    assert_includes response.body, 'href="/help.html"'
+    assert_includes response.body, 'href="/submit"'
   end
 
   # Store version format

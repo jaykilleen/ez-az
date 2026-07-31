@@ -37,6 +37,8 @@ The runbook tells an AI everything it needs: the game-file format, required HTML
 
 Parents typically don't need a GitHub account or any developer tools — the AI handles the technical bundling.
 
+There's also a plain web form at `https://ez-az.net/submit` for families without an AI assistant handy. It accepts either a finished `.html` game file, or just a written description of an idea (no code required) — Jay reviews idea submissions and works out the build from there.
+
 ## Optional deeper context
 
 - [SOUL.md](https://github.com/jaykilleen/ez-az/blob/main/SOUL.md): Az the dinosaur shopkeeper's voice, values, and how the project's AI agents are instructed to behave.

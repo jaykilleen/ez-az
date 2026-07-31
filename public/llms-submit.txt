@@ -17,6 +17,8 @@ If you are an AI agent reading this because a parent asked you to "submit my kid
 
 You do not need GitHub access. You do not need a deploy pipeline. You only need to call the submission endpoint.
 
+If the kid only has an idea and no code yet, that's fine too — submit a `"prompt"`-kind submission instead (see below). There's also a plain web form at `https://ez-az.net/submit` for a parent to use directly without an AI agent.
+
 ---
 
 ## Game file format
@@ -76,7 +78,9 @@ The slug is the URL path for the game and the leaderboard key. Choose carefully:
 
 ## Required fields
 
-When you POST to the submission API, send a JSON body with these fields:
+There are two submission kinds. Send `kind: "html"` (or omit it — that's the default) when the game is finished code. Send `kind: "prompt"` when it's just an idea in words, no code yet.
+
+**`kind: "html"`** — a finished, self-contained game:
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -86,9 +90,31 @@ When you POST to the submission API, send a JSON body with these fields:
 | `tagline` | string | yes | One short sentence describing the game |
 | `score_direction` | string | yes | `"desc"` (highest score wins, e.g. points) or `"asc"` (lowest wins, e.g. fastest time) |
 | `is_chill` | boolean | optional | `true` if the game has no leaderboard (exploration / meditative). Defaults `false`. |
-| `game_html` | string | yes | The complete HTML file content as a string |
+| `game_html` | string | yes* | The complete HTML file content as a string |
 | `contact_email` | string | yes | Parent's email — Jay uses this to follow up on the submission |
 | `notes` | string | optional | Anything Jay should know (e.g. "kid is 6 — be gentle in feedback") |
+
+\* Instead of sending `game_html` as a JSON string, you can `multipart/form-data` POST the file directly as `game_file` (a `.html`/`.htm` file, under 1MB). Either works — pick whichever's easier for your client.
+
+**`kind: "prompt"`** — an idea, no code:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `title` | string | yes | A working name for the idea |
+| `creators` | string | yes | Kid's name(s) |
+| `idea_prompt` | string | yes | The idea, in the kid's own words — what you do, how you win |
+| `contact_email` | string | yes | Parent's email |
+| `notes` | string | optional | Anything Jay should know |
+
+No `slug`, `tagline`, `score_direction`, or `game_html` needed for a prompt submission — those get decided once someone actually builds it.
+
+---
+
+## Security: submitted HTML is scanned before it's even queued
+
+`game_html` (however it arrives — inline or uploaded) is rejected outright, before it ever reaches Jay's review queue, if it contains any of: `document.cookie`, `window.parent`/`window.top`/`top.location` reach, an `<iframe>`, `eval()`, the `Function` constructor, `document.write()`, a `<script src>` pointing at an external URL, or a `fetch`/`XMLHttpRequest`/`WebSocket`/`EventSource` call to an absolute external URL. None of these have a legitimate reason to appear in a self-contained single-player game — if your kid's game genuinely needs one of these for some unusual reason, email `jay@retailtasker.com.au` first rather than submitting and hoping.
+
+This is a floor, not the whole defence: approved submissions still get copied in by hand rather than auto-published, and the admin preview runs in a sandboxed iframe with no access to the rest of the site.
 
 ---
 
@@ -96,13 +122,13 @@ When you POST to the submission API, send a JSON body with these fields:
 
 ```
 POST https://ez-az.net/api/submissions
-Content-Type: application/json
+Content-Type: application/json          (or multipart/form-data if uploading game_file)
 ```
 
-Send the JSON body described above. The response will be one of:
+Send the fields described above. The response will be one of:
 
-- `201 Created` — submission accepted into the queue. Response body: `{ "id": <int>, "slug": "<slug>", "status": "pending" }`.
-- `400 Bad Request` — validation failure. Response body: `{ "error": "<reason>" }`. Common reasons: missing field, slug collides with existing game, HTML over 1MB, slug malformed.
+- `201 Created` — submission accepted into the queue. Response body: `{ "id": <int>, "slug": "<slug or null>", "status": "pending" }`.
+- `400 Bad Request` — validation failure. Response body: `{ "error": "<reason>" }`. Common reasons: missing field, slug collides with existing game, HTML over 1MB, slug malformed, dangerous pattern detected (see above).
 - `429 Too Many Requests` — rate limit (5/hour per IP). Wait an hour and retry.
 
 ---

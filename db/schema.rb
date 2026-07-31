@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_27_003418) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_30_230629) do
   create_table "announcements", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
@@ -125,19 +125,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_27_003418) do
     t.string "contact_email", null: false
     t.datetime "created_at", null: false
     t.string "creators", null: false
-    t.text "game_html", null: false
+    t.text "game_html"
+    t.text "idea_prompt"
     t.boolean "is_chill", default: false, null: false
+    t.string "kind", default: "html", null: false
     t.text "notes"
     t.datetime "reviewed_at"
     t.text "reviewer_notes"
     t.string "score_direction", default: "desc", null: false
-    t.string "slug", null: false
+    t.string "slug"
     t.string "status", default: "pending", null: false
     t.string "submitter_ip"
-    t.string "tagline", null: false
+    t.string "tagline"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_submissions_on_created_at"
+    t.index ["kind"], name: "index_submissions_on_kind"
     t.index ["slug"], name: "index_submissions_on_slug"
     t.index ["status"], name: "index_submissions_on_status"
   end

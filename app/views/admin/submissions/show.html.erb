@@ -41,22 +41,31 @@
   <div class="breadcrumb"><a href="<%= admin_submissions_path %>">← all submissions</a></div>
   <% if flash[:notice] %><div class="notice"><%= flash[:notice] %></div><% end %>
 
-  <h1><%= @submission.title %> <span class="badge <%= @submission.status %>"><%= @submission.status %></span></h1>
-  <div class="tagline">by <%= @submission.creators %> — <%= @submission.tagline %></div>
+  <h1><%= @submission.title %> <span class="badge <%= @submission.status %>"><%= @submission.status %></span> <span class="badge <%= @submission.html? ? "approved" : "pending" %>"><%= @submission.kind %></span></h1>
+  <div class="tagline">by <%= @submission.creators %><%= " — #{@submission.tagline}" if @submission.tagline.present? %></div>
 
   <div class="grid">
     <div>
-      <div class="preview">
-        <iframe src="<%= preview_admin_submission_path(@submission) %>" sandbox="allow-scripts"></iframe>
-      </div>
-      <p style="color: #666; font-size: 12px; margin-top: 8px;">Preview runs the submitted HTML in a sandboxed iframe. <a href="<%= preview_admin_submission_path(@submission) %>" target="_blank" style="color:#00ffc8;">Open full-screen →</a></p>
+      <% if @submission.html? %>
+        <div class="preview">
+          <iframe src="<%= preview_admin_submission_path(@submission) %>" sandbox="allow-scripts"></iframe>
+        </div>
+        <p style="color: #666; font-size: 12px; margin-top: 8px;">Preview runs the submitted HTML in a sandboxed iframe. <a href="<%= preview_admin_submission_path(@submission) %>" target="_blank" style="color:#00ffc8;">Open full-screen →</a></p>
+      <% else %>
+        <div class="preview" style="padding: 24px; min-height: auto;">
+          <h3 style="color:#ffd700; margin-top:0;">The idea, in their own words</h3>
+          <div style="white-space: pre-wrap; line-height: 1.6;"><%= @submission.idea_prompt %></div>
+        </div>
+      <% end %>
     </div>
 
     <div class="meta">
       <dl>
-        <dt>Slug</dt><dd><code><%= @submission.slug %></code></dd>
-        <dt>Score direction</dt><dd><%= @submission.score_direction %><%= " (chill — no leaderboard)" if @submission.is_chill %></dd>
-        <dt>HTML size</dt><dd><%= @submission.game_html.bytesize %> bytes</dd>
+        <% if @submission.html? %>
+          <dt>Slug</dt><dd><code><%= @submission.slug %></code></dd>
+          <dt>Score direction</dt><dd><%= @submission.score_direction %><%= " (chill — no leaderboard)" if @submission.is_chill %></dd>
+          <dt>HTML size</dt><dd><%= @submission.game_html.bytesize %> bytes</dd>
+        <% end %>
         <dt>Submitter contact</dt><dd><a href="mailto:<%= @submission.contact_email %>" style="color:#00ffc8;"><%= @submission.contact_email %></a></dd>
         <dt>Submitted</dt><dd><%= @submission.created_at.strftime("%a %b %-d, %Y at %H:%M") %></dd>
         <dt>From IP</dt><dd><code><%= @submission.submitter_ip %></code></dd>
@@ -65,7 +74,7 @@
         <% end %>
       </dl>
 
-      <% if (warnings = @submission.html_warnings).any? %>
+      <% if @submission.html? && (warnings = @submission.html_warnings).any? %>
         <div class="warnings">
           <strong>Spec warnings (informational):</strong>
           <ul>

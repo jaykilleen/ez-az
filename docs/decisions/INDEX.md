@@ -24,7 +24,7 @@ that convention and don't have them yet; they pick it up if they're touched.
 | **Trivia** | 003 |
 | **Descent** | 004 |
 | **TV party games (Spotlight, Treasure Hunt, cards)** | 006 |
-| **Public game submission** | 007 |
+| **Public game submission** | 007, 016 |
 | **Build / retro workflow** | 008 |
 | **Golden Goal & QR join** | 009 |
 | **Shared design system** | 011, 015 |
@@ -51,11 +51,12 @@ that convention and don't have them yet; they pick it up if they're touched.
 | 013 | The Server Is Authoritative for Store Hours | Accepted | 2026-07-26 |
 | 014 | Leaderboards Rank Players, Not Attempts | Accepted | 2026-07-26 |
 | 015 | The Wrapper Around a Game Is Shared Code, Not a Snippet | Accepted | 2026-07-26 |
+| 016 | On-Site Submission Form, Idea-Only Submissions, and a Hard Security Floor | Accepted | 2026-07-31 |
 
 ## Maintenance
 
 When adding a new ADR:
-1. Use the next number in sequence (currently next: **016**)
+1. Use the next number in sequence (currently next: **017**)
 2. Add `Triggers:` and `Topics:` near the top
 3. Add a row to the chronological table above
 4. Add the ADR number to relevant topic rows above

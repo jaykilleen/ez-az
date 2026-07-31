@@ -13,6 +13,7 @@ module Admin
 
     def preview
       @submission = Submission.find(params[:id])
+      head :not_found and return unless @submission.html?
       response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;"
       render html: @submission.game_html.html_safe, layout: false
     end
@@ -20,7 +21,12 @@ module Admin
     def approve
       submission = Submission.find(params[:id])
       submission.update!(status: "approved", reviewed_at: Time.current, reviewer_notes: params[:notes])
-      redirect_to admin_submission_path(submission), notice: "Marked approved. Now copy the HTML to public/games/#{submission.slug}.html, register it in the Game model + Score::GAME_SORT, then deploy."
+      notice = if submission.html?
+        "Marked approved. Now copy the HTML to public/games/#{submission.slug}.html, register it in the Game model + Score::GAME_SORT, then deploy."
+      else
+        "Marked approved. This was an idea, not code -- go build it (with the kid, with Claude, whatever) and submit the HTML version when it's ready."
+      end
+      redirect_to admin_submission_path(submission), notice: notice
     end
 
     def reject

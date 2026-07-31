@@ -27,14 +27,15 @@
   <h2>Pending review (<%= @pending.size %>)</h2>
   <% if @pending.any? %>
     <table>
-      <tr><th>Title</th><th>By</th><th>Slug</th><th>Submitted</th><th>Warnings</th></tr>
+      <tr><th>Kind</th><th>Title</th><th>By</th><th>Slug</th><th>Submitted</th><th>Warnings</th></tr>
       <% @pending.each do |s| %>
         <tr>
+          <td><span class="badge <%= s.html? ? "approved" : "pending" %>"><%= s.kind %></span></td>
           <td><a href="<%= admin_submission_path(s) %>"><%= s.title %></a></td>
           <td><%= s.creators %></td>
-          <td><code><%= s.slug %></code></td>
+          <td><code><%= s.slug || "—" %></code></td>
           <td><%= s.created_at.strftime("%b %-d, %H:%M") %></td>
-          <td><%= s.html_warnings.size %></td>
+          <td><%= s.html? ? s.html_warnings.size : "—" %></td>
         </tr>
       <% end %>
     </table>
