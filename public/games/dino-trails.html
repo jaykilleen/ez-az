@@ -1,0 +1,409 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Jay Killeen -->
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Dino Trails — EZ-AZ</title>
+
+<script src="/opening-hours.js"></script>
+<script src="/error-reporter.js"></script>
+<script src="/game-viewport.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+
+<style>
+  :root { --ez-title-colour: var(--ez-teal); }
+
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--ez-bg);
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  #hud {
+    position: fixed; top: 34px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; padding: 8px 12px; z-index: 5;
+    font-family: var(--ez-font);
+    color: #cfd8dc;
+  }
+  #hud.hidden { display: none; }
+  #levelLabel { font-size: 13px; letter-spacing: 1px; }
+  #resetBtn {
+    font-family: var(--ez-font);
+    background: transparent; color: var(--ez-teal);
+    border: 1px solid rgba(0,255,200,0.4); border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; cursor: pointer;
+  }
+  #resetBtn:hover { background: rgba(0,255,200,0.12); }
+
+  #boardWrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+  }
+
+  #game {
+    display: block;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
+  .ezaz-title-tag.small { font-size: 12px; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<div class="ezaz-title" id="titleScreen">
+  <div class="ezaz-title-name">DINO TRAILS</div>
+  <div class="ezaz-title-tag">Connect the matching footprints. Fill every tile.</div>
+
+  <p class="ezaz-hint">Drag with a finger or mouse &nbsp;|&nbsp; No timer, no rush — take your time</p>
+
+  <button class="ezaz-btn-primary" id="startBtn">START</button>
+  <p id="restartLink" class="ezaz-hint" style="cursor:pointer; display:none;">Start over from Level 1</p>
+
+  <div class="ezaz-lb-wrap" id="titleLb"></div>
+</div>
+
+<div class="ezaz-title hidden" id="clearScreen">
+  <div class="ezaz-title-name" style="font-size: 22px;">TRAIL CLEAR!</div>
+  <div class="ezaz-title-tag" id="clearLevelLabel"></div>
+  <button class="ezaz-btn-primary" id="nextBtn">NEXT LEVEL</button>
+</div>
+
+<div class="ezaz-title hidden" id="doneScreen">
+  <div class="ezaz-title-name">ALL TRAILS CLEARED</div>
+  <div class="ezaz-go-score" id="finalTime"></div>
+
+  <div id="nameEntry" style="display:none;">
+    <span class="ezaz-label">Your name</span>
+    <input class="ezaz-lb-name-input" id="nameInput" maxlength="12" placeholder="NAME"
+           autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <button class="ezaz-btn-save" id="saveBtn">SAVE</button>
+  </div>
+
+  <div class="ezaz-lb-wrap" id="doneLb"></div>
+
+  <button class="ezaz-btn-primary" id="againBtn">PLAY AGAIN</button>
+  <a href="/" class="ezaz-btn-outline">BACK TO STORE</a>
+</div>
+
+<div id="hud" class="hidden">
+  <span id="levelLabel">LEVEL 1 / 18</span>
+  <button id="resetBtn">RESET</button>
+</div>
+
+<div id="boardWrap">
+  <canvas id="game" width="640" height="640"></canvas>
+</div>
+
+<script src="/arcade-shell.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var GAME = 'dino-trails';
+  var PROGRESS_KEY = 'ezaz.dino-trails.progress';
+
+  var LEVELS = [{"size":4,"dots":[[[0,3],[2,2]],[[1,2],[1,1]],[[2,1],[2,0]]]},{"size":4,"dots":[[[2,0],[2,2]],[[3,2],[0,3]],[[0,2],[0,1]]]},{"size":4,"dots":[[[0,2],[2,2]],[[2,3],[3,2]],[[3,1],[0,1]]]},{"size":4,"dots":[[[2,2],[2,3]],[[3,3],[1,0]],[[0,0],[0,3]]]},{"size":5,"dots":[[[2,4],[1,0]],[[0,0],[3,2]],[[3,3],[0,2]],[[0,3],[1,3]]]},{"size":5,"dots":[[[3,3],[1,4]],[[0,4],[2,2]],[[3,2],[2,0]],[[1,0],[1,1]]]},{"size":5,"dots":[[[3,1],[2,0]],[[2,1],[4,3]],[[4,4],[0,4]],[[0,3],[1,1]]]},{"size":5,"dots":[[[2,4],[2,2]],[[1,2],[1,1]],[[2,1],[4,0]],[[4,1],[3,3]]]},{"size":5,"dots":[[[4,2],[1,4]],[[0,4],[1,0]],[[2,0],[3,1]],[[3,2],[1,1]]]},{"size":6,"dots":[[[4,4],[3,3]],[[3,4],[0,3]],[[0,2],[1,4]],[[2,4],[3,0]],[[4,0],[4,1]]]},{"size":6,"dots":[[[3,3],[2,5]],[[1,5],[0,3]],[[0,2],[5,4]],[[5,3],[2,0]],[[2,1],[1,0]]]},{"size":6,"dots":[[[2,2],[5,0]],[[4,0],[3,0]],[[2,0],[0,2]],[[1,2],[4,5]],[[5,5],[2,3]]]},{"size":6,"dots":[[[1,5],[0,0]],[[1,0],[4,5]],[[5,5],[5,0]],[[4,0],[3,1]],[[4,1],[4,3]]]},{"size":7,"dots":[[[2,0],[2,6]],[[3,6],[2,5]],[[1,5],[1,2]],[[1,1],[3,4]],[[3,3],[4,2]],[[4,3],[5,1]]]},{"size":7,"dots":[[[2,6],[2,5]],[[2,4],[2,1]],[[2,0],[4,5]],[[4,4],[4,2]],[[4,1],[6,1]],[[5,1],[6,6]]]},{"size":7,"dots":[[[3,5],[4,6]],[[5,6],[6,3]],[[6,2],[5,3]],[[4,3],[1,0]],[[0,0],[1,4]],[[1,3],[2,2]]]},{"size":7,"dots":[[[1,5],[0,5]],[[0,4],[0,1]],[[0,0],[3,0]],[[4,0],[3,1]],[[3,2],[4,3]],[[3,3],[4,4]],[[5,4],[5,5]]]},{"size":7,"dots":[[[1,1],[0,0]],[[0,1],[1,6]],[[1,5],[1,2]],[[2,2],[4,6]],[[5,6],[5,4]],[[6,4],[2,0]],[[2,1],[4,2]]]}];
+
+  var PALETTE = ['#00ffc8', '#ff6ec7', '#ffe44d', '#ff4757', '#7c6cff', '#3aa0ff', '#ffa63a'];
+
+  var titleScreen  = document.getElementById('titleScreen');
+  var clearScreen  = document.getElementById('clearScreen');
+  var doneScreen   = document.getElementById('doneScreen');
+  var hud          = document.getElementById('hud');
+  var canvas       = document.getElementById('game');
+  var ctx          = canvas.getContext('2d');
+
+  var board = null;             // last leaderboard fetch, kept for `qualifies`
+  var running = false;          // true only while a level is actively being played
+  var levelIndex = 0;
+  var level = null, n = 0, occupied = null, paths = null, draggingColor = null;
+  var gameStartTime = 0, totalPausedTime = 0, pausedAt = 0;
+
+  ArcadeShell.banner();
+  EzAzGame.fitCanvas(canvas, { aspect: 1 });
+
+  ArcadeShell.pause({
+    enabled: function () { return running; },
+    onPause: function () { running = false; pausedAt = performance.now(); },
+    onResume: function () { running = true; totalPausedTime += performance.now() - pausedAt; }
+  });
+
+  ArcadeShell.leaderboard('#titleLb', GAME).then(function (data) { board = data; });
+
+  // ── Progress ─────────────────────────────────────────────────────────────
+
+  function readProgress() {
+    var n = parseInt(window.localStorage.getItem(PROGRESS_KEY), 10);
+    return isNaN(n) ? 0 : Math.min(n, LEVELS.length);
+  }
+
+  function writeProgress(cleared) {
+    try { window.localStorage.setItem(PROGRESS_KEY, String(cleared)); } catch (_) {}
+  }
+
+  var savedProgress = readProgress();
+  if (savedProgress > 0 && savedProgress < LEVELS.length) {
+    document.getElementById('startBtn').textContent = 'CONTINUE — LEVEL ' + (savedProgress + 1);
+    document.getElementById('restartLink').style.display = '';
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function () {
+    start(savedProgress);
+  });
+  document.getElementById('restartLink').addEventListener('click', function () {
+    start(0);
+  });
+  document.getElementById('againBtn').addEventListener('click', function () {
+    start(0);
+  });
+  document.getElementById('nextBtn').addEventListener('click', function () {
+    levelIndex++;
+    clearScreen.classList.add('hidden');
+    hud.classList.remove('hidden');
+    running = true;
+    loadLevel(levelIndex);
+  });
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    loadLevel(levelIndex);
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    var name = document.getElementById('nameInput').value.trim();
+    if (!name) { return; }
+    var finalMs = Math.round(performance.now() - gameStartTime - totalPausedTime);
+    ArcadeShell.submit(GAME, name, finalMs).then(function (data) {
+      board = data;
+      document.getElementById('nameEntry').style.display = 'none';
+      ArcadeShell.renderLeaderboard('#doneLb', data, { highlight: name.toUpperCase() });
+    });
+  });
+
+  function start(fromLevel) {
+    titleScreen.classList.add('hidden');
+    doneScreen.classList.add('hidden');
+    hud.classList.remove('hidden');
+    levelIndex = fromLevel;
+    gameStartTime = performance.now();
+    totalPausedTime = 0;
+    running = true;
+    loadLevel(levelIndex);
+  }
+
+  // ── Level state ──────────────────────────────────────────────────────────
+
+  function loadLevel(i) {
+    level = LEVELS[i];
+    n = level.size;
+    occupied = [];
+    for (var r = 0; r < n; r++) { occupied.push(new Array(n).fill(-1)); }
+    paths = level.dots.map(function () { return null; });
+
+    level.dots.forEach(function (pair, c) {
+      occupied[pair[0][0]][pair[0][1]] = c;
+      occupied[pair[1][0]][pair[1][1]] = c;
+    });
+
+    document.getElementById('levelLabel').textContent =
+      'LEVEL ' + (i + 1) + ' / ' + LEVELS.length;
+
+    draw();
+  }
+
+  function sameCell(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+  function isAdjacent(a, b) { return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) === 1; }
+  function inPath(path, cell) { return path.some(function (p) { return sameCell(p, cell); }); }
+
+  function isSolved() {
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; c++) {
+        if (occupied[r][c] === -1) { return false; }
+      }
+    }
+    for (var i = 0; i < level.dots.length; i++) {
+      var path = paths[i];
+      if (!path || path.length < 2) { return false; }
+      var a = level.dots[i][0], b = level.dots[i][1];
+      var first = path[0], last = path[path.length - 1];
+      var connects = (sameCell(first, a) && sameCell(last, b)) ||
+                     (sameCell(first, b) && sameCell(last, a));
+      if (!connects) { return false; }
+    }
+    return true;
+  }
+
+  function onLevelClear() {
+    running = false;
+    draggingColor = null;
+    var cleared = levelIndex + 1;
+    if (cleared > readProgress()) { writeProgress(cleared); }
+
+    if (cleared >= LEVELS.length) {
+      writeProgress(0); // a finished run starts fresh next time
+      var finalMs = Math.round(performance.now() - gameStartTime - totalPausedTime);
+      document.getElementById('finalTime').textContent = ArcadeShell.format(finalMs, 'asc');
+      document.getElementById('nameEntry').style.display =
+        ArcadeShell.qualifies(finalMs, board) ? '' : 'none';
+      ArcadeShell.renderLeaderboard('#doneLb', board);
+      hud.classList.add('hidden');
+      doneScreen.classList.remove('hidden');
+    } else {
+      document.getElementById('clearLevelLabel').textContent =
+        'Level ' + cleared + ' of ' + LEVELS.length + ' done.';
+      clearScreen.classList.remove('hidden');
+    }
+  }
+
+  // ── Drawing ──────────────────────────────────────────────────────────────
+
+  var MARGIN = 28;
+
+  function cellCentre(r, c, cellSize) {
+    return [MARGIN + c * cellSize + cellSize / 2, MARGIN + r * cellSize + cellSize / 2];
+  }
+
+  function drawFootprint(x, y, radius, colour) {
+    ctx.fillStyle = colour;
+    ctx.beginPath();
+    ctx.ellipse(x, y + radius * 0.15, radius * 0.62, radius * 0.75, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (var t = -1; t <= 1; t++) {
+      ctx.beginPath();
+      ctx.ellipse(x + t * radius * 0.5, y - radius * 0.55, radius * 0.22, radius * 0.3,
+                  t * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function draw() {
+    var size = Math.min(canvas.width, canvas.height);
+    var cellSize = (size - 2 * MARGIN) / n;
+
+    ctx.fillStyle = '#0a0a12';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    for (var i = 0; i <= n; i++) {
+      ctx.beginPath();
+      ctx.moveTo(MARGIN, MARGIN + i * cellSize);
+      ctx.lineTo(MARGIN + n * cellSize, MARGIN + i * cellSize);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(MARGIN + i * cellSize, MARGIN);
+      ctx.lineTo(MARGIN + i * cellSize, MARGIN + n * cellSize);
+      ctx.stroke();
+    }
+
+    level.dots.forEach(function (pair, c) {
+      var path = paths[c];
+      if (path && path.length > 1) {
+        ctx.strokeStyle = PALETTE[c];
+        ctx.lineWidth = cellSize * 0.32;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        path.forEach(function (cell, idx) {
+          var pt = cellCentre(cell[0], cell[1], cellSize);
+          if (idx === 0) { ctx.moveTo(pt[0], pt[1]); } else { ctx.lineTo(pt[0], pt[1]); }
+        });
+        ctx.stroke();
+      }
+
+      pair.forEach(function (cell) {
+        var pt = cellCentre(cell[0], cell[1], cellSize);
+        drawFootprint(pt[0], pt[1], cellSize * 0.28, PALETTE[c]);
+      });
+    });
+  }
+
+  // ── Input ────────────────────────────────────────────────────────────────
+
+  function cellFromEvent(e) {
+    var rect = canvas.getBoundingClientRect();
+    var size = Math.min(canvas.width, canvas.height);
+    var cellSize = (size - 2 * MARGIN) / n;
+    var scale = canvas.width / rect.width;
+    var x = (e.clientX - rect.left) * scale;
+    var y = (e.clientY - rect.top) * scale;
+    var c = Math.floor((x - MARGIN) / cellSize);
+    var r = Math.floor((y - MARGIN) / cellSize);
+    if (r < 0 || r >= n || c < 0 || c >= n) { return null; }
+    return [r, c];
+  }
+
+  function tryStep(cell) {
+    var path = paths[draggingColor];
+    var last = path[path.length - 1];
+    if (sameCell(cell, last)) { return; }
+
+    if (path.length >= 2 && sameCell(cell, path[path.length - 2])) {
+      var popped = path.pop();
+      var isOwnDot = level.dots[draggingColor].some(function (d) { return sameCell(d, popped); });
+      if (!isOwnDot) { occupied[popped[0]][popped[1]] = -1; }
+      draw();
+      return;
+    }
+
+    if (!isAdjacent(last, cell)) { return; }
+    if (inPath(path, cell)) { return; }
+    if (occupied[cell[0]][cell[1]] !== -1 && occupied[cell[0]][cell[1]] !== draggingColor) { return; }
+
+    path.push(cell);
+    occupied[cell[0]][cell[1]] = draggingColor;
+    draw();
+
+    if (isSolved()) { onLevelClear(); }
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    if (!running) { return; }
+    e.preventDefault();
+    var cell = cellFromEvent(e);
+    if (!cell) { return; }
+
+    var c = occupied[cell[0]][cell[1]];
+    if (c === -1) { return; }
+    var isDotCell = level.dots[c].some(function (d) { return sameCell(d, cell); });
+    if (!isDotCell) { return; }
+
+    // Touching a footprint always (re)starts that colour's trail from there.
+    if (paths[c]) {
+      paths[c].forEach(function (p) {
+        var isOwnDot = level.dots[c].some(function (d) { return sameCell(d, p); });
+        if (!isOwnDot) { occupied[p[0]][p[1]] = -1; }
+      });
+    }
+    paths[c] = [cell];
+    occupied[cell[0]][cell[1]] = c;
+    draggingColor = c;
+    draw();
+
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    if (!running || draggingColor === null) { return; }
+    e.preventDefault();
+    var cell = cellFromEvent(e);
+    if (!cell) { return; }
+    tryStep(cell);
+  });
+
+  function endDrag() { draggingColor = null; }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+})();
+</script>
+
+</body>
+</html>

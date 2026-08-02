@@ -189,6 +189,15 @@ class Game
       path: "/games/mutant-mile.html",
       icon: "mutant-mile",
       tv_optimised: false
+    },
+    {
+      slug: "dino-trails",
+      title: "Dino Trails",
+      creators: "Jaykill",
+      tagline: "Drag a trail between matching footprints and fill the whole board. No timer, no rush.",
+      path: "/games/dino-trails.html",
+      icon: "dino-trails",
+      tv_optimised: false
     }
   ].freeze
 

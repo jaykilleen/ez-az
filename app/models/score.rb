@@ -21,7 +21,8 @@ class Score < ApplicationRecord
     "snake-pit-royale" => :desc,
     "golden-goal" => :desc,
     "laser-turtle" => :desc,
-    "mutant-mile" => :desc
+    "mutant-mile" => :desc,
+    "dino-trails" => :asc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -38,7 +39,8 @@ class Score < ApplicationRecord
     "snake-pit-royale" => "AZ",
     "golden-goal" => "AZ",
     "laser-turtle" => "TORRIN",
-    "mutant-mile" => "JAYKILL"
+    "mutant-mile" => "JAYKILL",
+    "dino-trails" => "JAYKILL"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

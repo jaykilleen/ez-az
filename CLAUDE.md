@@ -65,9 +65,13 @@ The first game in the EZ-AZ collection. A two-player co-op space shooter with:
 
 An auto-scroll permadeath speedrunner by Jaykill (`public/games/mutant-mile.html`). 1-player. Every run generates a brand new mutant dino (random look, name and one perk — Double Jump, Featherfall, Magnetic, Slim or Adrenaline) and a procedurally generated gauntlet of spikes, pits, crawlers and duck-under beams that gets harder in tiers the longer you survive. One hit ends the run. Score is distance plus crystal pickups. Points-based scoring (DESC leaderboard).
 
+### Dino Trails
+
+A chill, mobile-first logic puzzle by Jaykill (`public/games/dino-trails.html`). 1-player. Drag a trail between matching coloured dino footprints, filling every tile on the grid without crossing your own path. 18 handcrafted levels, small grids to large, no timer or pressure during play — built to be playable one-handed on a phone anywhere, not just at a keyboard. Levels are generated offline from a random Hamiltonian path over the grid (so a full-coverage solution is guaranteed to exist) and baked in as static data; see the level array in the game file. Scored on total time to clear all 18 levels, only shown once the run is finished (ASC leaderboard) — see "Standard game features" below for why a "chill" game still carries a score.
+
 ## Standard game features
 
-Every game on EZ-AZ should follow these patterns unless the game is a "chill" game (no scoring, exploration only, meditative). Chill games can skip leaderboards and scoring.
+Every game on EZ-AZ should follow these patterns unless the game is a "chill" game (no scoring, exploration only, meditative). CLAUDE.md used to say chill games can skip leaderboards and scoring entirely, but `GameTest` requires every `Game::GAMES` entry to have a matching `Score::GAME_SORT` entry with no exception — so in practice a "chill" game still needs a score, just one that doesn't pressure the player (e.g. a one-off completion time only shown at the very end, not a visible countdown). Bloom and Dino Trails both follow this shape.
 
 ### Store banner
 

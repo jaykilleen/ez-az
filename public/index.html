@@ -1329,6 +1329,21 @@
         </div>
       </a>
 
+      <a href="/games/dino-trails.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="dinoTrailsCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Dino Trails</div>
+          <div class="game-box-creators">By Jaykill</div>
+          <div class="game-box-desc">
+            Drag a trail between matching footprints and fill the whole board. No timer, no rush — play it anywhere on your phone.
+          </div>
+          <span class="game-box-badge">1 PLAYER</span><br>
+          <span class="game-box-scores" data-game="dino-trails">High Scores</span>
+        </div>
+      </a>
+
       <a href="/games/corrupted.html" class="game-box">
         <div class="game-box-art">
           <canvas id="corruptedCover" width="220" height="280"></canvas>
@@ -3449,6 +3464,79 @@
       ctx.fillText('MUTANT MILE', W / 2, GAME_H + TITLE_H / 2);
       ctx.restore();
     })();
+
+    // ── Dino Trails cover ──
+    (function () {
+      var canvas = document.getElementById('dinoTrailsCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height; // 220 x 280
+
+      var TITLE_H = 44;
+      var GAME_H  = H - TITLE_H;
+
+      var bg = ctx.createLinearGradient(0, 0, 0, GAME_H);
+      bg.addColorStop(0, '#0d1a1f'); bg.addColorStop(1, '#0a0a12');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, GAME_H);
+
+      // Grid
+      var margin = 20, cell = (W - margin * 2) / 5, gridH = cell * 5;
+      var top = (GAME_H - gridH) / 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      for (var i = 0; i <= 5; i++) {
+        ctx.beginPath(); ctx.moveTo(margin, top + i * cell); ctx.lineTo(margin + gridH, top + i * cell); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(margin + i * cell, top); ctx.lineTo(margin + i * cell, top + gridH); ctx.stroke();
+      }
+
+      function centre(r, c) { return [margin + c * cell + cell / 2, top + r * cell + cell / 2]; }
+      function footprint(x, y, radius, colour) {
+        ctx.fillStyle = colour;
+        ctx.beginPath();
+        ctx.ellipse(x, y + radius * 0.15, radius * 0.62, radius * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        for (var t = -1; t <= 1; t++) {
+          ctx.beginPath();
+          ctx.ellipse(x + t * radius * 0.5, y - radius * 0.55, radius * 0.22, radius * 0.3, t * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Two demo trails across the mini grid
+      var trails = [
+        { colour: '#00ffc8', cells: [[0,0],[0,1],[0,2],[1,2],[2,2],[2,1],[2,0]] },
+        { colour: '#ff6ec7', cells: [[4,0],[4,1],[4,2],[3,2],[3,3],[3,4],[4,4]] }
+      ];
+      trails.forEach(function (trail) {
+        ctx.strokeStyle = trail.colour;
+        ctx.lineWidth = cell * 0.28;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        trail.cells.forEach(function (cell2, idx) {
+          var pt = centre(cell2[0], cell2[1]);
+          if (idx === 0) ctx.moveTo(pt[0], pt[1]); else ctx.lineTo(pt[0], pt[1]);
+        });
+        ctx.stroke();
+        var start = centre(trail.cells[0][0], trail.cells[0][1]);
+        var end = centre(trail.cells[trail.cells.length - 1][0], trail.cells[trail.cells.length - 1][1]);
+        footprint(start[0], start[1], cell * 0.3, trail.colour);
+        footprint(end[0], end[1], cell * 0.3, trail.colour);
+      });
+
+      // Title bar
+      ctx.fillStyle = '#0d1a1f';
+      ctx.fillRect(0, GAME_H, W, TITLE_H);
+      ctx.fillStyle = 'rgba(0,255,200,0.2)';
+      ctx.fillRect(0, GAME_H, W, 2);
+      ctx.save();
+      ctx.shadowColor = '#00ffc8'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#00ffc8';
+      ctx.font = 'bold 11px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('DINO TRAILS', W / 2, GAME_H + TITLE_H / 2);
+      ctx.restore();
+    })();
   </script>
 
   <script>
@@ -3589,7 +3677,8 @@
         'snake-pit-royale': 'Snake Pit Royale',
         'golden-goal': 'Golden Goal',
         'laser-turtle': 'Laser Turtle',
-        'mutant-mile': 'Mutant Mile'
+        'mutant-mile': 'Mutant Mile',
+        'dino-trails': 'Dino Trails'
       };
 
 
