@@ -30,6 +30,16 @@ CURRENT_STRING=$(grep 'STRING' "$VERSION_FILE" | grep -o '"[^"]*"' | tr -d '"')
 CURRENT_DATE="${CURRENT_STRING%%.*}"
 CURRENT_BUILD="${CURRENT_STRING##*.}"
 
+# Guard: a hand-patched or sed-no-op'd version.rb produces an empty or
+# malformed CURRENT_STRING; the arithmetic below would then silently reset
+# the build counter to 1 instead of incrementing it.
+if ! [[ "${CURRENT_STRING}" =~ ^[0-9]{8}\.[1-9][0-9]*$ ]]; then
+  echo "Error: version.rb STRING '${CURRENT_STRING}' does not match expected YYYYMMDD.N format."
+  echo "  lib/ez_az/version.rb may have been hand-patched incorrectly."
+  echo "  Verify and correct it before releasing."
+  exit 1
+fi
+
 if [ "$CURRENT_DATE" = "$TODAY" ]; then
   NEW_BUILD=$((CURRENT_BUILD + 1))
 else

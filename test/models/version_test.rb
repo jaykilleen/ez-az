@@ -1,4 +1,7 @@
 require "test_helper"
+require "open3"
+require "tmpdir"
+require "fileutils"
 
 # /api/version is the post-deploy signal for every release, so a malformed or
 # stale value there is worse than useless -- it reports success against the
@@ -39,6 +42,28 @@ class VersionTest < ActiveSupport::TestCase
     body = JSON.parse(get_via_rack.response.body)
     assert_equal EzAz::Version::STRING, body["version"]
     assert_equal EzAz::Version::COMMIT, body["commit"]
+  end
+
+  # Guard: bin/release must abort with a clear error when STRING is malformed
+  # rather than silently resetting the build counter to 1 via bad arithmetic.
+  test "bin/release aborts with a clear error when STRING is malformed" do
+    Dir.mktmpdir do |tmp|
+      FileUtils.mkdir_p(File.join(tmp, "lib/ez_az"))
+      File.write(File.join(tmp, "lib/ez_az/version.rb"), <<~RUBY)
+        module EzAz
+          module Version
+            STRING = "bad-version"
+            COMMIT = "abc1234"
+          end
+        end
+      RUBY
+
+      script = Rails.root.join("bin/release").to_s
+      out, status = Open3.capture2e(script, chdir: tmp)
+
+      assert_not status.success?, "expected bin/release to exit non-zero on malformed STRING"
+      assert_match(/does not match expected YYYYMMDD\.N format/, out)
+    end
   end
 
   # Only meaningful with real git history. CI checks out shallow, so skip there
