@@ -1,3 +1,7 @@
+---
+model: claude-sonnet-4-6
+---
+
 Fetch all open GitHub issues for this project and recommend what to work on next.
 
 Steps:

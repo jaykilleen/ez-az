@@ -1,3 +1,7 @@
+---
+model: claude-opus-4-8
+---
+
 Build a QR code scanner directly into EZ-AZ so kids never need a third-party scanner app again.
 
 ## Context

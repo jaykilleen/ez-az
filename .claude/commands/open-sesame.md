@@ -1,3 +1,7 @@
+---
+model: claude-haiku-4-5-20251001
+---
+
 Az has gone to bed but you need to test after hours. Wake the old dinosaur up.
 
 Run the following bash command to open the store. Use the number from $ARGUMENTS as hours (default 2):
