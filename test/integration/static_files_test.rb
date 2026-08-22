@@ -325,6 +325,29 @@ class StaticFilesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/games/corrupted.html"'
   end
 
+  # Privacy policy
+
+  test "privacy page returns 200" do
+    get "/privacy.html"
+    assert_response :success
+  end
+
+  test "privacy page serves html" do
+    get "/privacy.html"
+    assert_includes response.content_type, "text/html"
+    assert_includes response.body, "Privacy Policy"
+  end
+
+  test "privacy page has back link" do
+    get "/privacy.html"
+    assert_includes response.body, 'href="/"'
+  end
+
+  test "privacy page mentions ez-az.net" do
+    get "/privacy.html"
+    assert_includes response.body, "ez-az.net"
+  end
+
   # 404 handling
 
   test "missing page returns 404" do
