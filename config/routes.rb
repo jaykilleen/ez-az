@@ -38,10 +38,12 @@ Rails.application.routes.draw do
 
   resources :rooms, only: [:new, :create, :show], param: :code do
     member do
-      get  :join,     action: :join
-      post :join,     action: :add_member
-      get  :play
-      post :start
+      get    :join,                      action: :join
+      post   :join,                      action: :add_member
+      get    :play
+      post   :start
+      delete "members/:slot",            action: :kick,  as: :kick_member
+      delete :close
     end
   end
 

@@ -52,10 +52,31 @@
     box-shadow: 0 0 30px rgba(0, 255, 200, 0.25);
   }
   .lobby-slot-label { font-size: 0.7em; color: #00ffc8; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.4em; }
-  .lobby-slot-name { font-weight: 800; }
+  .lobby-slot-name { font-weight: 800; flex: 1; }
+  .kick-btn {
+    display: none;
+    align-items: center; justify-content: center;
+    width: 2em; height: 2em; border-radius: 50%;
+    background: rgba(255, 80, 80, 0.15); border: 1.5px solid rgba(255, 80, 80, 0.4);
+    color: #ff5555; font-size: 0.85em; font-weight: 900; cursor: pointer;
+    transition: background 150ms, border-color 150ms;
+    flex-shrink: 0; align-self: center;
+  }
+  .kick-btn:hover { background: rgba(255, 80, 80, 0.35); border-color: #ff5555; }
+  .lobby-slot.is-taken .kick-btn { display: flex; }
+
+  .lobby-slot { position: relative; }
+  .lobby-slot .lobby-slot-row { display: flex; align-items: center; gap: 0.6em; }
 
   .lobby-footer { display: flex; justify-content: space-between; align-items: center; color: #cfe; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
   .lobby-hint strong { color: #00ffc8; }
+  .close-room-btn {
+    padding: 0.5em 1.2em; border-radius: 0.5em;
+    background: rgba(255, 80, 80, 0.1); border: 1.5px solid rgba(255, 80, 80, 0.35);
+    color: #ff5555; font-size: inherit; cursor: pointer;
+    transition: background 150ms, border-color 150ms;
+  }
+  .close-room-btn:hover { background: rgba(255, 80, 80, 0.25); border-color: #ff5555; }
 </style>
 
 <div class="lobby">
@@ -78,7 +99,10 @@
           <% membership = @room.memberships.find_by(slot: slot) %>
           <div class="lobby-slot <%= 'is-taken' if membership %>" data-slot="<%= slot %>">
             <div class="lobby-slot-label">Player <%= slot %></div>
-            <div class="lobby-slot-name"><%= membership ? membership.name : "Waiting…" %></div>
+            <div class="lobby-slot-row">
+              <div class="lobby-slot-name"><%= membership ? membership.name : "Waiting…" %></div>
+              <button class="kick-btn" type="button" aria-label="Remove player <%= slot %>">✕</button>
+            </div>
           </div>
         <% end %>
       </div>
@@ -104,6 +128,7 @@
   <footer class="lobby-footer">
     <div class="lobby-hint">Point your phone's camera at the QR code to join. Need a friend? <strong>Up to <%= Room::MAX_PLAYERS %> players.</strong></div>
     <div>Room expires in ~2 hours</div>
+    <button class="close-room-btn" type="button" id="closeRoomBtn">Close room</button>
   </footer>
 </div>
 
@@ -143,10 +168,10 @@
 
   const consumer = createConsumer();
   const code     = <%= @room.code.to_json.html_safe %>;
+  const csrf     = <%= form_authenticity_token.to_json.html_safe %>;
   const slotsEl  = document.getElementById("lobbySlots");
 
   function renderMembers(members) {
-    // Reset every slot to "Waiting…"
     slotsEl.querySelectorAll(".lobby-slot").forEach(el => {
       el.classList.remove("is-taken");
       el.querySelector(".lobby-slot-name").textContent = "Waiting…";
@@ -169,4 +194,30 @@
       }
     }
   );
+
+  // Kick player buttons
+  slotsEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".kick-btn");
+    if (!btn) return;
+    const slot = btn.closest(".lobby-slot").dataset.slot;
+    btn.disabled = true;
+    try {
+      await fetch(`/rooms/${code}/members/${slot}`, {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": csrf, "Accept": "application/json" }
+      });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Close room button
+  document.getElementById("closeRoomBtn").addEventListener("click", async () => {
+    if (!confirm("Close this room? All players will be disconnected.")) return;
+    await fetch(`/rooms/${code}/close`, {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": csrf, "Accept": "application/json" }
+    });
+    window.location.href = "/";
+  });
 </script>

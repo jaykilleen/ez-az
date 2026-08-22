@@ -192,4 +192,65 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     post start_room_path(code: "XXXX"), params: { game_slug: "bloom" }
     assert_response :not_found
   end
+
+  # DELETE /rooms/:code/members/:slot (kick)
+
+  test "kick removes a player membership and broadcasts member_left" do
+    post rooms_path                   # establishes host session
+    room = Room.last
+    room.memberships.create!(name: "TARGET", slot: 1, role: :player)
+
+    assert_difference -> { room.memberships.count }, -1 do
+      delete kick_member_room_path(code: room.code, slot: 1),
+             as: :json
+    end
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert payload["ok"]
+    assert_equal 1, payload["slot"]
+
+    msgs = broadcasts(room.channel_name)
+    assert msgs.any? { |m| JSON.parse(m)["type"] == "member_left" }
+  end
+
+  test "kick returns not_found when slot has no player" do
+    post rooms_path
+    room = Room.last
+
+    delete kick_member_room_path(code: room.code, slot: 1), as: :json
+    assert_response :not_found
+  end
+
+  test "kick returns forbidden without a host session" do
+    room = Room.create!
+    room.memberships.create!(name: "P1", slot: 1, role: :player)
+
+    delete kick_member_room_path(code: room.code, slot: 1), as: :json
+    assert_response :forbidden
+  end
+
+  # DELETE /rooms/:code/close
+
+  test "close destroys the room and broadcasts room_closed" do
+    post rooms_path
+    room = Room.last
+
+    assert_difference -> { Room.count }, -1 do
+      delete close_room_path(code: room.code), as: :json
+    end
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert payload["ok"]
+
+    msgs = broadcasts(room.channel_name)
+    assert msgs.any? { |m| JSON.parse(m)["type"] == "room_closed" }
+  end
+
+  test "close returns forbidden without a host session" do
+    room = Room.create!
+
+    delete close_room_path(code: room.code), as: :json
+    assert_response :forbidden
+    assert Room.exists?(room.id)
+  end
 end

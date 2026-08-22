@@ -7,8 +7,9 @@ class RoomsController < ApplicationController
   # resolves the layout per action.
   layout :layout_for_action
 
-  before_action :load_room,         only: [:show, :join, :add_member, :play, :start]
-  before_action :ensure_room_active, only: [:show, :join, :add_member, :play, :start]
+  before_action :load_room,         only: [:show, :join, :add_member, :play, :start, :kick, :close]
+  before_action :ensure_room_active, only: [:show, :join, :add_member, :play, :start, :kick, :close]
+  before_action :require_host!,      only: [:kick, :close]
 
   # GET /rooms/new — TV splash: "Press OK to create a room"
   def new
@@ -78,6 +79,23 @@ class RoomsController < ApplicationController
     return redirect_to join_room_path(code: @room.code) unless @membership
   end
 
+  # DELETE /rooms/:code/members/:slot — host removes a player from the room
+  def kick
+    membership = @room.memberships.find_by(slot: params[:slot].to_i, role: :player)
+    return render json: { error: "not found" }, status: :not_found unless membership
+
+    membership.destroy!
+    RoomChannel.member_left(@room, membership)
+    render json: { ok: true, slot: membership.slot }
+  end
+
+  # DELETE /rooms/:code/close — host ends the room; notifies phones, then destroys
+  def close
+    RoomChannel.room_closed(@room)
+    @room.destroy!
+    render json: { ok: true }
+  end
+
   # POST /rooms/:code/start — host picks a game; broadcasts game_starting and
   # redirects the TV to the game page with ?room=<code> so the game wires
   # its key events to the ControllerChannel input stream.
@@ -125,5 +143,10 @@ class RoomsController < ApplicationController
 
   def host_session_id
     session[:host_session_id] ||= SecureRandom.hex(16)
+  end
+
+  def require_host!
+    return if session[:host_session_id].present?
+    render json: { error: "forbidden" }, status: :forbidden
   end
 end

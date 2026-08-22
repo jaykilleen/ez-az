@@ -210,6 +210,9 @@
             ctrlEl.classList.add("is-active");
           }
         }
+        if (data.type === "room_closed") {
+          window.location.href = "/";
+        }
       }
     }
   );

@@ -46,6 +46,13 @@ class RoomChannel < ApplicationCable::Channel
       )
     end
 
+    def room_closed(room)
+      ActionCable.server.broadcast(
+        room.channel_name,
+        { type: "room_closed" }
+      )
+    end
+
     private
 
     def current_members(room)
