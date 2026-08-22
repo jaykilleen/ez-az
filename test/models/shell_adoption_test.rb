@@ -18,7 +18,6 @@ class ShellAdoptionTest < ActiveSupport::TestCase
     corrupted
     letterbox
     marble-run
-    space-dodge
   ].freeze
 
   # Games are either a single file (public/games/foo.html) or a folder with an

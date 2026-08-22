@@ -10,6 +10,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
 <title>Charlie & Cooper's Space Dodge!</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -23,32 +25,13 @@
   #gameOver p, #nameEntry p { font-size: 20px; color: #ccc; margin-bottom: 6px; }
   .btn { margin-top: 14px; padding: 12px 36px; font-size: 20px; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg, #f97, #e44); color: white; font-weight: bold; transition: transform 0.1s; }
   .btn:hover { transform: scale(1.08); }
-  #leaderboard { margin-top: 12px; text-align: left; display: inline-block; }
-  #leaderboard h2 { text-align: center; color: #ff0; font-size: 20px; margin-bottom: 6px; }
-  #leaderboard ol { padding-left: 24px; }
-  #leaderboard li { color: #ddd; font-size: 16px; margin-bottom: 2px; }
-  #leaderboard li span.s { color: #ff0; float: right; margin-left: 30px; }
-  #leaderboard li.you { color: #0f0; }
-  .title-leaderboard { margin: 16px auto; max-width: 360px; text-align: left; }
-  .lb-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: #ff0; margin-bottom: 10px; text-align: center; letter-spacing: 1px; }
-  .lb-row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 13px; color: #ddd; font-family: 'Press Start 2P', monospace; }
-  .lb-empty { color: #555; font-size: 13px; padding: 8px 0; text-align: center; }
-  .lb-row.placeholder { color: #333; }
   #nameEntry h2 { font-size: 32px; color: #0f0; margin-bottom: 6px; }
   #nameEntry input { font-size: 24px; padding: 8px 14px; border-radius: 8px; border: 2px solid #0f0; background: #111; color: #0f0; text-align: center; width: 220px; outline: none; text-transform: uppercase; letter-spacing: 3px; }
   .info { font-size: 12px; color: #666; margin-top: 6px; line-height: 1.8; }
   .info span.p1 { color: #4af; } .info span.p2 { color: #f84; }
-  .store-banner { position: fixed; top: 0; left: 0; width: 100%; text-align: center; padding: 6px 0; z-index: 30; background: rgba(0,0,0,0.6); }
-  .store-banner a { text-decoration: none; font-family: 'Press Start 2P', monospace; font-size: 12px; background: linear-gradient(to right, #ff6ec7, #00ffc8, #ffe44d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.6; transition: opacity 0.2s; }
-  .store-banner a:hover { opacity: 1; }
-  #quitConfirm { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20; justify-content: center; align-items: center; }
-  #quitModal { background: #111; border: 2px solid #f97; border-radius: 16px; padding: 40px 50px; text-align: center; }
-  #quitModal h2 { font-size: 36px; color: #f97; margin-bottom: 10px; }
-  #quitModal p { font-size: 20px; color: #ccc; margin-bottom: 6px; }
 </style>
 </head>
 <body>
-<div class="store-banner"><a href="/">EZ-AZ</a></div>
 <div id="startScreen" class="overlay">
   <h1>Charlie & Cooper's Space Dodge!</h1>
   <p>Two players! 6 worlds! Epic bosses! Beat the Void King!</p>
@@ -60,7 +43,7 @@
     1 Player mode: use either controls!<br>
     Power-ups: <span style="color:#0ff">SHIELD</span> | <span style="color:#0f0">SLOW-MO</span> | <span style="color:#f0f">SPEED</span> | <span style="color:#f00">BLAST</span> | <span style="color:#f44">REVIVE</span> | <span style="color:#fa0">MEGA GUN</span>
   </div>
-  <div class="title-leaderboard" id="titleLeaderboard"></div>
+  <div class="ezaz-lb-wrap" id="titleLeaderboard"></div>
 </div>
 <div id="nameEntry" class="overlay">
   <h2>NEW HIGH SCORE!</h2>
@@ -72,17 +55,9 @@
 <div id="gameOver" class="overlay">
   <h1>BOOM!</h1>
   <p id="finalScore"></p>
-  <div id="leaderboardEnd"></div>
+  <div id="leaderboardEnd" class="ezaz-lb-wrap"></div>
   <button class="btn" onclick="startGame(playerCount)">TRY AGAIN!</button>
   <button class="btn" style="background:linear-gradient(135deg,#888,#555);margin-left:10px;" onclick="window.location.href='/'">BACK TO STORE</button>
-</div>
-<div id="quitConfirm" class="overlay" style="display:none;">
-  <div id="quitModal">
-    <h2>QUIT GAME?</h2>
-    <p>Are you sure you want to quit?</p>
-    <button class="btn" id="quitYes">YES, QUIT</button>
-    <button class="btn" id="quitNo" style="background:linear-gradient(135deg,#4af,#26d);margin-left:10px;">KEEP PLAYING</button>
-  </div>
 </div>
 <canvas id="game"></canvas>
 <script>
@@ -92,45 +67,7 @@ const W = canvas.width = 700, H = canvas.height = 800;
 if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
 
 // ===== LEADERBOARD =====
-let leaderboardCache = [];
-function getLB() { try { return JSON.parse(localStorage.getItem('charlieLeaderboard')) || []; } catch { return []; } }
-function saveLB(lb) { localStorage.setItem('charlieLeaderboard', JSON.stringify(lb)); }
-async function fetchLB() {
-  try {
-    const r = await fetch('/api/scores?game=space-dodge');
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    leaderboardCache = d.scores.map(s => ({name:s.name,score:s.value}));
-    saveLB(leaderboardCache);
-  } catch { leaderboardCache = getLB(); }
-  return leaderboardCache;
-}
-function qualifies(s) { return leaderboardCache.length < 10 || s > leaderboardCache[leaderboardCache.length-1].score; }
-async function addLB(name, s) {
-  name = (name || 'C&C').toUpperCase().slice(0,12);
-  try {
-    const r = await fetch('/api/scores', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:'space-dodge',name,value:s})});
-    if (!r.ok) throw new Error();
-    const d = await r.json();
-    leaderboardCache = d.scores.map(e => ({name:e.name,score:e.value}));
-    saveLB(leaderboardCache);
-  } catch { const lb = getLB(); lb.push({name,score:s}); lb.sort((a,b)=>b.score-a.score); lb.length = Math.min(lb.length,10); saveLB(lb); leaderboardCache = lb; }
-}
-function renderTitleLB() {
-  const lb = leaderboardCache, el = document.getElementById('titleLeaderboard');
-  let h = '<div class="lb-title">LEADERBOARD</div>';
-  if (!lb.length) { h+='<div class="lb-empty">No scores yet. Be the first!</div>'; }
-  lb.forEach((e,i) => { h+='<div class="lb-row"><span>'+(i+1)+'. '+e.name+'</span><span>'+e.score+' pts</span></div>'; });
-  for (let i=lb.length; i<10; i++) { h+='<div class="lb-row placeholder"><span>'+(i+1)+'. ---</span><span>-</span></div>'; }
-  el.innerHTML = h;
-}
-function renderLB(id, hl) {
-  const lb = leaderboardCache, el = document.getElementById(id);
-  if (!lb.length) { el.innerHTML='<div id="leaderboard"><h2>LEADERBOARD</h2><p style="color:#555;font-size:13px;">No scores yet. Be the first!</p></div>'; return; }
-  let h = '<div id="leaderboard"><h2>LEADERBOARD</h2><ol>', done=false;
-  lb.forEach(e => { const y=!done&&hl!==undefined&&e.score===hl; if(y)done=true; h+=`<li class="${y?'you':''}">${e.name} <span class="s">${e.score}</span></li>`; });
-  el.innerHTML = h+'</ol></div>';
-}
+let board = null;
 
 // ===== WORLDS =====
 const WORLDS = [
@@ -164,33 +101,20 @@ const keys = {};
 document.addEventListener('keydown', e => {
   keys[e.code]=true;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight'].includes(e.code)) e.preventDefault();
-  if(e.code==='Escape'){
-    if(paused){ resumeGame(); }
-    else if(started && players && players.some(p=>p.alive)){ pauseGame(); }
-    else if(!started && document.getElementById('startScreen').style.display!=='none'){ window.location.href='/'; }
-  }
 });
 document.addEventListener('keyup', e => keys[e.code]=false);
 
-function pauseGame(){
-  paused=true;
-  document.getElementById('quitConfirm').style.display='flex';
-}
-function resumeGame(){
-  paused=false;
-  document.getElementById('quitConfirm').style.display='none';
-  loop();
-}
-function quitGame(){
-  stopMusic();
-  started=false;
-  paused=false;
-  document.getElementById('quitConfirm').style.display='none';
-  window.location.href='/';
-}
-document.getElementById('quitYes').addEventListener('click', quitGame);
-document.getElementById('quitNo').addEventListener('click', resumeGame);
-fetchLB().then(() => renderTitleLB());
+ArcadeShell.banner();
+ArcadeShell.pause({
+  onPause: function() { paused = true; },
+  onResume: function() { paused = false; loop(); },
+  enabled: function() { return started && !!players && players.some(p => p.alive); }
+});
+ArcadeShell.leaderboard('#titleLeaderboard', 'space-dodge', { fill: true })
+  .then(function(d) {
+    board = d;
+    highScore = d.scores.length > 0 ? d.scores[0].value : 0;
+  });
 
 function createPlayer(id,x,col,name) { return {id,x,y:H-90,w:32,h:40,baseSpeed:6,colour:col,name,alive:true,shootCooldown:0,invincible:0}; }
 
@@ -200,7 +124,6 @@ function startGame(count) {
   document.getElementById('startScreen').style.display='none';
   document.getElementById('gameOver').style.display='none';
   document.getElementById('nameEntry').style.display='none';
-  document.getElementById('quitConfirm').style.display='none';
   if(playerCount===1) {
     players=[createPlayer(0,W/2,'#4af','CHARLIE')];
   } else {
@@ -830,9 +753,9 @@ function update() {
 function killPlayer(p){
   p.alive=false;playExplosionSFX();spawnParticles(p.x,p.y,p.colour,30);spawnParticles(p.x,p.y,'#ff0',15);showMsg(p.name+' DOWN!',p.colour,60);
   if(!players.some(pl=>pl.alive)){stopMusic();pendingScore=score;
-    setTimeout(()=>{fetchLB().then(()=>{highScore=leaderboardCache.length>0?leaderboardCache[0].score:0;if(score>highScore)highScore=score;if(qualifies(score)){document.getElementById('nameEntry').style.display='block';document.getElementById('nameScoreMsg').textContent=`You scored ${score}!`;const inp=document.getElementById('nameInput');inp.value='';inp.focus();}else{document.getElementById('gameOver').style.display='block';document.getElementById('finalScore').textContent=`Score: ${score}`;renderLB('leaderboardEnd');}});},1000);}
+    setTimeout(()=>{ArcadeShell.fetchScores('space-dodge').then(d=>{board=d;highScore=d.scores.length>0?d.scores[0].value:0;if(score>highScore)highScore=score;if(ArcadeShell.qualifies(score,board)){document.getElementById('nameEntry').style.display='block';document.getElementById('nameScoreMsg').textContent=`You scored ${score}!`;const inp=document.getElementById('nameInput');inp.value='';inp.focus();}else{document.getElementById('gameOver').style.display='block';document.getElementById('finalScore').textContent=`Score: ${score}`;ArcadeShell.renderLeaderboard('#leaderboardEnd',board,{fill:true});}});},1000);}
 }
-async function submitName(){const inp=document.getElementById('nameInput');await addLB(inp.value.trim()||'C&C',pendingScore);document.getElementById('nameEntry').style.display='none';document.getElementById('gameOver').style.display='block';document.getElementById('finalScore').textContent=`Score: ${pendingScore}`;renderLB('leaderboardEnd',pendingScore);renderLB('leaderboardStart');}
+async function submitName(){const inp=document.getElementById('nameInput');const name=inp.value.trim()||'C&C';board=await ArcadeShell.submit('space-dodge',name,pendingScore);document.getElementById('nameEntry').style.display='none';document.getElementById('gameOver').style.display='block';document.getElementById('finalScore').textContent=`Score: ${pendingScore}`;ArcadeShell.renderLeaderboard('#leaderboardEnd',board,{fill:true,highlight:name});}
 document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitName();});
 
 // ===== DRAW =====
@@ -864,7 +787,7 @@ function draw() {
   ctx.fillStyle=w.accent;ctx.font='bold 12px sans-serif';
   ctx.fillText(`WORLD ${currentWorld+1}: ${w.name}`,16,boss?64:48);
   ctx.fillStyle='#aaa';ctx.font='14px sans-serif';
-  ctx.fillText(`Best: ${Math.max(highScore,leaderboardCache.length>0?leaderboardCache[0].score:0)}`,16,boss?80:64);
+  ctx.fillText(`Best: ${Math.max(highScore,board&&board.scores.length>0?board.scores[0].value:0)}`,16,boss?80:64);
 
   ctx.textAlign='right';
   players.forEach((p,i)=>{ctx.fillStyle=p.alive?p.colour:'#555';ctx.font='bold 13px sans-serif';ctx.fillText(`${p.name} ${p.alive?'ALIVE':'DOWN'}`,W-16,30+i*20);});
