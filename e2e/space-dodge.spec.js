@@ -18,29 +18,33 @@ test.describe("Space Dodge", () => {
     await expect(page.locator("canvas#game")).toBeVisible();
   });
 
-  test("escape key opens quit dialog", async ({ page }) => {
+  // Space Dodge now uses the shared ArcadeShell pause overlay (migrated in
+  // 6573820) instead of a bespoke quit-confirm dialog -- Escape pauses
+  // (PAUSED + RESUME + QUIT TO STORE), matching the standard game features
+  // in CLAUDE.md, rather than prompting to quit outright.
+  test("escape key opens the pause overlay", async ({ page }) => {
     await page.getByRole("button", { name: "1 PLAYER" }).click();
     await expect(page.locator("#startScreen")).toBeHidden();
     await page.keyboard.press("Escape");
-    await expect(page.locator("#quitConfirm")).toBeVisible();
-    await expect(page.getByText("QUIT GAME?")).toBeVisible();
-    await expect(page.getByRole("button", { name: "YES, QUIT" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "KEEP PLAYING" })).toBeVisible();
+    await expect(page.locator(".ezaz-pause")).toBeVisible();
+    await expect(page.locator(".ezaz-pause-title")).toHaveText("PAUSED");
+    await expect(page.getByRole("button", { name: "RESUME" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "QUIT TO STORE" })).toBeVisible();
   });
 
-  test("keep playing resumes the game", async ({ page }) => {
+  test("resume button resumes the game", async ({ page }) => {
     await page.getByRole("button", { name: "1 PLAYER" }).click();
     await page.keyboard.press("Escape");
-    await expect(page.locator("#quitConfirm")).toBeVisible();
-    await page.getByRole("button", { name: "KEEP PLAYING" }).click();
-    await expect(page.locator("#quitConfirm")).toBeHidden();
+    await expect(page.locator(".ezaz-pause")).toBeVisible();
+    await page.getByRole("button", { name: "RESUME" }).click();
+    await expect(page.locator(".ezaz-pause")).toBeHidden();
     await expect(page.locator("canvas#game")).toBeVisible();
   });
 
   test("quit goes back to store", async ({ page }) => {
     await page.getByRole("button", { name: "1 PLAYER" }).click();
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "YES, QUIT" }).click();
+    await page.getByRole("link", { name: "QUIT TO STORE" }).click();
     await expect(page).toHaveURL("/");
   });
 });

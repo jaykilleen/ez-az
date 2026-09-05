@@ -41,9 +41,12 @@ test.describe("Store homepage", () => {
 });
 
 test.describe("Game page banner", () => {
+  // Space Dodge is on the shared wrapper now too (6573820), so its banner is
+  // .ezaz-store-banner from ez-az-shell.css rather than a per-game
+  // .store-banner -- same as Bloom below.
   test("Space Dodge has EZ-AZ banner linking back to store", async ({ page }) => {
     await page.goto("/games/space-dodge.html");
-    const banner = page.locator(".store-banner a");
+    const banner = page.locator(".ezaz-store-banner a");
     await expect(banner).toBeVisible();
     await expect(banner).toHaveAttribute("href", "/");
     await banner.click();

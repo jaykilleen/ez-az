@@ -4,8 +4,10 @@ test.describe("Az plays Space Dodge", () => {
   test("Az plays, scores, and signs the leaderboard", async ({ page }) => {
     await page.goto("/games/space-dodge.html");
 
-    // Clear leaderboard so Az always qualifies
-    await page.evaluate(() => localStorage.removeItem("charlieLeaderboard"));
+    // Clear leaderboard so Az always qualifies. Space Dodge's cache now goes
+    // through the shared ArcadeShell (6573820), keyed "ezaz.scores.<game>"
+    // rather than its own hand-rolled "charlieLeaderboard".
+    await page.evaluate(() => localStorage.removeItem("ezaz.scores.space-dodge"));
 
     // Start 1 player game
     await page.getByRole("button", { name: "1 PLAYER" }).click();
@@ -66,13 +68,15 @@ test.describe("Az plays Space Dodge", () => {
     await expect(page.locator("#leaderboardEnd")).toContainText("AZ");
     await expect(page.locator("#leaderboardEnd")).toContainText("1337");
 
-    // Verify localStorage has the entry
+    // Verify localStorage has the entry. ArcadeShell's cache shape is
+    // { scores: [...], sort }, not a bare array, and each entry uses
+    // "value" (the server's own field name) rather than "score".
     const lb = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("charlieLeaderboard"))
+      JSON.parse(localStorage.getItem("ezaz.scores.space-dodge"))
     );
-    expect(lb).toEqual(
+    expect(lb.scores).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: "AZ", score: 1337 }),
+        expect.objectContaining({ name: "AZ", value: 1337 }),
       ])
     );
   });

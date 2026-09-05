@@ -8,7 +8,7 @@ const { test, expect } = require("@playwright/test");
 // here, the assertions below fail loudly rather than silently testing markup
 // that no longer exists.
 const GAMES = [
-  { name: "Space Dodge", path: "/games/space-dodge.html", format: "pts", shell: false },
+  { name: "Space Dodge", path: "/games/space-dodge.html", format: "pts", shell: true },
   { name: "Cat vs Mouse", path: "/games/cat-vs-mouse.html", format: "pts", shell: false },
   { name: "Bloom", path: "/games/bloom.html", format: "time", shell: true },
 ];
