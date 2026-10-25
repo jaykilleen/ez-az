@@ -198,6 +198,15 @@ class Game
       path: "/games/dino-trails.html",
       icon: "dino-trails",
       tv_optimised: false
+    },
+    {
+      slug: "balloon-pop",
+      title: "Balloon Pop",
+      creators: "Guy",
+      tagline: "Line up the pin, drop it, pop the balloons! Grab power-ups for freeze, speed and multi-pin.",
+      path: "/games/balloon-pop.html",
+      icon: "balloon-pop",
+      tv_optimised: false
     }
   ].freeze
 

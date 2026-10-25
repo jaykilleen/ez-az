@@ -22,7 +22,8 @@ class Score < ApplicationRecord
     "golden-goal" => :desc,
     "laser-turtle" => :desc,
     "mutant-mile" => :desc,
-    "dino-trails" => :asc
+    "dino-trails" => :asc,
+    "balloon-pop" => :desc
   }.freeze
 
   DEFAULT_NAMES = {
@@ -40,7 +41,8 @@ class Score < ApplicationRecord
     "golden-goal" => "AZ",
     "laser-turtle" => "TORRIN",
     "mutant-mile" => "JAYKILL",
-    "dino-trails" => "JAYKILL"
+    "dino-trails" => "JAYKILL",
+    "balloon-pop" => "GUY"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

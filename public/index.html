@@ -1344,6 +1344,21 @@
         </div>
       </a>
 
+      <a href="/games/balloon-pop.html" class="game-box">
+        <div class="game-box-art">
+          <canvas id="balloonPopCover" width="220" height="280"></canvas>
+        </div>
+        <div class="game-box-info">
+          <div class="game-box-title">Balloon Pop</div>
+          <div class="game-box-creators">By Guy</div>
+          <div class="game-box-desc">
+            Line up the pin, drop it, pop the balloons! Grab power-ups for freeze, speed and multi-pin.
+          </div>
+          <span class="game-box-badge">1 PLAYER</span><br>
+          <span class="game-box-scores" data-game="balloon-pop">High Scores</span>
+        </div>
+      </a>
+
       <a href="/games/corrupted.html" class="game-box">
         <div class="game-box-art">
           <canvas id="corruptedCover" width="220" height="280"></canvas>
@@ -3537,6 +3552,79 @@
       ctx.fillText('DINO TRAILS', W / 2, GAME_H + TITLE_H / 2);
       ctx.restore();
     })();
+
+    // ── Balloon Pop cover ──
+    (function () {
+      var canvas = document.getElementById('balloonPopCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height; // 220 x 280
+
+      var TITLE_H = 44;
+      var GAME_H  = H - TITLE_H;
+
+      var sky = ctx.createLinearGradient(0, 0, 0, GAME_H);
+      sky.addColorStop(0, '#120a2b'); sky.addColorStop(1, '#2a1244');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GAME_H);
+
+      // Stars
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      for (var s = 0; s < 24; s++) {
+        ctx.beginPath();
+        ctx.arc((s * 53 + 17) % W, (s * 37 + 9) % GAME_H, 0.8 + (s % 3) * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Rail along the top
+      ctx.fillStyle = 'rgba(255,110,199,0.15)'; ctx.fillRect(0, 0, W, 12);
+      ctx.fillStyle = 'rgba(255,110,199,0.55)'; ctx.fillRect(0, 12, W, 2);
+
+      // Balloons
+      [
+        { x: 44,  y: 190, r: 26, c: '#ff4444' },
+        { x: 112, y: 150, r: 30, c: '#44aaff' },
+        { x: 176, y: 205, r: 24, c: '#ffe033' },
+        { x: 78,  y: 98,  r: 22, c: '#44dd44' },
+        { x: 160, y: 108, r: 22, c: '#cc44ff' }
+      ].forEach(function (b) {
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y + b.r * 1.15 + 5);
+        ctx.quadraticCurveTo(b.x + 9, b.y + b.r * 1.15 + 24, b.x, b.y + b.r * 1.15 + 40);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.2; ctx.stroke();
+        var g = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.35, b.r * 0.05, b.x, b.y, b.r);
+        g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.c); g.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.beginPath(); ctx.ellipse(b.x, b.y, b.r, b.r * 1.15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = b.c; ctx.fill();
+        ctx.fillStyle = g; ctx.globalAlpha = 0.55; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(b.x, b.y + b.r * 1.15, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
+      });
+
+      // The pin, dropping on the middle balloon
+      ctx.setLineDash([4, 6]); ctx.strokeStyle = 'rgba(255,110,199,0.35)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(112, 60); ctx.lineTo(112, 118); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#e8e8e8';
+      ctx.beginPath(); ctx.moveTo(112, 118); ctx.lineTo(110, 106); ctx.lineTo(114, 106); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#cfcfcf'; ctx.fillRect(110.5, 62, 3, 44);
+      var head = ctx.createRadialGradient(110, 52, 1, 112, 54, 10);
+      head.addColorStop(0, '#ffcce8'); head.addColorStop(0.5, '#ff3399'); head.addColorStop(1, '#880033');
+      ctx.beginPath(); ctx.arc(112, 54, 10, 0, Math.PI * 2); ctx.fillStyle = head; ctx.fill();
+
+      // Title bar
+      ctx.fillStyle = '#120a2b';
+      ctx.fillRect(0, GAME_H, W, TITLE_H);
+      ctx.fillStyle = 'rgba(255,110,199,0.25)';
+      ctx.fillRect(0, GAME_H, W, 2);
+      ctx.save();
+      ctx.shadowColor = '#ff6ec7'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ff6ec7';
+      ctx.font = 'bold 11px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('BALLOON POP', W / 2, GAME_H + TITLE_H / 2);
+      ctx.restore();
+    })();
   </script>
 
   <script>
@@ -3678,7 +3766,8 @@
         'golden-goal': 'Golden Goal',
         'laser-turtle': 'Laser Turtle',
         'mutant-mile': 'Mutant Mile',
-        'dino-trails': 'Dino Trails'
+        'dino-trails': 'Dino Trails',
+        'balloon-pop': 'Balloon Pop'
       };
 
 
