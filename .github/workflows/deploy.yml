@@ -35,7 +35,9 @@ jobs:
     # Drives the real games in a real browser. The Rails suite cannot see a
     # game whose title screen renders wrong, and migrating games onto the
     # shared shell (BL-016) changes exactly the markup these specs assert on.
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.58 cannot install Chromium on ubuntu-26.04, which is
+    # what ubuntu-latest became in Oct 2026. Unpin once Playwright is upgraded.
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v7
