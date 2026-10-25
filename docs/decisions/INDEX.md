@@ -31,7 +31,7 @@ that convention and don't have them yet; they pick it up if they're touched.
 | **TV / closed-screen resilience** | 012 |
 | **Store hours & opening times** | 012, 013, 018 |
 | **Admin area & auth** | 018 |
-| **Deployment & infrastructure** | 019 |
+| **Deployment & infrastructure** | 019, 020 |
 | **Leaderboards & scores** | 014, 015, 017 |
 | **Puzzle level generation** | 017 |
 
@@ -58,11 +58,12 @@ that convention and don't have them yet; they pick it up if they're touched.
 | 017 | Chill Games Need a Score, and a Construction-Based Technique for Guaranteed-Solvable Grid Puzzles | Accepted | 2026-08-02 |
 | 018 | DB-Backed Store Hours and Admin Magic-Link Login | Accepted | 2026-10-21 |
 | 019 | Kamal Is the Sole Deployment System | Accepted | 2026-10-21 |
+| 020 | Ruby Is Pinned to 3.4.12, and the e2e Job Is Pinned to ubuntu-24.04 | Accepted | 2026-10-25 |
 
 ## Maintenance
 
 When adding a new ADR:
-1. Use the next number in sequence (currently next: **020**)
+1. Use the next number in sequence (currently next: **021**)
 2. Add `Triggers:` and `Topics:` near the top
 3. Add a row to the chronological table above
 4. Add the ADR number to relevant topic rows above
