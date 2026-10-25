@@ -22,7 +22,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4.2"
+          ruby-version: "3.4.12"
           bundler-cache: true
 
       - name: Prepare test database
@@ -42,7 +42,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4.2"
+          ruby-version: "3.4.12"
           bundler-cache: true
 
       - uses: actions/setup-node@v5
@@ -102,7 +102,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4.2"
+          ruby-version: "3.4.12"
           bundler-cache: false
 
       - name: Install Kamal

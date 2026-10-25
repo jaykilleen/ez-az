@@ -142,7 +142,7 @@ Each game gets a "High Scores" link on its game box in `public/index.html`. This
 - Games are single HTML files using HTML5 Canvas
 - Web Audio API for procedural music and sound effects
 - Speech Synthesis API for robot singing
-- Rails 8 / Ruby 3.4.2 / SQLite / Puma
+- Rails 8 / Ruby 3.4.12 / SQLite / Puma
 - Action Cable for real-time TV remote and trivia channels
 - Propshaft for asset pipeline (no Sprockets, no Webpack)
 - `rqrcode` gem for QR code generation
