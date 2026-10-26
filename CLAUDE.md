@@ -52,7 +52,7 @@ A TV party game by Az (`public/games/snake-pit-royale.html`, phone controller at
 
 ### Balloon Pop
 
-A single-player arcade pin-dropper by Guy (`public/games/balloon-pop.html`). Slide the pin along the rail with the arrow keys, press down to drop it and pop the rising balloons before five get past the danger line. Smaller balloons score more, chained pops build a combo, and every five pops lifts the wave (faster balloons, faster music). Power-up balloons give Freeze, Speed or Multi-Pin for 10 seconds. Built on the shared arcade shell. Points-based scoring (DESC leaderboard).
+A single-player arcade pin-dropper by Lil (submitted by Guy via PR #58) (`public/games/balloon-pop.html`). Slide the pin along the rail with the arrow keys, press down to drop it and pop the rising balloons before five get past the danger line. Smaller balloons score more, chained pops build a combo, and every five pops lifts the wave (faster balloons, faster music). Power-up balloons give Freeze, Speed or Multi-Pin for 10 seconds. Built on the shared arcade shell. Points-based scoring (DESC leaderboard).
 
 ### Charlie & Cooper's Space Dodge
 

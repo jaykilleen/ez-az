@@ -42,7 +42,7 @@ class Score < ApplicationRecord
     "laser-turtle" => "TORRIN",
     "mutant-mile" => "JAYKILL",
     "dino-trails" => "JAYKILL",
-    "balloon-pop" => "GUY"
+    "balloon-pop" => "LIL"
   }.freeze
 
   validates :game, presence: true, inclusion: { in: GAME_SORT.keys }

@@ -202,7 +202,7 @@ class Game
     {
       slug: "balloon-pop",
       title: "Balloon Pop",
-      creators: "Guy",
+      creators: "Lil",
       tagline: "Line up the pin, drop it, pop the balloons! Grab power-ups for freeze, speed and multi-pin.",
       path: "/games/balloon-pop.html",
       icon: "balloon-pop",
