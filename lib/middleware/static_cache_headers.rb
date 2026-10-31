@@ -12,6 +12,7 @@ class StaticCacheHeaders
     /arcade-cable.js
     /arcade-tv.js
     /opening-hours.js
+    /ez-az-bug-report.js
   ].freeze
 
   def initialize(app)

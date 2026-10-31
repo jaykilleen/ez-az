@@ -11,6 +11,7 @@ require "action_cable/engine"
 require "propshaft"
 
 require_relative "../lib/middleware/static_cache_headers"
+require_relative "../lib/middleware/game_script_injector"
 
 module EzAz
   class Application < Rails::Application
@@ -27,6 +28,9 @@ module EzAz
 
     # Custom cache headers for static files (HTML: no-cache, assets: 1h)
     config.middleware.insert_before ActionDispatch::Static, StaticCacheHeaders
+
+    # Inject shared scripts into /games/*.html responses without touching game files
+    config.middleware.insert_after StaticCacheHeaders, GameScriptInjector
 
     # Use custom 404 page in all environments
     config.exceptions_app = routes

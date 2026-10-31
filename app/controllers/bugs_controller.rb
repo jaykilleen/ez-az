@@ -17,7 +17,10 @@ class BugsController < ApplicationController
 
   def create
     unless current_player
-      redirect_to bugs_path, alert: "You need a gamer tag to report bugs — play a game first."
+      respond_to do |format|
+        format.json { render json: { error: "You need a gamer tag to report bugs — play a game first." }, status: :unauthorized }
+        format.html { redirect_to bugs_path, alert: "You need a gamer tag to report bugs — play a game first." }
+      end
       return
     end
 
@@ -27,9 +30,15 @@ class BugsController < ApplicationController
     )
 
     if bug.save
-      redirect_to bugs_path, notice: "Bug reported! Az will investigate."
+      respond_to do |format|
+        format.json { render json: { message: "Bug reported! Az will investigate." } }
+        format.html { redirect_to bugs_path, notice: "Bug reported! Az will investigate." }
+      end
     else
-      redirect_to bugs_path, alert: bug.errors.full_messages.first || "Could not submit bug."
+      respond_to do |format|
+        format.json { render json: { error: bug.errors.full_messages.first || "Could not submit bug." }, status: :unprocessable_entity }
+        format.html { redirect_to bugs_path, alert: bug.errors.full_messages.first || "Could not submit bug." }
+      end
     end
   end
 
