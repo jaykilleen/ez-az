@@ -1,0 +1,1479 @@
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (c) 2026 Jay Killeen -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/opening-hours.js"></script>
+<script src="/game-viewport.js"></script>
+<script src="/error-reporter.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ez-az-shell.css">
+<script src="/arcade-shell.js"></script>
+<title>Descent Party - EZ-AZ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  #wrap { position: relative; }
+  canvas { display: block; }
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; z-index: 10; padding: 20px; background: rgba(0,0,0,0.88); }
+  .btn { margin-top: 14px; padding: 14px 40px; font-size: 16px; border: none; border-radius: 12px; cursor: pointer; background: linear-gradient(135deg, #555, #333); color: white; font-weight: bold; transition: transform 0.1s; }
+  .btn:hover { transform: scale(1.06); }
+  .btn-quit { margin-top: 10px; padding: 10px 30px; font-size: 13px; border: none; border-radius: 10px; background: rgba(255,255,255,0.06); color: #666; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
+
+<div id="wrap">
+<canvas id="game" width="1920" height="1080"></canvas>
+
+<div id="titleScreen" class="overlay">
+  <h1 style="font-family:'Press Start 2P',monospace;font-size:28px;color:#aaa;margin-bottom:14px;letter-spacing:2px">DESCENT PARTY</h1>
+  <p style="color:#555;font-size:13px;margin-bottom:8px">Az lost something deep below the store.</p>
+  <p style="color:#555;font-size:13px;margin-bottom:20px">Four guides. One guitar. First one there wins.</p>
+  <div style="display:flex;gap:24px;margin-bottom:20px">
+    <div style="background:rgba(160,160,160,0.08);border:1px solid #333;border-radius:10px;padding:14px 20px;text-align:left">
+      <div style="color:#a0a0a0;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P1 — SLATE</div>
+      <div style="color:#555;font-size:11px;line-height:1.8">Arrow keys to move<br>Shift / Space to sprint</div>
+    </div>
+    <div style="background:rgba(0,255,204,0.06);border:1px solid #1a5a5a;border-radius:10px;padding:14px 20px;text-align:left">
+      <div style="color:#00ffcc;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P2 — PIXEL</div>
+      <div style="color:#555;font-size:11px;line-height:1.8">WASD to move<br>Q to sprint</div>
+    </div>
+    <div style="background:rgba(68,204,102,0.06);border:1px solid #1a4a1a;border-radius:10px;padding:14px 20px;text-align:left">
+      <div style="color:#44cc66;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P3 — FERN</div>
+      <div style="color:#555;font-size:11px;line-height:1.8">Bot</div>
+    </div>
+    <div style="background:rgba(170,136,255,0.06);border:1px solid #2a1a5a;border-radius:10px;padding:14px 20px;text-align:left">
+      <div style="color:#aa88ff;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P4 — ECHO</div>
+      <div style="color:#555;font-size:11px;line-height:1.8">Bot</div>
+    </div>
+  </div>
+  <button class="btn" onclick="startPartyGame()">Play (or Space)</button>
+  <button class="btn-quit" onclick="window.location.href='/'">← Store</button>
+</div>
+
+<div id="resultsScreen" class="overlay" style="display:none">
+  <h2 style="font-family:'Press Start 2P',monospace;font-size:22px;color:#ffe44d;margin-bottom:6px">RESULTS</h2>
+  <p style="color:#555;font-size:12px;margin-bottom:24px">Az's guitar has been found.</p>
+  <div id="resultsList" style="font-size:15px;line-height:2.6;text-align:left;min-width:320px"></div>
+  <button class="btn" onclick="startPartyGame()" style="margin-top:28px">Play Again</button>
+  <button class="btn-quit" onclick="window.location.href='/'">← Store</button>
+</div>
+
+<div id="pauseScreen" class="overlay" style="display:none">
+  <h2 style="font-family:'Press Start 2P',monospace;font-size:22px;color:#fff;margin-bottom:20px">PAUSED</h2>
+  <button class="btn" onclick="resumeGame()">Resume</button>
+  <button class="btn-quit" onclick="window.location.href='/'">Quit to Store</button>
+</div>
+</div>
+
+<script>
+// ===== SHARED CONSTANTS =====
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+var W = 1920;
+var H = 1080;
+canvas.width = W;
+canvas.height = H;
+if (window.EzAzGame) EzAzGame.fitCanvas(canvas);
+
+var CELL = 60;
+var PI = Math.PI;
+var TAU = PI * 2;
+
+// ===== FLOOR CONFIG =====
+var FLOORS = [
+  { grid: 9,  camera: false, breadcrumbDensity: 0.50, azTimeout: 30 },
+  { grid: 11, camera: false, breadcrumbDensity: 0.40, azTimeout: 35 },
+  { grid: 13, camera: true,  breadcrumbDensity: 0.40, azTimeout: 40 },
+  { grid: 15, camera: true,  breadcrumbDensity: 0.30, azTimeout: 45 },
+  { grid: 17, camera: true,  breadcrumbDensity: 0.30, azTimeout: 50 },
+  { grid: 19, camera: true,  breadcrumbDensity: 0.25, azTimeout: 55 },
+  { grid: 21, camera: true,  breadcrumbDensity: 0.25, azTimeout: 60 },
+  { grid: 23, camera: true,  breadcrumbDensity: 0.20, azTimeout: 70 }
+];
+
+var FLOOR_TEXT = [
+  "The stairs creak under your feet.",
+  "The air is cooler down here.",
+  "Dust drifts in the dark.",
+  "You hear dripping somewhere far away.",
+  "The walls feel closer now.",
+  "A faint hum resonates from below.",
+  "The darkness has weight here.",
+  "Something is waiting at the bottom."
+];
+
+// ===== CHARACTERS =====
+var CHARACTERS = [
+  {
+    name: 'Slate', colour: '#a0a0a0', accent: '#c8b89a',
+    wallColour: '#a08060', floorColour: '#3a3020', fogColour: 'rgba(10,8,5,1)',
+    coneAngle: 60, speedMult: 1.0, staminaMult: 1.0, rangeMult: 1.0
+  },
+  {
+    name: 'Pixel', colour: '#00ffcc', accent: '#ff00ff',
+    wallColour: '#1a8a8a', floorColour: '#0a1020', fogColour: 'rgba(2,2,12,1)',
+    coneAngle: 50, speedMult: 1.2, staminaMult: 1.0, rangeMult: 1.0
+  },
+  {
+    name: 'Fern', colour: '#44cc66', accent: '#88ff44',
+    wallColour: '#3a8a3a', floorColour: '#0a200a', fogColour: 'rgba(2,8,2,1)',
+    coneAngle: 50, speedMult: 1.0, staminaMult: 1.2, rangeMult: 1.0
+  },
+  {
+    name: 'Echo', colour: '#aa88ff', accent: '#ff88dd',
+    wallColour: '#5a5a9a', floorColour: '#100a20', fogColour: 'rgba(4,2,12,1)',
+    coneAngle: 50, speedMult: 1.0, staminaMult: 1.0, rangeMult: 1.35
+  }
+];
+
+// ===== PURE MAZE FUNCTIONS =====
+function generateMaze(cols, rows) {
+  var grid = [];
+  for (var r = 0; r < rows; r++) {
+    grid[r] = [];
+    for (var c = 0; c < cols; c++) {
+      grid[r][c] = { top: true, right: true, bottom: true, left: true, visited: false };
+    }
+  }
+  var stack = [];
+  var startR = 0, startC = 0;
+  grid[startR][startC].visited = true;
+  stack.push([startR, startC]);
+  while (stack.length > 0) {
+    var curr = stack[stack.length - 1];
+    var cr = curr[0], cc = curr[1];
+    var neighbours = [];
+    if (cr > 0 && !grid[cr-1][cc].visited) neighbours.push([cr-1, cc, 'top', 'bottom']);
+    if (cr < rows-1 && !grid[cr+1][cc].visited) neighbours.push([cr+1, cc, 'bottom', 'top']);
+    if (cc > 0 && !grid[cr][cc-1].visited) neighbours.push([cr, cc-1, 'left', 'right']);
+    if (cc < cols-1 && !grid[cr][cc+1].visited) neighbours.push([cr, cc+1, 'right', 'left']);
+    if (neighbours.length > 0) {
+      var next = neighbours[Math.floor(Math.random() * neighbours.length)];
+      grid[cr][cc][next[2]] = false;
+      grid[next[0]][next[1]][next[3]] = false;
+      grid[next[0]][next[1]].visited = true;
+      stack.push([next[0], next[1]]);
+    } else {
+      stack.pop();
+    }
+  }
+  return grid;
+}
+
+function bfsFarthest(grid, startR, startC) {
+  var rows = grid.length, cols = grid[0].length;
+  var visited = [];
+  for (var r = 0; r < rows; r++) {
+    visited[r] = [];
+    for (var c = 0; c < cols; c++) visited[r][c] = false;
+  }
+  var queue = [[startR, startC, 0]];
+  visited[startR][startC] = true;
+  var farthest = [startR, startC];
+  var maxDist = 0;
+  while (queue.length > 0) {
+    var item = queue.shift();
+    var r = item[0], c = item[1], dist = item[2];
+    if (dist > maxDist) { maxDist = dist; farthest = [r, c]; }
+    var cell = grid[r][c];
+    if (!cell.top && r > 0 && !visited[r-1][c]) { visited[r-1][c] = true; queue.push([r-1, c, dist+1]); }
+    if (!cell.bottom && r < rows-1 && !visited[r+1][c]) { visited[r+1][c] = true; queue.push([r+1, c, dist+1]); }
+    if (!cell.left && c > 0 && !visited[r][c-1]) { visited[r][c-1] = true; queue.push([r, c-1, dist+1]); }
+    if (!cell.right && c < cols-1 && !visited[r][c+1]) { visited[r][c+1] = true; queue.push([r, c+1, dist+1]); }
+  }
+  return farthest;
+}
+
+function bfsPath(grid, startR, startC, targetR, targetC) {
+  var rows = grid.length, cols = grid[0].length;
+  var visited = [], parent = [];
+  for (var r = 0; r < rows; r++) {
+    visited[r] = []; parent[r] = [];
+    for (var c = 0; c < cols; c++) { visited[r][c] = false; parent[r][c] = null; }
+  }
+  var queue = [[startR, startC]];
+  visited[startR][startC] = true;
+  while (queue.length > 0) {
+    var item = queue.shift();
+    var r = item[0], c = item[1];
+    if (r === targetR && c === targetC) break;
+    var cell = grid[r][c];
+    var dirs = [
+      [!cell.top, r-1, c], [!cell.bottom, r+1, c],
+      [!cell.left, r, c-1], [!cell.right, r, c+1]
+    ];
+    for (var d = 0; d < dirs.length; d++) {
+      if (dirs[d][0]) {
+        var nr = dirs[d][1], nc = dirs[d][2];
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc]) {
+          visited[nr][nc] = true;
+          parent[nr][nc] = [r, c];
+          queue.push([nr, nc]);
+        }
+      }
+    }
+  }
+  var path = [], cur = [targetR, targetC];
+  while (cur) { path.unshift(cur); cur = parent[cur[0]][cur[1]]; }
+  return path;
+}
+
+function addLoops(grid, count) {
+  var rows = grid.length, cols = grid[0].length;
+  var added = 0, attempts = 0;
+  while (added < count && attempts < 200) {
+    attempts++;
+    var r = Math.floor(Math.random() * rows);
+    var c = Math.floor(Math.random() * cols);
+    var dirs = [];
+    if (r > 0 && grid[r][c].top) dirs.push(['top', 'bottom', r-1, c]);
+    if (r < rows-1 && grid[r][c].bottom) dirs.push(['bottom', 'top', r+1, c]);
+    if (c > 0 && grid[r][c].left) dirs.push(['left', 'right', r, c-1]);
+    if (c < cols-1 && grid[r][c].right) dirs.push(['right', 'left', r, c+1]);
+    if (dirs.length > 0) {
+      var d = dirs[Math.floor(Math.random() * dirs.length)];
+      grid[r][c][d[0]] = false;
+      grid[d[2]][d[3]][d[1]] = false;
+      added++;
+    }
+  }
+}
+
+function addChambers(grid, count) {
+  var rows = grid.length, cols = grid[0].length;
+  for (var i = 0; i < count; i++) {
+    var cr = 2 + Math.floor(Math.random() * (rows - 4));
+    var cc = 2 + Math.floor(Math.random() * (cols - 4));
+    for (var dr = 0; dr < 3 && cr + dr < rows; dr++) {
+      for (var dc = 0; dc < 3 && cc + dc < cols; dc++) {
+        var r = cr + dr, c = cc + dc;
+        if (dc < 2) { grid[r][c].right = false; grid[r][c+1].left = false; }
+        if (dr < 2) { grid[r][c].bottom = false; grid[r+1][c].top = false; }
+      }
+    }
+  }
+}
+
+function formatTime(ms) {
+  var totalSec = Math.max(0, ms / 1000);
+  var mins = Math.floor(totalSec / 60);
+  var secs = Math.floor(totalSec % 60);
+  var millis = Math.floor(ms % 1000);
+  return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0') + '.' + String(millis).padStart(3, '0');
+}
+
+// ===== GAME INSTANCE CLASS =====
+function GameInstance(charIdx, qx, qy, isBot) {
+  this.charIdx = charIdx;
+  this.charData = CHARACTERS[charIdx];
+  this.qx = qx;
+  this.qy = qy;
+  this.qw = 960;
+  this.qh = 540;
+  this.isBot = isBot;
+
+  this.fogCanvas = document.createElement('canvas');
+  this.fogCtx = this.fogCanvas.getContext('2d');
+
+  this.state = 'floorIntro';
+  this.currentFloor = 0;
+  this.maze = null;
+  this.mazeW = 0;
+  this.mazeH = 0;
+
+  this.player = { x: 0, y: 0, size: 12, moving: false };
+  this.playerAngle = -PI / 2;
+  this.targetAngle = -PI / 2;
+  this.walkSpeed = 3;
+  this.sprintSpeed = 5.5;
+  this.stamina = 100;
+  this.maxStamina = 100;
+  this.isSprinting = false;
+  this.keys = {};
+
+  this.breadcrumbs = [];
+  this.visitedCells = {};
+  this.stairsPos = { x: 0, y: 0 };
+  this.cameraX = 0;
+  this.cameraY = 0;
+  this.particles = [];
+
+  this.gameStartTime = 0;
+  this.totalPausedTime = 0;
+  this.pausedAt = 0;
+  this.finalTime = 0;
+  this.floorStartTime = 0;
+
+  this.az = { active: false, x: 0, y: 0, visible: false, fadeTimer: 0, path: [], pathIdx: 0, greenTrail: [], triggered: false, triggerCount: 0 };
+  this.lastBreadcrumbTime = 0;
+
+  this.staminaFlashTimer = 0;
+  this.screenShakeTimer = 0;
+  this.dustMotes = [];
+  this.discoveryTimer = 0;
+  this.lightBloom = 0;
+  this.footstepTimer = 0;
+  this.floorIntroTimer = 0;
+  this.floorIntroFade = 0;
+
+  this.finished = false;
+  this.finishTime = 0;
+  this.finishWallTime = 0;
+  this.counted = false;
+
+  this.botPath = [];
+  this.botPathIdx = 0;
+}
+
+GameInstance.prototype.buildFloor = function(floorIdx) {
+  var cfg = FLOORS[floorIdx];
+  var cols = cfg.grid, rows = cfg.grid;
+  this.maze = generateMaze(cols, rows);
+  this.mazeW = cols;
+  this.mazeH = rows;
+
+  if (floorIdx >= 3 && floorIdx <= 4) addLoops(this.maze, 2);
+  if (floorIdx >= 5 && floorIdx <= 6) { addLoops(this.maze, 3); addChambers(this.maze, 1); }
+  if (floorIdx >= 7) { addLoops(this.maze, 5); addChambers(this.maze, 2); }
+
+  this.player.x = CELL * 0.5;
+  this.player.y = CELL * 0.5;
+
+  var far = bfsFarthest(this.maze, 0, 0);
+  this.stairsPos.x = far[1] * CELL + CELL * 0.5;
+  this.stairsPos.y = far[0] * CELL + CELL * 0.5;
+
+  this.breadcrumbs = [];
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (r === 0 && c === 0) continue;
+      if (r === far[0] && c === far[1]) continue;
+      if (Math.random() < cfg.breadcrumbDensity) {
+        this.breadcrumbs.push({
+          x: c * CELL + CELL * 0.5,
+          y: r * CELL + CELL * 0.5,
+          collected: false,
+          pulse: Math.random() * TAU
+        });
+      }
+    }
+  }
+
+  this.visitedCells = {};
+  this.markVisited(this.player.x, this.player.y);
+
+  var mw = this.mazeW * CELL, mh = this.mazeH * CELL;
+  this.cameraX = Math.min(0, Math.max(this.qw - mw, this.qw / 2 - this.player.x));
+  this.cameraY = Math.min(0, Math.max(this.qh - mh, this.qh / 2 - this.player.y));
+  if (mw < this.qw) this.cameraX = (this.qw - mw) / 2;
+  if (mh < this.qh) this.cameraY = (this.qh - mh) / 2;
+
+  this.stamina = this.maxStamina;
+  this.az = { active: false, x: 0, y: 0, visible: false, fadeTimer: 0, path: [], pathIdx: 0, greenTrail: [], triggered: false, triggerCount: 0 };
+  this.lastBreadcrumbTime = 0;
+  this.dustMotes = [];
+  this.playerAngle = -PI / 2;
+  this.targetAngle = -PI / 2;
+  this.particles = [];
+  this.botPath = [];
+  this.botPathIdx = 0;
+};
+
+GameInstance.prototype.markVisited = function(px, py) {
+  var col = Math.floor(px / CELL);
+  var row = Math.floor(py / CELL);
+  this.visitedCells[row + ',' + col] = true;
+};
+
+GameInstance.prototype.pointBlocked = function(px, py) {
+  if (px < 0 || py < 0 || px >= this.mazeW * CELL || py >= this.mazeH * CELL) return true;
+  var col = Math.floor(px / CELL);
+  var row = Math.floor(py / CELL);
+  if (col < 0 || col >= this.mazeW || row < 0 || row >= this.mazeH) return true;
+  var cell = this.maze[row][col];
+  var cx = px - col * CELL;
+  var cy = py - row * CELL;
+  var wt = 4;
+  if (cell.top && cy < wt) return true;
+  if (cell.bottom && cy > CELL - wt) return true;
+  if (cell.left && cx < wt) return true;
+  if (cell.right && cx > CELL - wt) return true;
+  return false;
+};
+
+GameInstance.prototype.canMove = function(nx, ny) {
+  var r = this.player.size * 0.7;
+  for (var i = 0; i < 8; i++) {
+    var a = i * TAU / 8;
+    if (this.pointBlocked(nx + Math.cos(a) * r, ny + Math.sin(a) * r)) return false;
+  }
+  return true;
+};
+
+GameInstance.prototype.updateCamera = function() {
+  var mw = this.mazeW * CELL, mh = this.mazeH * CELL;
+  var tx = this.qw / 2 - this.player.x;
+  var ty = this.qh / 2 - this.player.y;
+  this.cameraX = Math.min(0, Math.max(this.qw - mw, tx));
+  this.cameraY = Math.min(0, Math.max(this.qh - mh, ty));
+  if (mw < this.qw) this.cameraX = (this.qw - mw) / 2;
+  if (mh < this.qh) this.cameraY = (this.qh - mh) / 2;
+};
+
+GameInstance.prototype.spawnParticles = function(x, y, colour, count) {
+  for (var i = 0; i < count; i++) {
+    var angle = Math.random() * TAU;
+    var speed = 0.5 + Math.random() * 2;
+    this.particles.push({
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 30 + Math.random() * 20,
+      maxLife: 50,
+      colour: colour,
+      size: 2 + Math.random() * 3
+    });
+  }
+};
+
+GameInstance.prototype.updateParticles = function() {
+  for (var i = this.particles.length - 1; i >= 0; i--) {
+    var p = this.particles[i];
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.05;
+    p.life--;
+    if (p.life <= 0) this.particles.splice(i, 1);
+  }
+};
+
+GameInstance.prototype.triggerAzRescue = function() {
+  if (this.az.active && this.az.visible) return;
+  var playerRow = Math.floor(this.player.y / CELL);
+  var playerCol = Math.floor(this.player.x / CELL);
+  var stairsRow = Math.floor(this.stairsPos.y / CELL);
+  var stairsCol = Math.floor(this.stairsPos.x / CELL);
+  var path = bfsPath(this.maze, playerRow, playerCol, stairsRow, stairsCol);
+  if (path.length < 4) return;
+  var azIdx = Math.min(3 + Math.floor(Math.random() * 2), path.length - 1);
+  this.az.x = path[azIdx][1] * CELL + CELL * 0.5;
+  this.az.y = path[azIdx][0] * CELL + CELL * 0.5;
+  this.az.path = path.slice(azIdx);
+  this.az.pathIdx = 0;
+  this.az.active = true;
+  this.az.visible = true;
+  this.az.fadeTimer = 480;
+  this.az.triggered = true;
+  this.az.triggerCount++;
+  if (audioCtx) playAzChime();
+};
+
+GameInstance.prototype.updateAz = function() {
+  if (!this.az.active || !this.az.visible) return;
+  this.az.fadeTimer--;
+  if (this.az.fadeTimer <= 0) { this.az.visible = false; return; }
+  if (this.az.pathIdx < this.az.path.length - 1) {
+    var target = this.az.path[this.az.pathIdx + 1];
+    var tx = target[1] * CELL + CELL * 0.5;
+    var ty = target[0] * CELL + CELL * 0.5;
+    var dx = tx - this.az.x;
+    var dy = ty - this.az.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    var azSpeed = this.walkSpeed * 1.5;
+    if (dist < azSpeed) {
+      this.az.x = tx; this.az.y = ty; this.az.pathIdx++;
+    } else {
+      this.az.x += (dx / dist) * azSpeed;
+      this.az.y += (dy / dist) * azSpeed;
+    }
+    var lastTrail = this.az.greenTrail.length > 0 ? this.az.greenTrail[this.az.greenTrail.length - 1] : null;
+    if (!lastTrail || Math.hypot(this.az.x - lastTrail.x, this.az.y - lastTrail.y) > 30) {
+      this.az.greenTrail.push({ x: this.az.x, y: this.az.y });
+    }
+  }
+};
+
+GameInstance.prototype.showFloorIntro = function() {
+  this.state = 'floorIntro';
+  this.buildFloor(this.currentFloor);
+  this.floorIntroTimer = 150;
+  this.floorIntroFade = 0;
+};
+
+GameInstance.prototype.beginPlaying = function() {
+  this.state = 'playing';
+  this.floorStartTime = Date.now();
+  this.screenShakeTimer = 8;
+};
+
+GameInstance.prototype.getElapsedTime = function() {
+  var now = (this.state === 'finished') ? this.finishWallTime : Date.now();
+  return now - this.gameStartTime - this.totalPausedTime;
+};
+
+GameInstance.prototype.startDiscovery = function() {
+  this.state = 'discovery';
+  this.finalTime = this.getElapsedTime();
+  this.discoveryTimer = 120;
+  this.spawnParticles(this.stairsPos.x, this.stairsPos.y, '#ffe44d', 30);
+  this.spawnParticles(this.stairsPos.x, this.stairsPos.y, '#ffaa22', 20);
+  if (audioCtx) playGuitarMelody();
+};
+
+GameInstance.prototype.endForInstance = function() {
+  this.state = 'finished';
+  this.finished = true;
+  this.finishTime = this.finalTime;
+  this.finishWallTime = Date.now();
+};
+
+GameInstance.prototype.update = function() {
+  if (this.state === 'floorIntro') {
+    this.floorIntroTimer--;
+    if (this.floorIntroTimer > 100) {
+      this.floorIntroFade = Math.min(1, this.floorIntroFade + 0.04);
+    } else if (this.floorIntroTimer < 40) {
+      this.floorIntroFade = Math.max(0, this.floorIntroFade - 0.04);
+    }
+    if (this.floorIntroTimer <= 0) this.beginPlaying();
+    return;
+  }
+
+  if (this.state === 'discovery') {
+    this.discoveryTimer--;
+    this.updateParticles();
+    if (this.discoveryTimer % 10 === 0) this.spawnParticles(this.stairsPos.x, this.stairsPos.y, '#ffe44d', 5);
+    if (this.discoveryTimer <= 0) this.endForInstance();
+    return;
+  }
+
+  if (this.state === 'finished') return;
+  if (this.state !== 'playing') return;
+
+  var ch = this.charData;
+  var dx = 0, dy = 0;
+
+  if (this.isBot) {
+    this.botUpdate();
+  } else {
+    if (this.keys['ArrowLeft'])  dx -= 1;
+    if (this.keys['ArrowRight']) dx += 1;
+    if (this.keys['ArrowUp'])    dy -= 1;
+    if (this.keys['ArrowDown'])  dy += 1;
+
+    if (dx !== 0 && dy !== 0) { dx *= 0.7071; dy *= 0.7071; }
+
+    var wantsSprint = this.keys['ShiftLeft'] && (dx !== 0 || dy !== 0);
+    this.isSprinting = wantsSprint && this.stamina > 0;
+    var speed = this.walkSpeed * ch.speedMult;
+    if (this.isSprinting) {
+      speed = this.sprintSpeed * ch.speedMult;
+      this.stamina = Math.max(0, this.stamina - 0.35);
+    } else if (wantsSprint && this.stamina <= 0) {
+      this.staminaFlashTimer = 20;
+    }
+
+    if (!this.isSprinting && (dx !== 0 || dy !== 0)) {
+      this.stamina = Math.min(this.maxStamina, this.stamina + 0.15);
+    }
+
+    if (dx !== 0 || dy !== 0) {
+      var nx = this.player.x + dx * speed;
+      var ny = this.player.y + dy * speed;
+      if (this.canMove(nx, ny)) {
+        this.player.x = nx; this.player.y = ny;
+      } else if (this.canMove(nx, this.player.y)) {
+        this.player.x = nx;
+      } else if (this.canMove(this.player.x, ny)) {
+        this.player.y = ny;
+      }
+      this.targetAngle = Math.atan2(dy, dx);
+      this.markVisited(this.player.x, this.player.y);
+
+      this.footstepTimer++;
+      var stepInterval = this.isSprinting ? 8 : 14;
+      if (this.footstepTimer >= stepInterval && this.charIdx === 0) {
+        this.footstepTimer = 0;
+        playFootstep(this.isSprinting);
+      } else if (this.footstepTimer >= stepInterval) {
+        this.footstepTimer = 0;
+      }
+      this.player.moving = true;
+    } else {
+      this.footstepTimer = 0;
+      this.player.moving = false;
+    }
+  }
+
+  var angleDiff = this.targetAngle - this.playerAngle;
+  while (angleDiff > PI) angleDiff -= TAU;
+  while (angleDiff < -PI) angleDiff += TAU;
+  this.playerAngle += angleDiff * 0.25;
+
+  // Collect breadcrumbs
+  for (var i = 0; i < this.breadcrumbs.length; i++) {
+    var b = this.breadcrumbs[i];
+    if (b.collected) continue;
+    var bdx = this.player.x - b.x;
+    var bdy = this.player.y - b.y;
+    if (Math.sqrt(bdx * bdx + bdy * bdy) < 22) {
+      b.collected = true;
+      this.stamina = Math.min(this.maxStamina, this.stamina + 8 * ch.staminaMult);
+      this.spawnParticles(b.x, b.y, ch.accent, 8);
+      this.lastBreadcrumbTime = 0;
+      this.lightBloom = 20;
+    }
+  }
+
+  // Check stairs
+  var sdx = this.player.x - this.stairsPos.x;
+  var sdy = this.player.y - this.stairsPos.y;
+  if (Math.sqrt(sdx * sdx + sdy * sdy) < 24) {
+    if (this.currentFloor === 7) {
+      this.startDiscovery();
+    } else {
+      if (audioCtx && !this.isBot) playStairsSound();
+      this.currentFloor++;
+      this.showFloorIntro();
+    }
+    return;
+  }
+
+  this.updateCamera();
+  this.updateParticles();
+
+  this.lastBreadcrumbTime += 1 / 60;
+  var azThreshold = FLOORS[this.currentFloor].azTimeout;
+  if (this.az.triggerCount > 0) azThreshold = azThreshold * 0.5;
+  if (this.lastBreadcrumbTime >= azThreshold && !this.az.visible) {
+    this.triggerAzRescue();
+  }
+  this.updateAz();
+
+  if (this.staminaFlashTimer > 0) this.staminaFlashTimer--;
+  if (this.screenShakeTimer > 0) this.screenShakeTimer--;
+  if (this.lightBloom > 0) this.lightBloom--;
+
+  // Dust motes
+  if (Math.random() < 0.12) {
+    var da = this.playerAngle + (Math.random() - 0.5) * (ch.coneAngle * PI / 180);
+    var dd = 30 + Math.random() * 150 * ch.rangeMult;
+    this.dustMotes.push({
+      x: this.player.x + Math.cos(da) * dd,
+      y: this.player.y + Math.sin(da) * dd,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      life: 60 + Math.random() * 60,
+      maxLife: 120
+    });
+  }
+  for (var di = this.dustMotes.length - 1; di >= 0; di--) {
+    var dm = this.dustMotes[di];
+    dm.x += dm.vx; dm.y += dm.vy;
+    dm.life--;
+    if (dm.life <= 0) this.dustMotes.splice(di, 1);
+  }
+};
+
+GameInstance.prototype.botUpdate = function() {
+  if (this.botPath.length === 0 || this.botPathIdx >= this.botPath.length) {
+    var pc = [Math.floor(this.player.y / CELL), Math.floor(this.player.x / CELL)];
+    var sc = [Math.floor(this.stairsPos.y / CELL), Math.floor(this.stairsPos.x / CELL)];
+    this.botPath = bfsPath(this.maze, pc[0], pc[1], sc[0], sc[1]);
+    this.botPathIdx = 0;
+  }
+  if (this.botPathIdx >= this.botPath.length) return;
+
+  var target = this.botPath[this.botPathIdx];
+  var tx = target[1] * CELL + CELL * 0.5;
+  var ty = target[0] * CELL + CELL * 0.5;
+  var dx = tx - this.player.x;
+  var dy = ty - this.player.y;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist < 4) { this.botPathIdx++; return; }
+
+  var spd = this.walkSpeed * 0.85;
+  var nx = this.player.x + (dx / dist) * spd;
+  var ny = this.player.y + (dy / dist) * spd;
+  if (this.canMove(nx, ny)) { this.player.x = nx; this.player.y = ny; }
+  else if (this.canMove(nx, this.player.y)) { this.player.x = nx; }
+  else if (this.canMove(this.player.x, ny)) { this.player.y = ny; }
+
+  this.targetAngle = Math.atan2(dy, dx);
+  this.player.moving = true;
+  this.markVisited(this.player.x, this.player.y);
+  this.updateCamera();
+
+  // Bot collects breadcrumbs
+  for (var i = 0; i < this.breadcrumbs.length; i++) {
+    var b = this.breadcrumbs[i];
+    if (b.collected) continue;
+    var bdx = this.player.x - b.x, bdy = this.player.y - b.y;
+    if (Math.sqrt(bdx * bdx + bdy * bdy) < 22) {
+      b.collected = true;
+      this.stamina = Math.min(this.maxStamina, this.stamina + 8 * this.charData.staminaMult);
+      this.lastBreadcrumbTime = 0;
+    }
+  }
+
+  this.updateParticles();
+  this.lastBreadcrumbTime += 1 / 60;
+  if (this.screenShakeTimer > 0) this.screenShakeTimer--;
+  if (this.lightBloom > 0) this.lightBloom--;
+};
+
+// ===== RENDER =====
+GameInstance.prototype.render = function(ctx) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(this.qx, this.qy, this.qw, this.qh);
+  ctx.clip();
+  ctx.translate(this.qx, this.qy);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, this.qw, this.qh);
+
+  var isActive = this.state === 'floorIntro' || this.state === 'playing' || this.state === 'discovery' || this.state === 'finished';
+  if (isActive && this.maze) {
+    ctx.save();
+    var sx = this.screenShakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+    var sy = this.screenShakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+    ctx.translate(this.cameraX + sx, this.cameraY + sy);
+    this.drawMaze(ctx);
+    this.drawStairs(ctx);
+    this.drawBreadcrumbs(ctx);
+    this.drawAzTrail(ctx);
+    this.drawAz(ctx);
+    this.drawPlayer(ctx);
+    this.drawParticles(ctx);
+    this.drawDustMotes(ctx);
+    this.drawFogOfWar(ctx);
+    ctx.restore();
+
+    if (this.state === 'playing') this.drawHUD(ctx);
+    if (this.state === 'floorIntro') this.drawFloorIntroOverlay(ctx);
+    if (this.state === 'finished') this.drawFinishedOverlay(ctx);
+  }
+
+  this.drawNameTag(ctx);
+  ctx.restore();
+};
+
+GameInstance.prototype.drawMaze = function(ctx) {
+  var ch = this.charData;
+  ctx.fillStyle = ch.floorColour;
+  ctx.fillRect(0, 0, this.mazeW * CELL, this.mazeH * CELL);
+  ctx.strokeStyle = ch.wallColour;
+  ctx.lineWidth = 4;
+  for (var r = 0; r < this.mazeH; r++) {
+    for (var c = 0; c < this.mazeW; c++) {
+      var cell = this.maze[r][c];
+      var x = c * CELL, y = r * CELL;
+      if (cell.top)    { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + CELL, y); ctx.stroke(); }
+      if (cell.bottom) { ctx.beginPath(); ctx.moveTo(x, y + CELL); ctx.lineTo(x + CELL, y + CELL); ctx.stroke(); }
+      if (cell.left)   { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + CELL); ctx.stroke(); }
+      if (cell.right)  { ctx.beginPath(); ctx.moveTo(x + CELL, y); ctx.lineTo(x + CELL, y + CELL); ctx.stroke(); }
+    }
+  }
+};
+
+GameInstance.prototype.drawStairs = function(ctx) {
+  var t = Date.now() * 0.003;
+  var pulse = 0.5 + Math.sin(t) * 0.3;
+  ctx.save();
+  if (this.currentFloor === 7) {
+    ctx.fillStyle = 'rgba(255,228,77,' + (0.3 + pulse * 0.4) + ')';
+    ctx.beginPath();
+    ctx.arc(this.stairsPos.x, this.stairsPos.y, 14 + pulse * 4, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.ellipse(this.stairsPos.x, this.stairsPos.y + 2, 8, 10, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#3a1a00';
+    ctx.beginPath();
+    ctx.arc(this.stairsPos.x, this.stairsPos.y + 2, 3, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(this.stairsPos.x - 2, this.stairsPos.y - 14, 4, 14);
+    ctx.strokeStyle = '#ddd'; ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(this.stairsPos.x - 1, this.stairsPos.y - 14);
+    ctx.lineTo(this.stairsPos.x - 1, this.stairsPos.y + 10);
+    ctx.moveTo(this.stairsPos.x + 1, this.stairsPos.y - 14);
+    ctx.lineTo(this.stairsPos.x + 1, this.stairsPos.y + 10);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = 'rgba(200,200,200,' + (0.2 + pulse * 0.3) + ')';
+    ctx.beginPath();
+    ctx.arc(this.stairsPos.x, this.stairsPos.y, 12 + pulse * 3, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = '#aaa';
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('▼', this.stairsPos.x, this.stairsPos.y);
+  }
+  ctx.restore();
+};
+
+GameInstance.prototype.drawBreadcrumbs = function(ctx) {
+  var ch = this.charData;
+  var t = Date.now() * 0.004;
+  for (var i = 0; i < this.breadcrumbs.length; i++) {
+    var b = this.breadcrumbs[i];
+    if (b.collected) continue;
+    var pulse = 0.6 + Math.sin(t + b.pulse) * 0.4;
+    ctx.fillStyle = ch.accent;
+    ctx.globalAlpha = pulse * 0.8;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 6 + pulse * 2, 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawAzTrail = function(ctx) {
+  var t = Date.now() * 0.003;
+  for (var i = 0; i < this.az.greenTrail.length; i++) {
+    var gt = this.az.greenTrail[i];
+    var pulse = 0.5 + Math.sin(t + i * 0.5) * 0.3;
+    ctx.fillStyle = '#00ff88';
+    ctx.globalAlpha = 0.6 * pulse;
+    ctx.beginPath();
+    ctx.arc(gt.x, gt.y, 3, 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawAz = function(ctx) {
+  if (!this.az.active || !this.az.visible) return;
+  var fade = Math.min(1, this.az.fadeTimer / 60);
+  ctx.globalAlpha = fade;
+  var glow = ctx.createRadialGradient(this.az.x, this.az.y, 5, this.az.x, this.az.y, 40);
+  glow.addColorStop(0, 'rgba(0,255,136,0.4)');
+  glow.addColorStop(1, 'rgba(0,255,136,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(this.az.x, this.az.y, 40, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#00cc88';
+  ctx.beginPath();
+  ctx.arc(this.az.x, this.az.y, 10, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(this.az.x - 3, this.az.y - 3, 2.5, 0, TAU);
+  ctx.arc(this.az.x + 3, this.az.y - 3, 2.5, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(this.az.x - 3, this.az.y - 3, 1.2, 0, TAU);
+  ctx.arc(this.az.x + 3, this.az.y - 3, 1.2, 0, TAU);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawPlayer = function(ctx) {
+  var ch = this.charData;
+  var t = Date.now() / 1000;
+  var bob = this.player.moving ? 0 : Math.sin(t * 2) * 1.5;
+  var animSpeed = this.isSprinting ? 16 : 10;
+  var walk = this.player.moving ? Math.sin(t * animSpeed) * 3 : 0;
+  var armSwing = this.player.moving ? Math.sin(t * animSpeed) * (this.isSprinting ? 15 : 10) : 0;
+  ctx.save();
+  ctx.translate(this.player.x, this.player.y + bob);
+  ctx.rotate(this.playerAngle + PI / 2);
+  if (this.charIdx === 0) this.drawSlate(ctx, t, walk, armSwing);
+  else if (this.charIdx === 1) this.drawPixel(ctx, t, walk, armSwing);
+  else if (this.charIdx === 2) this.drawFern(ctx, t, walk, armSwing);
+  else this.drawEcho(ctx, t, walk, armSwing);
+  ctx.restore();
+};
+
+GameInstance.prototype.drawSlate = function(ctx, t, walk, armSwing) {
+  ctx.fillStyle = '#888';
+  ctx.fillRect(-7, 4 + walk, 5, 4);
+  ctx.fillRect(2, 4 - walk, 5, 4);
+  ctx.fillStyle = '#a0a0a0';
+  ctx.fillRect(-8, -10, 16, 16);
+  ctx.fillStyle = '#c0c0c0';
+  ctx.fillRect(-5, -6, 10, 10);
+  ctx.fillStyle = '#a0a0a0';
+  ctx.beginPath(); ctx.ellipse(0, -15, 10, 8, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#808080';
+  ctx.beginPath(); ctx.ellipse(0, -22, 12, 5, 0, PI, TAU); ctx.fill();
+  ctx.fillStyle = '#c8b89a';
+  ctx.beginPath();
+  ctx.arc(-5, -23, 1.5, 0, TAU); ctx.arc(0, -24, 1.5, 0, TAU); ctx.arc(5, -23, 1.5, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#c8b89a';
+  ctx.beginPath(); ctx.moveTo(-2, -22); ctx.lineTo(0, -30); ctx.lineTo(2, -22); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-8, -17); ctx.lineTo(-11, -23); ctx.lineTo(-6, -17); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(6, -17); ctx.lineTo(11, -23); ctx.lineTo(8, -17); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(-4, -16, 3, 3.5, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(4, -16, 3, 3.5, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(-3.5, -15.5, 1.5, 0, TAU); ctx.arc(4.5, -15.5, 1.5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -11, 4, 0.1, PI - 0.1);
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#a0a0a0';
+  ctx.save(); ctx.translate(-9, -6); ctx.rotate((10 + armSwing) * PI / 180); ctx.fillRect(-2, 0, 4, 7); ctx.restore();
+  ctx.save(); ctx.translate(9, -6); ctx.rotate((-10 - armSwing) * PI / 180); ctx.fillRect(-2, 0, 4, 7); ctx.restore();
+  ctx.fillStyle = '#a0a0a0';
+  ctx.beginPath(); ctx.ellipse(0, 10, 4, 6, 0, 0, TAU); ctx.fill();
+};
+
+GameInstance.prototype.drawPixel = function(ctx, t, walk, armSwing) {
+  var blink = Math.sin(t * 8) > 0.95;
+  ctx.fillStyle = '#009988';
+  ctx.fillRect(-5, 3 + walk * 1.3, 4, 3); ctx.fillRect(1, 3 - walk * 1.3, 4, 3);
+  ctx.fillStyle = '#00ffcc'; ctx.fillRect(-6, -8, 12, 12);
+  ctx.fillStyle = '#88ffee'; ctx.fillRect(-4, -5, 8, 8);
+  ctx.fillStyle = '#00ffcc';
+  ctx.beginPath(); ctx.ellipse(0, -13, 8, 7, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#ff00ff';
+  ctx.beginPath(); ctx.moveTo(-3, -19); ctx.lineTo(-1, -26); ctx.lineTo(1, -19); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(1, -19); ctx.lineTo(4, -24); ctx.lineTo(5, -18); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-5, -17); ctx.lineTo(-6, -23); ctx.lineTo(-3, -17); ctx.fill();
+  if (!blink) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(-3, -14, 3.5, 4, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(3, -14, 3.5, 4, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-2.5, -13.5, 2, 0, TAU); ctx.arc(3.5, -13.5, 2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-3.5, -15, 0.8, 0, TAU); ctx.arc(2.5, -15, 0.8, 0, TAU); ctx.fill();
+  } else {
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-5, -14); ctx.lineTo(-1, -13); ctx.moveTo(1, -13); ctx.lineTo(5, -14); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(0, -9, 4, 0, PI); ctx.strokeStyle = '#008866'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#00ffcc';
+  ctx.save(); ctx.translate(-7, -5); ctx.rotate((15 + armSwing * 1.5) * PI / 180); ctx.fillRect(-1.5, 0, 3, 7); ctx.restore();
+  ctx.save(); ctx.translate(7, -5); ctx.rotate((-15 - armSwing * 1.5) * PI / 180); ctx.fillRect(-1.5, 0, 3, 7); ctx.restore();
+  ctx.fillStyle = '#00ddaa';
+  ctx.beginPath(); ctx.moveTo(-2, 5); ctx.lineTo(0, 11); ctx.lineTo(2, 5); ctx.fill();
+};
+
+GameInstance.prototype.drawFern = function(ctx, t, walk, armSwing) {
+  ctx.fillStyle = '#338844';
+  ctx.fillRect(-7, 6 + walk * 0.7, 5, 4); ctx.fillRect(2, 6 - walk * 0.7, 5, 4);
+  ctx.fillStyle = '#44cc66';
+  ctx.beginPath(); ctx.ellipse(0, -2, 9, 10, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#88ee88';
+  ctx.beginPath(); ctx.ellipse(0, 1, 6, 7, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#44cc66';
+  ctx.beginPath(); ctx.moveTo(-4, -10); ctx.quadraticCurveTo(-3, -22, 0, -26); ctx.quadraticCurveTo(3, -22, 4, -10); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0, -28, 7, 5.5, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#88ff44';
+  ctx.beginPath(); ctx.arc(-4, -3, 2, 0, TAU); ctx.arc(3, 1, 1.5, 0, TAU); ctx.arc(-1, 4, 1.5, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(-3, -29, 2.5, 3, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(3, -29, 2.5, 3, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(-2.5, -28.5, 1.5, 0, TAU); ctx.arc(3.5, -28.5, 1.5, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#3ab858'; ctx.fillRect(-6, -33, 6, 2); ctx.fillRect(0, -33, 6, 2);
+  ctx.beginPath(); ctx.arc(0, -26, 3, 0.2, PI - 0.2); ctx.strokeStyle = '#2a8844'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#44cc66';
+  ctx.save(); ctx.translate(-9, -4); ctx.rotate((5 + armSwing * 0.5) * PI / 180); ctx.fillRect(-2, 0, 4, 6); ctx.restore();
+  ctx.save(); ctx.translate(9, -4); ctx.rotate((-5 - armSwing * 0.5) * PI / 180); ctx.fillRect(-2, 0, 4, 6); ctx.restore();
+  ctx.fillStyle = '#44cc66';
+  ctx.beginPath(); ctx.moveTo(-3, 8); ctx.quadraticCurveTo(-6, 16, -2, 20); ctx.quadraticCurveTo(2, 16, 3, 8); ctx.fill();
+};
+
+GameInstance.prototype.drawEcho = function(ctx, t, walk, armSwing) {
+  var hover = Math.sin(t * 3) * 2;
+  ctx.fillStyle = 'rgba(100,60,180,0.2)';
+  ctx.beginPath(); ctx.ellipse(0, 8, 8, 3, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#aa88ff';
+  ctx.beginPath(); ctx.ellipse(0, -2 + hover, 7, 9, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#ccaaff';
+  ctx.beginPath(); ctx.ellipse(0, 0 + hover, 5, 6, 0, 0, TAU); ctx.fill();
+  var wingFlap = Math.sin(t * 4) * 8;
+  ctx.fillStyle = '#9966ee';
+  ctx.beginPath(); ctx.moveTo(-7, -4 + hover); ctx.quadraticCurveTo(-20, -12 + wingFlap + hover, -22, -2 + hover); ctx.quadraticCurveTo(-16, 2 + hover, -7, 0 + hover); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(7, -4 + hover); ctx.quadraticCurveTo(20, -12 + wingFlap + hover, 22, -2 + hover); ctx.quadraticCurveTo(16, 2 + hover, 7, 0 + hover); ctx.fill();
+  ctx.strokeStyle = '#7744cc'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(-8, -2 + hover); ctx.lineTo(-18, -6 + wingFlap / 2 + hover); ctx.moveTo(-9, 0 + hover); ctx.lineTo(-16, -1 + hover); ctx.moveTo(8, -2 + hover); ctx.lineTo(18, -6 + wingFlap / 2 + hover); ctx.moveTo(9, 0 + hover); ctx.lineTo(16, -1 + hover); ctx.stroke();
+  ctx.fillStyle = '#aa88ff';
+  ctx.beginPath(); ctx.ellipse(0, -13 + hover, 7, 6, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#ff88dd';
+  ctx.beginPath(); ctx.moveTo(-2, -18 + hover); ctx.lineTo(0, -26 + hover); ctx.lineTo(4, -17 + hover); ctx.fill();
+  ctx.fillStyle = '#ffcc88';
+  ctx.beginPath(); ctx.moveTo(-2, -11 + hover); ctx.lineTo(0, -7 + hover); ctx.lineTo(2, -11 + hover); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(-3, -14 + hover, 3, 3.5, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(3, -14 + hover, 3, 3.5, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#6622aa';
+  ctx.beginPath(); ctx.arc(-2.5, -13.5 + hover, 1.8, 0, TAU); ctx.arc(3.5, -13.5 + hover, 1.8, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(170,136,255,0.3)';
+  ctx.beginPath(); ctx.arc(-3, -14 + hover, 5, 0, TAU); ctx.arc(3, -14 + hover, 5, 0, TAU); ctx.fill();
+};
+
+GameInstance.prototype.castRay = function(px, py, angle, maxDist) {
+  var dx = Math.cos(angle), dy = Math.sin(angle);
+  var step = 4, dist = 0;
+  while (dist < maxDist) {
+    dist += step;
+    var rx = px + dx * dist, ry = py + dy * dist;
+    if (rx < 0 || ry < 0 || rx >= this.mazeW * CELL || ry >= this.mazeH * CELL) return dist;
+    var col = Math.floor(rx / CELL), row = Math.floor(ry / CELL);
+    if (col < 0 || col >= this.mazeW || row < 0 || row >= this.mazeH) return dist;
+    var cell = this.maze[row][col];
+    var cx = rx - col * CELL, cy = ry - row * CELL;
+    var wallZone = 5;
+    if (cell.top && cy < wallZone) return dist;
+    if (cell.bottom && cy > CELL - wallZone) return dist;
+    if (cell.left && cx < wallZone) return dist;
+    if (cell.right && cx > CELL - wallZone) return dist;
+  }
+  return maxDist;
+};
+
+GameInstance.prototype.drawFogOfWar = function(ctx) {
+  var ch = this.charData;
+  var mw = this.mazeW * CELL, mh = this.mazeH * CELL;
+  if (this.fogCanvas.width !== mw || this.fogCanvas.height !== mh) {
+    this.fogCanvas.width = mw;
+    this.fogCanvas.height = mh;
+  }
+  var fc = this.fogCtx;
+  fc.clearRect(0, 0, mw, mh);
+  fc.fillStyle = ch.fogColour;
+  fc.fillRect(0, 0, mw, mh);
+  fc.globalCompositeOperation = 'destination-out';
+
+  var bloomPct = this.lightBloom / 20;
+  var ambientRadius = 50 + bloomPct * 120;
+  var ambientGrad = fc.createRadialGradient(this.player.x, this.player.y, 10, this.player.x, this.player.y, ambientRadius);
+  ambientGrad.addColorStop(0, 'rgba(0,0,0,1)');
+  ambientGrad.addColorStop(0.4, 'rgba(0,0,0,' + (0.7 + bloomPct * 0.3) + ')');
+  ambientGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  fc.fillStyle = ambientGrad;
+  fc.beginPath(); fc.arc(this.player.x, this.player.y, ambientRadius, 0, TAU); fc.fill();
+
+  var coneHalf = (ch.coneAngle * PI / 180) / 2;
+  var range = 340 * ch.rangeMult;
+  var rayCount = 40; // reduced from 80 for performance
+  var coneStart = this.playerAngle - coneHalf;
+  var coneEnd = this.playerAngle + coneHalf;
+
+  fc.beginPath();
+  fc.moveTo(this.player.x, this.player.y);
+  for (var i = 0; i <= rayCount; i++) {
+    var a = coneStart + (coneEnd - coneStart) * (i / rayCount);
+    var hitDist = this.castRay(this.player.x, this.player.y, a, range);
+    hitDist = Math.min(hitDist + 6, range);
+    fc.lineTo(this.player.x + Math.cos(a) * hitDist, this.player.y + Math.sin(a) * hitDist);
+  }
+  fc.closePath();
+  var coneGrad = fc.createRadialGradient(this.player.x, this.player.y, 0, this.player.x, this.player.y, range);
+  coneGrad.addColorStop(0, 'rgba(0,0,0,1)');
+  coneGrad.addColorStop(0.5, 'rgba(0,0,0,1)');
+  coneGrad.addColorStop(0.8, 'rgba(0,0,0,0.6)');
+  coneGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  fc.fillStyle = coneGrad;
+  fc.fill();
+
+  if (this.az.active && this.az.visible) {
+    var azGlow = fc.createRadialGradient(this.az.x, this.az.y, 5, this.az.x, this.az.y, 50);
+    azGlow.addColorStop(0, 'rgba(0,0,0,0.8)');
+    azGlow.addColorStop(1, 'rgba(0,0,0,0)');
+    fc.fillStyle = azGlow;
+    fc.beginPath(); fc.arc(this.az.x, this.az.y, 50, 0, TAU); fc.fill();
+  }
+
+  for (var j = 0; j < this.az.greenTrail.length; j++) {
+    var gt = this.az.greenTrail[j];
+    fc.fillStyle = 'rgba(0,0,0,0.15)';
+    fc.beginPath(); fc.arc(gt.x, gt.y, 8, 0, TAU); fc.fill();
+  }
+
+  fc.globalCompositeOperation = 'source-over';
+  ctx.drawImage(this.fogCanvas, 0, 0);
+};
+
+GameInstance.prototype.drawParticles = function(ctx) {
+  for (var i = 0; i < this.particles.length; i++) {
+    var p = this.particles[i];
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.colour;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawDustMotes = function(ctx) {
+  for (var i = 0; i < this.dustMotes.length; i++) {
+    var dm = this.dustMotes[i];
+    ctx.globalAlpha = (dm.life / dm.maxLife) * 0.25;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(dm.x, dm.y, 1, 0, TAU);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawHUD = function(ctx) {
+  var ch = this.charData;
+  var barX = 12, barY = this.qh - 22, barW = 160, barH = 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
+  var pct = this.stamina / this.maxStamina;
+  var barFlash = this.staminaFlashTimer > 0 && this.staminaFlashTimer % 6 < 3;
+  ctx.fillStyle = barFlash ? '#ff4444' : ch.colour;
+  ctx.globalAlpha = barFlash ? 0.9 : 0.7;
+  ctx.fillRect(barX, barY, barW * Math.max(pct, barFlash ? 1 : 0), barH);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = barFlash ? 'rgba(255,60,60,0.5)' : 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX, barY, barW, barH);
+  ctx.fillStyle = '#666';
+  ctx.font = '8px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('F' + (this.currentFloor + 1), barX, barY - 6);
+  ctx.fillStyle = '#555';
+  ctx.textAlign = 'right';
+  ctx.font = '8px "Press Start 2P", monospace';
+  ctx.fillText(formatTime(this.getElapsedTime()), this.qw - 12, barY + 8);
+};
+
+GameInstance.prototype.drawFloorIntroOverlay = function(ctx) {
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.8 * this.floorIntroFade) + ')';
+  ctx.fillRect(0, 0, this.qw, this.qh);
+  ctx.globalAlpha = this.floorIntroFade;
+  ctx.fillStyle = '#888';
+  ctx.font = '12px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  var label = this.currentFloor === 7 ? 'The bottom' : 'Floor ' + (this.currentFloor + 1);
+  ctx.fillText(label, this.qw / 2, this.qh / 2 - 18);
+  ctx.fillStyle = '#555';
+  ctx.font = '11px sans-serif';
+  ctx.fillText(FLOOR_TEXT[this.currentFloor], this.qw / 2, this.qh / 2 + 10);
+  ctx.globalAlpha = 1;
+};
+
+GameInstance.prototype.drawFinishedOverlay = function(ctx) {
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, 0, this.qw, this.qh);
+  ctx.fillStyle = this.charData.colour;
+  ctx.font = '11px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FOUND IT!', this.qw / 2, this.qh / 2 - 12);
+  ctx.fillStyle = '#ffe44d';
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.fillText(formatTime(this.finishTime), this.qw / 2, this.qh / 2 + 14);
+};
+
+GameInstance.prototype.drawNameTag = function(ctx) {
+  ctx.font = '9px "Press Start 2P", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = this.charData.colour;
+  var label = this.charData.name + (this.isBot ? ' BOT' : '');
+  ctx.fillText(label, 10, 10);
+};
+
+// ===== AUDIO (shared, driven by P1) =====
+var audioCtx = null;
+var ambientGain = null;
+var ambientOsc = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  ambientGain = audioCtx.createGain();
+  ambientGain.gain.value = 0.06;
+  ambientGain.connect(audioCtx.destination);
+}
+
+function startAmbient() {
+  if (!audioCtx) return;
+  stopAmbient();
+  // Use Slate's ambient (stone corridors) for all players — fitting for the dungeon
+  var depthMul = 1;
+  var o1 = audioCtx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 82 * depthMul;
+  var o2 = audioCtx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 123 * depthMul;
+  var o3 = audioCtx.createOscillator(); o3.type = 'triangle'; o3.frequency.value = 165 * depthMul;
+  var lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.3;
+  var lfoGain = audioCtx.createGain(); lfoGain.gain.value = 0.04;
+  lfo.connect(lfoGain);
+  var g1 = audioCtx.createGain(); g1.gain.value = 0.07;
+  var g2 = audioCtx.createGain(); g2.gain.value = 0.04;
+  var g3 = audioCtx.createGain(); g3.gain.value = 0.025;
+  o1.connect(g1); o2.connect(g2); o3.connect(g3);
+  lfoGain.connect(g1.gain);
+  g1.connect(ambientGain); g2.connect(ambientGain); g3.connect(ambientGain);
+  o1.start(); o2.start(); o3.start(); lfo.start();
+  ambientOsc = { _nodes: [o1, o2, o3, lfo] };
+}
+
+function stopAmbient() {
+  if (ambientOsc) {
+    if (ambientOsc._nodes) {
+      ambientOsc._nodes.forEach(function(n) { try { n.stop(); } catch(e) {} });
+    }
+    ambientOsc = null;
+  }
+}
+
+function playFootstep(sprint) {
+  if (!audioCtx) return;
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = sprint ? 180 + Math.random() * 40 : 120 + Math.random() * 30;
+  gain.gain.value = 0.04;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+}
+
+function playAzChime() {
+  if (!audioCtx) return;
+  var notes = [330, 440, 554];
+  notes.forEach(function(freq, idx) {
+    setTimeout(function() {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      gain.gain.value = 0.08;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }, idx * 180);
+  });
+}
+
+function playStairsSound() {
+  if (!audioCtx) return;
+  [220, 277, 330, 440].forEach(function(freq, idx) {
+    setTimeout(function() {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq;
+      gain.gain.value = 0.07;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }, idx * 120);
+  });
+}
+
+function playGuitarMelody() {
+  if (!audioCtx) return;
+  [330, 392, 440, 494, 523, 587, 659, 784].forEach(function(freq, idx) {
+    setTimeout(function() {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq;
+      gain.gain.value = 0.10;
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+    }, idx * 200);
+  });
+}
+
+// ===== TOP-LEVEL CONTROLLER =====
+var instances = [
+  new GameInstance(0, 0,   0,   false), // Slate  — P1 arrows
+  new GameInstance(1, 960, 0,   false), // Pixel  — P2 WASD
+  new GameInstance(2, 0,   540, true),  // Fern   — bot
+  new GameInstance(3, 960, 540, true),  // Echo   — bot
+];
+
+var gameState = 'title';
+var winner = null;
+var winnerBannerTimer = 0;
+var gamePaused = false;
+
+var globalKeys = {};
+window.addEventListener('keydown', function(e) {
+  globalKeys[e.code] = true;
+  if (gameState === 'title' && e.code === 'Space') startPartyGame();
+  if (gameState === 'playing' && e.code === 'Escape') togglePause();
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+});
+window.addEventListener('keyup', function(e) { globalKeys[e.code] = false; });
+
+function mapKeys() {
+  var i0 = instances[0];
+  i0.keys['ArrowLeft']  = !!globalKeys['ArrowLeft'];
+  i0.keys['ArrowRight'] = !!globalKeys['ArrowRight'];
+  i0.keys['ArrowUp']    = !!globalKeys['ArrowUp'];
+  i0.keys['ArrowDown']  = !!globalKeys['ArrowDown'];
+  i0.keys['ShiftLeft']  = !!(globalKeys['ShiftLeft'] || globalKeys['ShiftRight'] || globalKeys['Space']);
+
+  var i1 = instances[1];
+  i1.keys['ArrowLeft']  = !!globalKeys['KeyA'];
+  i1.keys['ArrowRight'] = !!globalKeys['KeyD'];
+  i1.keys['ArrowUp']    = !!globalKeys['KeyW'];
+  i1.keys['ArrowDown']  = !!globalKeys['KeyS'];
+  i1.keys['ShiftLeft']  = !!globalKeys['KeyQ'];
+}
+
+function startPartyGame() {
+  gameState = 'playing';
+  gamePaused = false;
+  winner = null;
+  winnerBannerTimer = 0;
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('resultsScreen').style.display = 'none';
+  document.getElementById('pauseScreen').style.display = 'none';
+  var now = Date.now();
+  instances.forEach(function(inst) {
+    inst.currentFloor = 0;
+    inst.gameStartTime = now;
+    inst.totalPausedTime = 0;
+    inst.finished = false;
+    inst.finishTime = 0;
+    inst.finishWallTime = 0;
+    inst.counted = false;
+    inst.botPath = [];
+    inst.botPathIdx = 0;
+    inst.particles = [];
+    inst.dustMotes = [];
+    inst.stamina = inst.maxStamina;
+    inst.isSprinting = false;
+    inst.az = { active: false, x: 0, y: 0, visible: false, fadeTimer: 0, path: [], pathIdx: 0, greenTrail: [], triggered: false, triggerCount: 0 };
+    inst.lastBreadcrumbTime = 0;
+    inst.showFloorIntro();
+  });
+  stopAmbient();
+  initAudio();
+  startAmbient();
+}
+
+function togglePause() {
+  if (!gamePaused) {
+    gamePaused = true;
+    var now = Date.now();
+    instances.forEach(function(inst) { inst.pausedAt = now; });
+    if (ambientGain) ambientGain.gain.value = 0;
+    document.getElementById('pauseScreen').style.display = 'flex';
+  } else {
+    resumeGame();
+  }
+}
+
+function resumeGame() {
+  gamePaused = false;
+  var now = Date.now();
+  instances.forEach(function(inst) {
+    if (inst.pausedAt) inst.totalPausedTime += now - inst.pausedAt;
+  });
+  if (ambientGain) ambientGain.gain.value = 0.06;
+  document.getElementById('pauseScreen').style.display = 'none';
+}
+
+function checkWinCondition() {
+  if (gameState !== 'playing') return;
+
+  instances.forEach(function(inst) {
+    if (inst.finished && !inst.counted) {
+      inst.counted = true;
+      if (!winner) {
+        winner = inst;
+        winnerBannerTimer = 240; // 4 seconds at 60fps
+      }
+    }
+  });
+
+  if (!winner) return;
+
+  var allDone = instances.every(function(i) { return i.finished; });
+  var timeSinceWin = Date.now() - winner.finishWallTime;
+  if (allDone || timeSinceWin > 9000) {
+    showResults();
+  }
+}
+
+function showResults() {
+  if (gameState === 'results') return;
+  gameState = 'results';
+  stopAmbient();
+
+  var finished = instances.filter(function(i) { return i.finished; });
+  finished.sort(function(a, b) { return a.finishTime - b.finishTime; });
+  var unfinished = instances.filter(function(i) { return !i.finished; });
+
+  var html = '';
+  finished.forEach(function(inst, idx) {
+    var medal = idx === 0 ? ' 🎸' : '';
+    html += '<div style="color:' + inst.charData.colour + ';margin-bottom:6px">' +
+      (idx + 1) + '. ' + inst.charData.name + (inst.isBot ? ' (bot)' : '') +
+      ' — ' + formatTime(inst.finishTime) + medal + '</div>';
+  });
+  if (unfinished.length > 0) {
+    html += '<div style="color:#444;margin-top:10px;font-size:12px">Did not finish:</div>';
+    unfinished.forEach(function(inst) {
+      html += '<div style="color:#333;font-size:12px">' + inst.charData.name + (inst.isBot ? ' (bot)' : '') + '</div>';
+    });
+  }
+  document.getElementById('resultsList').innerHTML = html;
+  document.getElementById('resultsScreen').style.display = 'flex';
+}
+
+function gameLoop() {
+  if (gameState === 'playing' && !gamePaused) {
+    mapKeys();
+    instances.forEach(function(inst) { inst.update(); });
+    checkWinCondition();
+
+    ctx.clearRect(0, 0, W, H);
+    instances.forEach(function(inst) { inst.render(ctx); });
+
+    // Quadrant dividers
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(960, 0); ctx.lineTo(960, 1080);
+    ctx.moveTo(0, 540); ctx.lineTo(1920, 540);
+    ctx.stroke();
+
+    // Winner banner
+    if (winnerBannerTimer > 0) {
+      winnerBannerTimer--;
+      var alpha = Math.min(1, winnerBannerTimer / 30);
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 370, W, 240);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = winner.charData.colour;
+      ctx.font = '52px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(winner.charData.name + ' FOUND IT!', W / 2, 460);
+      ctx.fillStyle = '#ffe44d';
+      ctx.font = '28px "Press Start 2P", monospace';
+      ctx.fillText('🎸  ' + formatTime(winner.finishTime), W / 2, 530);
+      ctx.restore();
+    }
+  } else if (gameState !== 'playing') {
+    // Keep canvas clear when not playing
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ===== INIT =====
+gameLoop();
+</script>
+</body>
+</html>
