@@ -33,6 +33,8 @@ Rails.application.routes.draw do
 
   get '/golden-goal/join', to: 'golden_goal#join'
 
+  get '/mammoth-games/join', to: 'mammoth_games#join'
+
   # QR code SVG for static-file TV games (Snake Pit, Dino Jump, Golden Goal).
   get '/qr', to: 'qr#show'
 

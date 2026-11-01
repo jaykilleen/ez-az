@@ -42,7 +42,7 @@ class GameTest < ActiveSupport::TestCase
   # data-game High Scores span, but every card links to the game.
   test "the shelf and Game::GAMES list the same games" do
     shelf = File.read(Rails.root.join("public", "index.html"))
-             .scan(%r{href="(/games/[a-z0-9./-]+)"}).flatten.uniq.sort
+             .scan(%r{href="(/(games|[a-z]+-games)/[a-z0-9./-]+)"}).map(&:first).uniq.sort
     registered = Game.all.map { |g| g[:path] }.sort
 
     assert shelf.any?, "found no game links on the shelf -- has the markup changed?"

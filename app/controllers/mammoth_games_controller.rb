@@ -1,0 +1,5 @@
+class MammothGamesController < ApplicationController
+  def join
+    render layout: false
+  end
+end

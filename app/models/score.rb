@@ -23,7 +23,8 @@ class Score < ApplicationRecord
     "laser-turtle" => :desc,
     "mutant-mile" => :desc,
     "dino-trails" => :asc,
-    "balloon-pop" => :desc
+    "balloon-pop" => :desc,
+    "mammoth-games" => :desc
   }.freeze
 
   DEFAULT_NAMES = {

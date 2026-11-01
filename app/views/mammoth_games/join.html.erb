@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mammoth Games</title>
+  <link rel="stylesheet" href="/ez-az-shell.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #080e06; color: #fff;
+      font-family: var(--ez-font, 'Courier New', monospace);
+      overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+
+    .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    /* ---- Join screen ---- */
+    #screenJoin {
+      justify-content: flex-start;
+      padding-top: 54px;
+    }
+    .join-inner {
+      width: 100%; max-width: 400px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .game-title {
+      font-size: 26px; font-weight: 900; letter-spacing: 0.12em;
+      color: #6dff8a; text-align: center;
+      text-shadow: 0 0 18px rgba(109,255,138,0.5);
+    }
+    .game-sub { font-size: 11px; color: #4a6a4a; text-align: center; letter-spacing: 0.08em; }
+    .section-label {
+      font-size: 10px; letter-spacing: 0.12em; color: #4a6a4a; text-transform: uppercase;
+    }
+    .code-row { display: flex; gap: 10px; }
+    .code-input {
+      flex: 1; padding: 14px 16px; background: #0d1a0d; border: 2px solid #1e3a1e;
+      border-radius: 8px; color: #6dff8a; font-family: inherit;
+      font-size: 22px; font-weight: 700; letter-spacing: 0.2em; text-align: center;
+      text-transform: uppercase; outline: none;
+    }
+    .code-input:focus { border-color: #6dff8a; }
+    .gen-btn {
+      padding: 14px 16px; background: #1a3a1a; border: 2px solid #2a5a2a;
+      border-radius: 8px; color: #6dff8a; font-family: inherit;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      cursor: pointer; white-space: nowrap;
+    }
+    .gen-btn:active { background: #2a5a2a; }
+    .name-input {
+      width: 100%; padding: 14px 16px; background: #0d1a0d; border: 2px solid #1e3a1e;
+      border-radius: 8px; color: #fff; font-family: inherit;
+      font-size: 18px; font-weight: 700; letter-spacing: 0.1em; text-align: center;
+      text-transform: uppercase; outline: none;
+    }
+    .name-input:focus { border-color: #6dff8a; }
+    .join-btn {
+      width: 100%; padding: 16px; background: #6dff8a; border: none;
+      border-radius: 10px; color: #080e06; font-family: inherit;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.14em;
+      cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+    }
+    .join-btn:disabled { opacity: 0.3; pointer-events: none; }
+    .join-btn:active { transform: scale(0.97); }
+    .error-msg { font-size: 12px; color: #ff6b6b; text-align: center; min-height: 18px; }
+    .code-hint {
+      font-size: 11px; color: #3a5a3a; text-align: center; line-height: 1.5;
+    }
+    .code-hint strong { color: #6dff8a; letter-spacing: 0.1em; }
+
+    /* ---- Lobby screen ---- */
+    #screenLobby {
+      justify-content: flex-start;
+      padding-top: 54px;
+    }
+    .lobby-inner {
+      width: 100%; max-width: 400px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .lobby-code-badge {
+      text-align: center; font-size: 11px; color: #4a6a4a; letter-spacing: 0.1em;
+    }
+    .lobby-code-badge span {
+      display: block; font-size: 30px; color: #6dff8a;
+      font-weight: 900; letter-spacing: 0.3em;
+    }
+    .lobby-you {
+      text-align: center; font-size: 15px; font-weight: 700;
+      color: #fff; letter-spacing: 0.08em;
+    }
+    .lobby-players { display: flex; flex-direction: column; gap: 8px; }
+    .lobby-player-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #0d1a0d;
+      border-radius: 8px; border: 1px solid #1a3a1a;
+    }
+    .lobby-player-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #6dff8a; flex-shrink: 0;
+    }
+    .lobby-player-name { font-size: 14px; font-weight: 700; letter-spacing: 0.08em; }
+    .lobby-host-tag { font-size: 10px; color: #4a6a4a; margin-left: auto; }
+    .lobby-waiting {
+      text-align: center; font-size: 12px; color: #3a5a3a; letter-spacing: 0.06em;
+    }
+    .start-btn {
+      width: 100%; padding: 16px; background: #ffd23b; border: none;
+      border-radius: 10px; color: #1a1000; font-family: inherit;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.14em;
+      cursor: pointer;
+    }
+    .start-btn:active { transform: scale(0.97); }
+
+    /* Arena picker */
+    .host-controls { display: flex; flex-direction: column; gap: 10px; }
+    .picker-label { font-size: 10px; letter-spacing: 0.12em; color: #4a6a4a; text-transform: uppercase; }
+    .arena-cards, .bot-cards { display: flex; gap: 8px; flex-wrap: wrap; }
+    .arena-card {
+      padding: 8px 14px; border-radius: 8px; border: 2px solid #1e3a1e;
+      background: #0d1a0d; cursor: pointer; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; transition: border-color 0.15s;
+      display: flex; align-items: center; gap: 4px; user-select: none;
+    }
+    .arena-card.selected { border-color: #6dff8a; color: #6dff8a; }
+    .arena-card.soon { opacity: 0.35; cursor: not-allowed; flex-direction: column; align-items: center; }
+    .arena-card.soon small { font-size: 9px; display: block; }
+    .bot-card {
+      flex: 1; padding: 8px 4px; border-radius: 8px; border: 2px solid #1e3a1e;
+      background: #0d1a0d; cursor: pointer; font-size: 13px; font-weight: 700;
+      text-align: center; transition: border-color 0.15s; user-select: none;
+    }
+    .bot-card.selected { border-color: #ffd23b; color: #ffd23b; }
+
+    /* ---- Game screen ---- */
+    #screenGame {
+      position: relative; overflow: hidden;
+    }
+    #gameCanvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    /* Role border overlay */
+    #roleBorder {
+      position: absolute; inset: 0; pointer-events: none;
+      border: 10px solid transparent;
+      transition: border-color 0.3s;
+      z-index: 10;
+    }
+    #roleBorder.it     { border-color: #4488ff; }
+    #roleBorder.runner { border-color: #ff4444; }
+
+    /* Role label */
+    #roleLabel {
+      position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+      padding: 4px 12px; border-radius: 20px; z-index: 11;
+      opacity: 0; transition: opacity 0.5s; white-space: nowrap;
+    }
+    #roleLabel.show { opacity: 1; }
+    #roleLabel.it     { background: rgba(68,136,255,0.85); color: #fff; }
+    #roleLabel.runner { background: rgba(255,68,68,0.85); color: #fff; }
+
+    /* Power-up HUD (top-right) */
+    #powerHud {
+      position: absolute; top: 50px; right: 12px;
+      display: flex; flex-direction: column; gap: 6px; z-index: 11;
+    }
+    .pu-btn {
+      min-width: 48px; height: 48px; border-radius: 24px;
+      border: 3px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      font-size: 18px; font-family: inherit; cursor: pointer;
+      padding: 0 10px;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+    .pu-btn.active { border-color: #ffd23b; }
+    .pu-btn:active { transform: scale(0.9); }
+
+    /* Player count (top-left) */
+    #runnerCount {
+      position: absolute; top: 50px; left: 12px;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      letter-spacing: 0.06em; z-index: 11;
+    }
+
+    /* Joystick */
+    #joystickWrap {
+      position: absolute; bottom: 40px; left: 30px; z-index: 12;
+    }
+    #joystickBase {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+      position: relative;
+    }
+    #joystickKnob {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.4); border: 2px solid rgba(255,255,255,0.6);
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+
+    /* ---- Game Over screen ---- */
+    #screenOver {
+      justify-content: flex-start;
+      padding-top: 54px;
+    }
+    .over-inner {
+      width: 100%; max-width: 400px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 16px; align-items: center;
+    }
+    .over-title {
+      font-size: 28px; font-weight: 900; letter-spacing: 0.12em;
+      color: #ffd23b; text-align: center;
+    }
+    .over-winner { font-size: 16px; color: #6dff8a; text-align: center; font-weight: 700; }
+    .over-results { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .over-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #0d1a0d;
+      border-radius: 8px; border: 1px solid #1a3a1a;
+    }
+    .over-row.survived { border-color: #6dff8a; }
+    .over-row.tagged   { opacity: 0.5; }
+    .over-row-icon { font-size: 20px; }
+    .over-row-name { font-size: 14px; font-weight: 700; }
+    .over-row-status { font-size: 11px; color: #4a6a4a; margin-left: auto; }
+    .play-again-btn {
+      width: 100%; padding: 16px; background: #6dff8a; border: none;
+      border-radius: 10px; color: #080e06; font-family: inherit;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.14em;
+      cursor: pointer;
+    }
+    .play-again-btn:active { transform: scale(0.97); }
+    .leave-btn {
+      font-size: 12px; color: #3a5a3a; letter-spacing: 0.08em;
+      background: none; border: none; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
+  <button class="ezaz-exit-btn" id="exitBtn">EXIT</button>
+
+  <!-- JOIN -->
+  <div class="screen active" id="screenJoin">
+    <div class="join-inner">
+      <div class="game-title">MAMMOTH GAMES</div>
+      <div class="game-sub">BY CHARLIE</div>
+
+      <div class="section-label">Game code</div>
+      <div class="code-row">
+        <input class="code-input" id="codeInput" type="text" maxlength="4"
+               placeholder="XXXX" autocomplete="off" autocorrect="off"
+               autocapitalize="characters" spellcheck="false">
+        <button class="gen-btn" id="genBtn">CREATE</button>
+      </div>
+      <div class="code-hint" id="codeHint" hidden>
+        Tell your friends: <strong id="hintCode"></strong>
+      </div>
+
+      <div class="section-label">Your name</div>
+      <input class="name-input" id="nameInput" type="text" maxlength="12"
+             placeholder="ENTER NAME" autocomplete="off" autocorrect="off"
+             autocapitalize="characters" spellcheck="false">
+
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="join-btn" id="joinBtn" disabled>JOIN GAME</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="screen" id="screenLobby">
+    <div class="lobby-inner">
+      <div class="game-title">MAMMOTH GAMES</div>
+      <div class="lobby-code-badge">
+        GAME CODE<span id="lobbyCode"></span>
+      </div>
+      <div class="lobby-you" id="lobbyYou"></div>
+      <div class="lobby-players" id="lobbyPlayers"></div>
+      <div class="lobby-waiting" id="lobbyWait">Waiting for players... share the code above.</div>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:#4a6a4a;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="musicToggle" checked style="width:18px;height:18px;accent-color:#6dff8a;cursor:pointer;">
+        Music on
+      </label>
+      <div class="host-controls" id="hostControls" style="display:none;">
+        <div class="picker-label">Arena</div>
+        <div class="arena-cards" id="arenaCards">
+          <div class="arena-card selected" data-arena="forest">🌲 Forest</div>
+          <div class="arena-card soon">🏜️ Desert<small>coming soon</small></div>
+          <div class="arena-card soon">🕳️ Cave<small>coming soon</small></div>
+        </div>
+        <div class="picker-label">Bots</div>
+        <div class="bot-cards" id="botCards">
+          <div class="bot-card selected" data-bots="0">0</div>
+          <div class="bot-card" data-bots="1">1</div>
+          <div class="bot-card" data-bots="2">2</div>
+          <div class="bot-card" data-bots="3">3</div>
+        </div>
+      </div>
+      <button class="start-btn" id="startBtn">START GAME</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="screenGame">
+    <canvas id="gameCanvas"></canvas>
+    <div id="roleBorder"></div>
+    <div id="roleLabel"></div>
+    <div id="runnerCount"></div>
+    <div id="powerHud">
+      <div class="pu-btn" id="btnTrap" hidden>🕳️</div>
+    </div>
+    <div id="joystickWrap">
+      <div id="joystickBase">
+        <div id="joystickKnob"></div>
+      </div>
+    </div>
+    <canvas id="minimapCanvas" style="position:absolute;bottom:96px;right:14px;z-index:12;
+      width:110px;height:90px;border:1px solid rgba(255,255,255,0.2);border-radius:4px;
+      opacity:0.85;pointer-events:none;"></canvas>
+    <button id="muteBtn" style="
+      position:absolute; bottom:44px; right:14px; z-index:12;
+      width:40px; height:40px; border-radius:50%; border:none;
+      background:rgba(0,0,0,0.5); font-size:18px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    ">🔊</button>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="screen" id="screenOver">
+    <div class="over-inner">
+      <div class="over-title">GAME OVER</div>
+      <div class="over-winner" id="overWinner"></div>
+      <div class="over-results" id="overResults"></div>
+      <button class="play-again-btn" id="playAgainBtn">PLAY AGAIN</button>
+      <button class="leave-btn" id="leaveBtn">Back to store</button>
+    </div>
+  </div>
+
+  <script src="/arcade-cable.js"></script>
+  <script>
+  (function () {
+    // Arena constants (mirror server)
+    var ARENA_W    = 3000;
+    var ARENA_H    = 3000;
+    var SPAWN_X    = 1500;
+    var SPAWN_Y    = 1500;
+    var PLAYER_SPD = 240;
+    var BOOST_SPD  = 380;
+    var PLAYER_R   = 18;
+    var SEND_HZ    = 30;
+    var TRAP_R     = 12;
+    var JOY_MAX    = 38;
+
+    // Pre-generate forest trees (deterministic seeded rand, avoid centre)
+    var TREES = (function () {
+      var s = 42;
+      function r() { s = (s * 1664525 + 1013904223) & 0x7fffffff; return s / 0x7fffffff; }
+      var list = [], tries = 0;
+      while (list.length < 90 && tries++ < 5000) {
+        var x = 40 + r() * (ARENA_W - 80);
+        var y = 40 + r() * (ARENA_H - 80);
+        var dx = x - SPAWN_X, dy = y - SPAWN_Y;
+        if (Math.sqrt(dx*dx + dy*dy) < 280) continue;
+        list.push({ x: x, y: y, R: 18 + r() * 14, g: r() });
+      }
+      return list;
+    }());
+
+    // State
+    var myCode = new URLSearchParams(location.search).get('code') || '';
+    var mySlot = null, myName = '', myIsHost = false, myRole = null;
+    var myPos  = { x: SPAWN_X, y: SPAWN_Y };
+    var myArena = 'forest';
+    var players = {};
+    var powerUpSpots = [];
+    var traps = [];
+    var myBoosts = { speedUntil: null, bigTagUntil: null, trapCharges: 0 };
+    var phase = 'lobby';
+    var sub = null;
+    var rafId = null;
+    var joyX = 0, joyY = 0;
+    var joyActive = false, joyTouchId = null;
+    var joyOriginX = 0, joyOriginY = 0;
+    var lastTs = 0, lastSend = 0;
+    var startCtrl = null;
+
+    // DOM refs
+    var codeInput    = document.getElementById('codeInput');
+    var genBtn       = document.getElementById('genBtn');
+    var nameInput    = document.getElementById('nameInput');
+    var joinBtn      = document.getElementById('joinBtn');
+    var errorMsg     = document.getElementById('errorMsg');
+    var codeHint     = document.getElementById('codeHint');
+    var hintCode     = document.getElementById('hintCode');
+    var lobbyCode    = document.getElementById('lobbyCode');
+    var lobbyYou     = document.getElementById('lobbyYou');
+    var lobbyPlayers = document.getElementById('lobbyPlayers');
+    var lobbyWait    = document.getElementById('lobbyWait');
+    var startBtn     = document.getElementById('startBtn');
+    var canvas       = document.getElementById('gameCanvas');
+    var ctx          = canvas.getContext('2d');
+    var roleBorder   = document.getElementById('roleBorder');
+    var roleLabel    = document.getElementById('roleLabel');
+    var runnerCount  = document.getElementById('runnerCount');
+    var btnTrap      = document.getElementById('btnTrap');
+    var joystickBase = document.getElementById('joystickBase');
+    var joystickKnob = document.getElementById('joystickKnob');
+
+    function showScreen(name) {
+      ['Join','Lobby','Game','Over'].forEach(function(s) {
+        document.getElementById('screen'+s).classList.toggle('active', s === name);
+      });
+    }
+
+    function generateCode() {
+      var c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var o = '';
+      for (var i = 0; i < 4; i++) o += c[Math.floor(Math.random() * c.length)];
+      return o;
+    }
+
+    if (myCode) { codeInput.value = myCode; checkJoinReady(); }
+
+    genBtn.addEventListener('click', function () {
+      var c = generateCode();
+      myCode = c;
+      codeInput.value = c;
+      hintCode.textContent = c;
+      codeHint.hidden = false;
+      history.replaceState(null, '', '/mammoth-games/join?code=' + c);
+      checkJoinReady();
+    });
+
+    codeInput.addEventListener('input', function () {
+      codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      myCode = codeInput.value;
+      codeHint.hidden = true;
+      history.replaceState(null, '', '/mammoth-games/join' + (myCode ? '?code=' + myCode : ''));
+      checkJoinReady();
+    });
+
+    nameInput.addEventListener('input', function () {
+      nameInput.value = nameInput.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+      checkJoinReady();
+    });
+
+    function checkJoinReady() {
+      joinBtn.disabled = !(codeInput.value.length === 4 && nameInput.value.trim().length > 0);
+    }
+
+    // Arena picker
+    document.getElementById('arenaCards').addEventListener('click', function (e) {
+      var card = e.target.closest('[data-arena]');
+      if (!card || !sub) return;
+      document.querySelectorAll('.arena-card').forEach(function (c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      sub.send('set_arena', { arena: card.dataset.arena });
+    });
+
+    // Bot count picker
+    document.getElementById('botCards').addEventListener('click', function (e) {
+      var card = e.target.closest('[data-bots]');
+      if (!card || !sub) return;
+      document.querySelectorAll('.bot-card').forEach(function (c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      sub.send('set_bots', { count: parseInt(card.dataset.bots, 10) });
+    });
+
+    joinBtn.addEventListener('click', function () {
+      var name = nameInput.value.trim();
+      if (!name || codeInput.value.length !== 4) return;
+      myName = name;
+      errorMsg.textContent = '';
+      joinBtn.disabled = true;
+
+      if (!sub) {
+        sub = ArcadeCable.subscribe('MammothGamesChannel', myCode, { received: onMessage });
+        ArcadeCable.attachExit(document.getElementById('exitBtn'), function () { return sub; });
+        startCtrl = ArcadeCable.hostStart(startBtn, function () { return sub; });
+      }
+      // Give WebSocket time to connect
+      setTimeout(function () {
+        if (sub) sub.send('join', { name: myName });
+      }, 400);
+    });
+
+    function onMessage(msg) {
+      switch (msg.type) {
+        case 'state':
+          phase = msg.phase;
+          if (phase === 'playing') { showScreen('Game'); if (sub) sub.send('request_role', {}); }
+          if (startCtrl) startCtrl.update(myIsHost && msg.host_slot === mySlot, msg.phase);
+          break;
+
+        case 'joined':
+          mySlot   = msg.slot;
+          myIsHost = msg.host;
+          lobbyCode.textContent = myCode;
+          lobbyYou.textContent  = myName + (myIsHost ? ' (host)' : '');
+          if (startCtrl) startCtrl.update(myIsHost, 'lobby');
+          document.getElementById('hostControls').style.display = myIsHost ? '' : 'none';
+          showScreen('Lobby');
+          break;
+
+        case 'join_error':
+          errorMsg.textContent = msg.message || 'Could not join';
+          joinBtn.disabled = false;
+          break;
+
+        case 'lobby_update':
+          updateLobbyList(msg.players, msg.host_slot);
+          if (startCtrl) startCtrl.update(myIsHost && msg.host_slot === mySlot, 'lobby');
+          break;
+
+        case 'game_started':
+          myArena = msg.arena || 'forest';
+          powerUpSpots = msg.power_up_spots || [];
+          players = {}; traps = [];
+          myPos   = { x: SPAWN_X, y: SPAWN_Y };
+          myBoosts = { speedUntil: null, bigTagUntil: null, trapCharges: 0 };
+          showScreen('Game');
+          resizeCanvas();
+          if (sub) sub.send('request_role', {});
+          startLoop();
+          break;
+
+        case 'your_role':
+          myRole = msg.it ? 'it' : 'runner';
+          myBoosts.speedUntil  = msg.speed_boost_until || null;
+          myBoosts.bigTagUntil = msg.big_tag_until     || null;
+          myBoosts.trapCharges = msg.trap_charges      || 0;
+          updateRoleUI();
+          break;
+
+        case 'positions':
+          (msg.positions || []).forEach(function (p) {
+            if (p.slot === mySlot) return;
+            players[p.slot] = { name: p.name, x: p.x, y: p.y };
+          });
+          break;
+
+        case 'tagged':
+          if (msg.slots && msg.slots.indexOf(mySlot) !== -1) {
+            myRole = 'it';
+            updateRoleUI();
+            if (sub) sub.send('request_role', {});
+          }
+          break;
+
+        case 'powerup_cooldown':
+          var spot = null;
+          for (var i = 0; i < powerUpSpots.length; i++) {
+            if (powerUpSpots[i].id === msg.id) { spot = powerUpSpots[i]; break; }
+          }
+          if (spot) spot.cooldown_until = msg.cooldown_until;
+          break;
+
+        case 'trap_placed':
+          traps.push(msg.trap);
+          break;
+
+        case 'game_over':
+          stopLoop();
+          showGameOver(msg.winner, msg.results);
+          break;
+
+        case 'game_ended':
+        case 'session_reset':
+          stopLoop(); myRole = null;
+          showScreen('Lobby');
+          break;
+
+        case 'player_left':
+          delete players[msg.slot];
+          break;
+
+        case 'left':
+          window.location.href = '/';
+          break;
+      }
+    }
+
+    function updateLobbyList(playerList, hostSlot) {
+      lobbyPlayers.innerHTML = '';
+      (playerList || []).forEach(function (p) {
+        var row  = document.createElement('div'); row.className = 'lobby-player-row';
+        var dot  = document.createElement('div'); dot.className = 'lobby-player-dot';
+        var name = document.createElement('div'); name.className = 'lobby-player-name';
+        name.textContent = p.name;
+        row.appendChild(dot); row.appendChild(name);
+        if (p.slot === hostSlot) {
+          var tag = document.createElement('div'); tag.className = 'lobby-host-tag';
+          tag.textContent = 'HOST'; row.appendChild(tag);
+        }
+        lobbyPlayers.appendChild(row);
+      });
+      var count = (playerList || []).length;
+      lobbyWait.textContent = count >= 2
+        ? 'Ready! Host can start the game.'
+        : 'Waiting for players... share the code above.';
+    }
+
+    function updateRoleUI() {
+      roleBorder.className = myRole === 'it' ? 'it' : (myRole === 'runner' ? 'runner' : '');
+      roleLabel.className  = 'show ' + (myRole === 'it' ? 'it' : 'runner');
+      roleLabel.textContent = myRole === 'it' ? 'YOU ARE IT' : 'SURVIVE!';
+      setTimeout(function () { roleLabel.classList.remove('show'); }, 3000);
+      btnTrap.hidden = !(myRole === 'it' && myBoosts.trapCharges > 0);
+      if (!btnTrap.hidden) btnTrap.textContent = '🕳️ ×' + myBoosts.trapCharges;
+    }
+
+    function fireTrap(e) {
+      if (e && e.cancelable) e.preventDefault();
+      if (!sub || myRole !== 'it' || myBoosts.trapCharges <= 0) return;
+      sub.send('place_trap', {});
+      myBoosts.trapCharges--;
+      btnTrap.hidden = myBoosts.trapCharges <= 0;
+      if (!btnTrap.hidden) btnTrap.textContent = '🕳️ ×' + myBoosts.trapCharges;
+    }
+    btnTrap.addEventListener('touchstart', fireTrap, { passive: false });
+    btnTrap.addEventListener('click', fireTrap);
+
+    function showGameOver(winner, results) {
+      document.getElementById('overWinner').textContent =
+        winner ? winner + ' survived!' : 'Everyone got tagged!';
+      var container = document.getElementById('overResults');
+      container.innerHTML = '';
+      (results || []).forEach(function (r) {
+        var row  = document.createElement('div');
+        row.className = 'over-row ' + (r.survived ? 'survived' : 'tagged');
+        var icon = document.createElement('div'); icon.className = 'over-row-icon';
+        icon.textContent = r.survived ? '🏃' : '🏷️';
+        var name = document.createElement('div'); name.className = 'over-row-name';
+        name.textContent = r.name;
+        var st = document.createElement('div'); st.className = 'over-row-status';
+        st.textContent = r.survived ? 'SURVIVOR' : 'TAGGED';
+        row.appendChild(icon); row.appendChild(name); row.appendChild(st);
+        container.appendChild(row);
+      });
+      showScreen('Over');
+    }
+
+    document.getElementById('playAgainBtn').addEventListener('click', function () {
+      showScreen('Lobby');
+    });
+    document.getElementById('leaveBtn').addEventListener('click', function () {
+      if (sub) sub.send('leave', {});
+      window.location.href = '/';
+    });
+
+    // Canvas
+    function resizeCanvas() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    window.addEventListener('resize', function () {
+      if (document.getElementById('screenGame').classList.contains('active')) resizeCanvas();
+    });
+
+    function startLoop() {
+      lastTs = 0; lastSend = 0;
+      if (!rafId) rafId = requestAnimationFrame(loop);
+    }
+    function stopLoop() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    }
+
+    function loop(ts) {
+      if (!document.getElementById('screenGame').classList.contains('active')) {
+        rafId = null; return;
+      }
+      rafId = requestAnimationFrame(loop);
+      var dt = lastTs ? Math.min((ts - lastTs) / 1000, 0.05) : 0;
+      lastTs = ts;
+
+      var now = ts / 1000;
+      var boosted = myRole === 'it' && myBoosts.speedUntil && myBoosts.speedUntil > now;
+      var spd = boosted ? BOOST_SPD : PLAYER_SPD;
+      var nPos = resolveCollision(myPos.x + joyX * spd * dt, myPos.y + joyY * spd * dt);
+      myPos.x = nPos.x; myPos.y = nPos.y;
+      if (mySlot !== null) players[mySlot] = { name: myName, x: myPos.x, y: myPos.y };
+
+      if ((joyX !== 0 || joyY !== 0) && ts - lastSend >= 1000 / SEND_HZ) {
+        if (sub) sub.send('move', { x: myPos.x, y: myPos.y });
+        lastSend = ts;
+      }
+
+      var total = Object.keys(players).length;
+      runnerCount.textContent = total + ' player' + (total !== 1 ? 's' : '') + ' in arena';
+
+      render(ts);
+    }
+
+    function render(ts) {
+      var W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      var camX = myPos.x - W / 2;
+      var camY = myPos.y - H / 2;
+      ctx.save();
+      ctx.translate(-camX, -camY);
+      drawArena();
+      drawTrees();
+      drawTraps(ts);
+      drawPowerUps(ts);
+      drawPlayers();
+      ctx.restore();
+      drawMinimap();
+    }
+
+    function drawArena() {
+      ctx.fillStyle = '#1e3a14';
+      ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+      ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+      ctx.lineWidth = 1;
+      for (var x = 0; x < ARENA_W; x += 120) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ARENA_H); ctx.stroke();
+      }
+      for (var y = 0; y < ARENA_H; y += 120) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ARENA_W, y); ctx.stroke();
+      }
+      ctx.strokeStyle = '#0a1a06';
+      ctx.lineWidth = 30;
+      ctx.strokeRect(0, 0, ARENA_W, ARENA_H);
+    }
+
+    function drawTrees() {
+      TREES.forEach(function (t) {
+        ctx.fillStyle = '#4a2a0a';
+        ctx.beginPath(); ctx.ellipse(t.x, t.y + t.R * 0.4, 6, 9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.ellipse(t.x + 4, t.y - 6, t.R * 0.85, t.R * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = t.g > 0.5 ? '#1a4a0e' : '#163a0a';
+        ctx.beginPath(); ctx.arc(t.x, t.y - 8, t.R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(60,140,30,0.25)';
+        ctx.beginPath(); ctx.arc(t.x - 4, t.y - 12, t.R * 0.55, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+
+    function drawTraps(ts) {
+      var now = ts / 1000;
+      traps = traps.filter(function (t) { return !t.expires_at || t.expires_at > now; });
+      traps.forEach(function (trap) {
+        ctx.save();
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ff8800';
+        ctx.fillStyle = '#ff8800';
+        ctx.beginPath(); ctx.arc(trap.x, trap.y, TRAP_R, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('⚠', trap.x, trap.y);
+        ctx.textBaseline = 'alphabetic';
+      });
+    }
+
+    function drawPowerUps(ts) {
+      var now = ts / 1000;
+      var C = { big_tag: '#ffdd00', speed_boost: '#00ccff', trap: '#ff9900' };
+      var I = { big_tag: '⚡',      speed_boost: '💨',       trap: '🕳' };
+      powerUpSpots.forEach(function (sp) {
+        var cd  = sp.cooldown_until && sp.cooldown_until > now;
+        var col = cd ? 'rgba(60,60,60,0.4)' : (C[sp.type] || '#fff');
+        ctx.save();
+        if (!cd) { ctx.shadowBlur = 14; ctx.shadowColor = col; }
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(sp.x, sp.y, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.globalAlpha = cd ? 0.3 : 1;
+        ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(I[sp.type] || '?', sp.x, sp.y);
+        ctx.globalAlpha = 1; ctx.textBaseline = 'alphabetic';
+      });
+    }
+
+    function drawPlayers() {
+      Object.keys(players).forEach(function (k) {
+        var slot = parseInt(k), p = players[k], isMe = slot === mySlot;
+        ctx.save();
+        if (isMe) { ctx.shadowBlur = 18; ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff'; }
+        else { ctx.fillStyle = '#aaccaa'; }
+        ctx.beginPath(); ctx.arc(p.x, p.y, PLAYER_R, 0, Math.PI * 2); ctx.fill();
+        if (isMe) { ctx.strokeStyle = '#6dff8a'; ctx.lineWidth = 3; ctx.stroke(); }
+        ctx.restore();
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillRect(p.x - 26, p.y - PLAYER_R - 22, 52, 15);
+        ctx.fillStyle = isMe ? '#ffffff' : '#cceecc';
+        ctx.font = '10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText((p.name || '').substring(0, 8), p.x, p.y - PLAYER_R - 11);
+      });
+    }
+
+    // Tree collision push-out for players
+    function resolveCollision(x, y) {
+      x = Math.max(PLAYER_R, Math.min(ARENA_W - PLAYER_R, x));
+      y = Math.max(PLAYER_R, Math.min(ARENA_H - PLAYER_R, y));
+      for (var i = 0; i < TREES.length; i++) {
+        var t = TREES[i];
+        var minD = t.R + PLAYER_R;
+        var dx = x - t.x, dy = y - t.y;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < minD && d > 0.001) {
+          var sc = minD / d;
+          x = t.x + dx * sc;
+          y = t.y + dy * sc;
+        }
+      }
+      return { x: x, y: y };
+    }
+
+    // Mini-map — bird's-eye view of the arena
+    function drawMinimap() {
+      var mm = document.getElementById('minimapCanvas');
+      if (!mm) return;
+      mm.width  = mm.offsetWidth;
+      mm.height = mm.offsetHeight;
+      var mw = mm.width, mh = mm.height;
+      var mc = mm.getContext('2d');
+      var sx = mw / ARENA_W, sy = mh / ARENA_H;
+
+      mc.fillStyle = '#1a3210';
+      mc.fillRect(0, 0, mw, mh);
+
+      // Viewport rect
+      var vx = (myPos.x - canvas.width / 2) * sx;
+      var vy = (myPos.y - canvas.height / 2) * sy;
+      mc.strokeStyle = 'rgba(255,255,255,0.25)';
+      mc.lineWidth = 1;
+      mc.strokeRect(vx, vy, canvas.width * sx, canvas.height * sy);
+
+      // Power-ups
+      var now2 = performance.now() / 1000;
+      var PUC = { big_tag: '#ffdd00', speed_boost: '#00ccff', trap: '#ff9900' };
+      powerUpSpots.forEach(function (sp) {
+        var cd = sp.cooldown_until && sp.cooldown_until > now2;
+        mc.fillStyle = cd ? 'rgba(80,80,80,0.5)' : (PUC[sp.type] || '#fff');
+        mc.beginPath(); mc.arc(sp.x * sx, sp.y * sy, 2, 0, Math.PI * 2); mc.fill();
+      });
+
+      // Players
+      Object.keys(players).forEach(function (k) {
+        var p = players[k], isMe = parseInt(k) === mySlot;
+        mc.fillStyle = isMe ? '#6dff8a' : '#aaccaa';
+        mc.beginPath(); mc.arc(p.x * sx, p.y * sy, isMe ? 3 : 2, 0, Math.PI * 2); mc.fill();
+      });
+    }
+
+    // Joystick — touch
+    joystickBase.addEventListener('touchstart', function (e) {
+      e.preventDefault();
+      if (joyActive) return;
+      var t = e.changedTouches[0];
+      joyTouchId = t.identifier; joyActive = true;
+      var r = joystickBase.getBoundingClientRect();
+      joyOriginX = r.left + r.width / 2;
+      joyOriginY = r.top  + r.height / 2;
+      moveKnob(t.clientX, t.clientY);
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function (e) {
+      if (!joyActive) return;
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joyTouchId) {
+          // Only update the knob — no preventDefault so other simultaneous
+          // touches (power-up buttons) can still fire their own events.
+          moveKnob(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          break;
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joyTouchId) {
+          joyActive = false; joyTouchId = null; joyX = 0; joyY = 0;
+          joystickKnob.style.transform = 'translate(-50%, -50%)';
+          break;
+        }
+      }
+    });
+
+    // Joystick — mouse
+    var mouseHeld = false;
+    joystickBase.addEventListener('mousedown', function (e) {
+      mouseHeld = true; joyActive = true;
+      var r = joystickBase.getBoundingClientRect();
+      joyOriginX = r.left + r.width / 2; joyOriginY = r.top + r.height / 2;
+      moveKnob(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', function (e) { if (mouseHeld) moveKnob(e.clientX, e.clientY); });
+    document.addEventListener('mouseup', function () {
+      mouseHeld = false; joyActive = false; joyX = 0; joyY = 0;
+      joystickKnob.style.transform = 'translate(-50%, -50%)';
+    });
+
+    function moveKnob(cx, cy) {
+      var dx = cx - joyOriginX, dy = cy - joyOriginY;
+      var dist = Math.sqrt(dx*dx + dy*dy);
+      var clamped = Math.min(dist, JOY_MAX);
+      if (dist > 0) { joyX = dx / dist; joyY = dy / dist; }
+      var ox = joyX * clamped, oy = joyY * clamped;
+      joystickKnob.style.transform = 'translate(calc(-50% + ' + ox + 'px), calc(-50% + ' + oy + 'px))';
+    }
+
+    // Keyboard fallback
+    var keys = {};
+    document.addEventListener('keydown', function (e) { keys[e.code] = true;  updateKeyJoy(); });
+    document.addEventListener('keyup',   function (e) { keys[e.code] = false; updateKeyJoy(); });
+    function updateKeyJoy() {
+      if (!document.getElementById('screenGame').classList.contains('active')) return;
+      joyX = (keys['ArrowRight']||keys['KeyD'] ? 1 : 0) - (keys['ArrowLeft']||keys['KeyA'] ? 1 : 0);
+      joyY = (keys['ArrowDown'] ||keys['KeyS'] ? 1 : 0) - (keys['ArrowUp']  ||keys['KeyW'] ? 1 : 0);
+      var len = Math.sqrt(joyX*joyX + joyY*joyY);
+      if (len > 1) { joyX /= len; joyY /= len; }
+    }
+
+    // ── Music engine ──────────────────────────────────────────────────
+    // Minecraft-style procedural music: square-wave bass, triangle melody,
+    // noise hi-hat, sine kick. Web Audio look-ahead scheduler for tight timing.
+    var _actx = null, _masterGain = null;
+    var _musicRunning = false, _musicMuted = false;
+    var _beat = 0, _nextTime = 0, _schedId = null;
+    var BPM = 132;
+    var STEP = 60 / BPM / 2;         // 8th-note duration in seconds
+    var LOOKAHEAD = 0.12;             // schedule this far ahead
+    var TICK = 40;                    // scheduler poll ms
+
+    // C minor pentatonic across 3 octaves
+    var NOTES = [
+      130.81, 155.56, 174.61, 196.00, 233.08,   // C3 Eb3 F3 G3 Bb3
+      261.63, 311.13, 349.23, 392.00, 466.16,   // C4 Eb4 F4 G4 Bb4
+      523.25, 622.25, 698.46, 783.99, 932.33    // C5 Eb5 F5 G5 Bb5
+    ];
+
+    // Bass (8-step), melody (16-step) — indices into NOTES[]
+    var BASS    = [0, 0, 2, 0, 3, 0, 2, 1];
+    var MELODY  = [9,11, 9,10, 9, 8, 7, 9, 11, 9,10, 9, 7, 8, 9,11];
+
+    function _ac() {
+      if (!_actx) {
+        try {
+          _actx = new (window.AudioContext || window.webkitAudioContext)();
+          _masterGain = _actx.createGain();
+          _masterGain.gain.value = 0.55;
+          _masterGain.connect(_actx.destination);
+        } catch (e) {}
+      }
+      return _actx;
+    }
+
+    function _osc(freq, t, dur, type, vol) {
+      var a = _ac(); if (!a || _musicMuted) return;
+      var o = a.createOscillator(), g = a.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(_masterGain);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+
+    function _kick(t) {
+      var a = _ac(); if (!a || _musicMuted) return;
+      var o = a.createOscillator(), g = a.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(120, t);
+      o.frequency.exponentialRampToValueAtTime(0.001, t + 0.28);
+      g.gain.setValueAtTime(0.5, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      o.connect(g); g.connect(_masterGain);
+      o.start(t); o.stop(t + 0.32);
+    }
+
+    function _hat(t, open) {
+      var a = _ac(); if (!a || _musicMuted) return;
+      var sz  = Math.floor(a.sampleRate * 0.05);
+      var buf = a.createBuffer(1, sz, a.sampleRate);
+      var d   = buf.getChannelData(0);
+      for (var i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+      var src = a.createBufferSource(); src.buffer = buf;
+      var hp  = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+      var g   = a.createGain();
+      var dur = open ? 0.12 : 0.04;
+      g.gain.setValueAtTime(open ? 0.07 : 0.04, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(hp); hp.connect(g); g.connect(_masterGain);
+      src.start(t); src.stop(t + dur + 0.01);
+    }
+
+    function _scheduleStep(step, t) {
+      var b8  = step % 8;
+      var b16 = step % 16;
+      var b32 = step % 32;
+
+      // Kick: beats 1 & 3 (steps 0 and 4)
+      if (b8 === 0 || b8 === 4) _kick(t);
+
+      // Hi-hat: every 8th note; open on offbeats (2, 6)
+      _hat(t, b8 === 2 || b8 === 6);
+
+      // Bass: every 8th, square wave — the Minecraft blocky feel
+      _osc(NOTES[BASS[b8]], t, STEP * 0.85, 'square', 0.13);
+
+      // Melody: every other 8th (quarter-note grid), triangle for warmth
+      if (b16 % 2 === 0) {
+        _osc(NOTES[MELODY[b16 >> 1]], t, STEP * 1.6, 'triangle', 0.06);
+      }
+
+      // Extra energy: short chord stab on beat 3 of every 4th bar (step 36)
+      if (b32 === 4) {
+        _osc(NOTES[7],  t, STEP * 0.4, 'square', 0.05);
+        _osc(NOTES[9],  t, STEP * 0.4, 'square', 0.04);
+        _osc(NOTES[11], t, STEP * 0.4, 'square', 0.03);
+      }
+    }
+
+    function _scheduler() {
+      var a = _ac(); if (!a) return;
+      while (_nextTime < a.currentTime + LOOKAHEAD) {
+        _scheduleStep(_beat, _nextTime);
+        _beat++;
+        _nextTime += STEP;
+      }
+      if (_musicRunning) _schedId = setTimeout(_scheduler, TICK);
+    }
+
+    function startMusic() {
+      if (_musicRunning) return;
+      var a = _ac(); if (!a) return;
+      _musicRunning = true;
+      _beat = 0;
+      _nextTime = a.currentTime + 0.05;
+      _scheduler();
+    }
+
+    function stopMusic() {
+      _musicRunning = false;
+      if (_schedId) { clearTimeout(_schedId); _schedId = null; }
+    }
+
+    function setMusicMuted(muted) {
+      _musicMuted = muted;
+      if (_masterGain) _masterGain.gain.value = muted ? 0 : 0.55;
+      var muteBtn = document.getElementById('muteBtn');
+      if (muteBtn) muteBtn.textContent = muted ? '🔇' : '🔊';
+      var toggle = document.getElementById('musicToggle');
+      if (toggle) toggle.checked = !muted;
+    }
+
+    // Lobby checkbox
+    var musicToggle = document.getElementById('musicToggle');
+    if (musicToggle) {
+      musicToggle.addEventListener('change', function () {
+        setMusicMuted(!this.checked);
+      });
+    }
+
+    // In-game mute button (bottom-right)
+    var muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', function () {
+        setMusicMuted(!_musicMuted);
+      });
+    }
+
+    // Hook into screen transitions
+    var _origStartLoop = startLoop;
+    startLoop = function () { _origStartLoop(); startMusic(); };
+    var _origStopLoop  = stopLoop;
+    stopLoop = function () { _origStopLoop(); stopMusic(); };
+  }());
+  </script>
+</body>
+</html>

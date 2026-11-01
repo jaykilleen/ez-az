@@ -207,6 +207,16 @@ class Game
       path: "/games/balloon-pop.html",
       icon: "balloon-pop",
       tv_optimised: false
+    },
+    {
+      slug: "mammoth-games",
+      title: "Mammoth Games",
+      creators: "Charlie",
+      tagline: "Someone is IT, but nobody knows who. Run, hide, or rush the power-ups. Last one untagged wins.",
+      path: "/mammoth-games/join",
+      icon: "mammoth-games",
+      tv_optimised: true,
+      controller: :joystick
     }
   ].freeze
 
