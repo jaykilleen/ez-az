@@ -57,7 +57,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :submissions, only: [:create]
-    resources :scores,  only: [:index, :create]
+    resources :scores,      only: [:index, :create]
+    resources :game_votes,  only: [:index, :create]
     resource  :session, only: [:show, :create, :destroy]
     get "version",      to: "version#show"
     get "store/status", to: "store#status"

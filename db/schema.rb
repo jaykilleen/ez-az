@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_230629) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_001148) do
   create_table "announcements", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
@@ -62,6 +62,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_230629) do
     t.index ["fingerprint"], name: "index_error_reports_on_fingerprint", unique: true
     t.index ["game"], name: "index_error_reports_on_game"
     t.index ["last_seen_at"], name: "index_error_reports_on_last_seen_at"
+  end
+
+  create_table "game_votes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "game_slug", null: false
+    t.integer "player_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["player_id", "game_slug"], name: "index_game_votes_on_player_id_and_game_slug", unique: true
+    t.index ["player_id"], name: "index_game_votes_on_player_id"
   end
 
   create_table "players", force: :cascade do |t|
@@ -145,6 +154,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_230629) do
     t.index ["status"], name: "index_submissions_on_status"
   end
 
+  add_foreign_key "game_votes", "players"
   add_foreign_key "room_memberships", "players"
   add_foreign_key "room_memberships", "rooms"
   add_foreign_key "scores", "players"

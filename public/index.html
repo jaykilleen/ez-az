@@ -614,6 +614,30 @@
       text-decoration: underline;
     }
 
+    .game-box-vote {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 1px solid rgba(255,110,199,0.3);
+      color: #ff6ec7;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 8px;
+      opacity: 0.6;
+      vertical-align: middle;
+      line-height: 1.6;
+      transition: opacity 0.2s, background 0.2s;
+    }
+    .game-box-vote:hover { opacity: 1; }
+    .game-box-vote.voted {
+      background: rgba(255,110,199,0.12);
+      border-color: #ff6ec7;
+      opacity: 1;
+    }
+
     .scores-modal-backdrop {
       display: none;
       position: fixed;
@@ -1190,7 +1214,7 @@
             Can you beat the Void King?
           </div>
           <span class="game-box-badge">2 PLAYERS</span><br>
-          <span class="game-box-scores" data-game="space-dodge">High Scores</span>
+          <span class="game-box-scores" data-game="space-dodge">High Scores</span><button class="game-box-vote" data-game="space-dodge" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1205,7 +1229,7 @@
             Explore a grey world. Find the hearts. Bring it back to life.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="bloom">High Scores</span>
+          <span class="game-box-scores" data-game="bloom">High Scores</span><button class="game-box-vote" data-game="bloom" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1220,7 +1244,7 @@
             A rope puzzle. Guide your cat, hook the pegs, and trap the mouse. 8 levels.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="cat-vs-mouse">High Scores</span>
+          <span class="game-box-scores" data-game="cat-vs-mouse">High Scores</span><button class="game-box-vote" data-game="cat-vs-mouse" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1235,7 +1259,7 @@
             2v2 dodgeball. World Championship 1988. Up to 4 players on one keyboard!
           </div>
           <span class="game-box-badge">1-4 PLAYERS</span><br>
-          <span class="game-box-scores" data-game="dodgeball">High Scores</span>
+          <span class="game-box-scores" data-game="dodgeball">High Scores</span><button class="game-box-vote" data-game="dodgeball" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1250,7 +1274,7 @@
             Deep maze. One flashlight. Find what Az lost below the store.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="descent">High Scores</span>
+          <span class="game-box-scores" data-game="descent">High Scores</span><button class="game-box-vote" data-game="descent" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1265,7 +1289,7 @@
             Az rides through Gumdale spreading the word. Hit the letterbox, dodge the dog, grab a coffee for the mums and dads.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="letterbox">High Scores</span>
+          <span class="game-box-scores" data-game="letterbox">High Scores</span><button class="game-box-vote" data-game="letterbox" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1280,7 +1304,7 @@
             Store's shut. Catch the falling cartridges and sort them onto the right shelves. Build a combo, dodge the smashes.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="late-shift">High Scores</span>
+          <span class="game-box-scores" data-game="late-shift">High Scores</span><button class="game-box-vote" data-game="late-shift" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1295,7 +1319,7 @@
             Sit at opposite ends of the table. Drop magnets on the board, push and pull the energy ball into the target. Pure co-op physics.
           </div>
           <span class="game-box-badge">2 PLAYERS</span><br>
-          <span class="game-box-scores" data-game="magnet-lab">High Scores</span>
+          <span class="game-box-scores" data-game="magnet-lab">High Scores</span><button class="game-box-vote" data-game="magnet-lab" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1310,7 +1334,7 @@
             Ride Shelldon through the reef and zap every shark before your five hearts run out.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="laser-turtle">High Scores</span>
+          <span class="game-box-scores" data-game="laser-turtle">High Scores</span><button class="game-box-vote" data-game="laser-turtle" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1325,7 +1349,7 @@
             Every run mutates a new dino. One hit and it's over — how far can you drag it into Mars?
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="mutant-mile">High Scores</span>
+          <span class="game-box-scores" data-game="mutant-mile">High Scores</span><button class="game-box-vote" data-game="mutant-mile" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1340,7 +1364,7 @@
             Drag a trail between matching footprints and fill the whole board. No timer, no rush — play it anywhere on your phone.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="dino-trails">High Scores</span>
+          <span class="game-box-scores" data-game="dino-trails">High Scores</span><button class="game-box-vote" data-game="dino-trails" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1355,7 +1379,7 @@
             Line up the pin, drop it, pop the balloons! Grab power-ups for freeze, speed and multi-pin.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="balloon-pop">High Scores</span>
+          <span class="game-box-scores" data-game="balloon-pop">High Scores</span><button class="game-box-vote" data-game="balloon-pop" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1370,7 +1394,7 @@
             First-person zombie fighter. 6 worlds, loot the fallen, defeat the bosses.
           </div>
           <span class="game-box-badge">1-2 PLAYERS</span><br>
-          <span class="game-box-scores" data-game="corrupted">High Scores</span>
+          <span class="game-box-scores" data-game="corrupted">High Scores</span><button class="game-box-vote" data-game="corrupted" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1385,7 +1409,7 @@
             Az locked up for the night. Crack the substitution cipher to get back in.
           </div>
           <span class="game-box-badge">1 PLAYER</span><br>
-          <span class="game-box-scores" data-game="az-cipher">High Scores</span>
+          <span class="game-box-scores" data-game="az-cipher">High Scores</span><button class="game-box-vote" data-game="az-cipher" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1542,7 +1566,7 @@
             Slate, Pixel, Fern and Echo race for the sky. 4 players, one keyboard. Highest altitude wins.
           </div>
           <span class="game-box-badge">1-4 PLAYERS</span><br>
-          <span class="game-box-scores" data-game="dino-jump">High Scores</span>
+          <span class="game-box-scores" data-game="dino-jump">High Scores</span><button class="game-box-vote" data-game="dino-jump" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1557,7 +1581,7 @@
             Four snakes, one shrinking pit. Phones are your controller. Eat, grow, dodge. Last snake slithering wins.
           </div>
           <span class="game-box-badge">1-4 PLAYERS · PHONE</span><br>
-          <span class="game-box-scores" data-game="snake-pit-royale">High Scores</span>
+          <span class="game-box-scores" data-game="snake-pit-royale">High Scores</span><button class="game-box-vote" data-game="snake-pit-royale" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -1572,7 +1596,7 @@
             Penalty shootout under the lights. Step up to the spot, pick your corner on your phone. Glory or heartbreak on one kick.
           </div>
           <span class="game-box-badge">1-4 PLAYERS · PHONE</span><br>
-          <span class="game-box-scores" data-game="golden-goal">High Scores</span>
+          <span class="game-box-scores" data-game="golden-goal">High Scores</span><button class="game-box-vote" data-game="golden-goal" type="button">&#9829; <span class="vote-count">0</span></button>
         </div>
       </a>
 
@@ -4179,6 +4203,80 @@
   </script>
 
   <script src="/dev-bar.js"></script>
+
+  <script>
+    // Game upvoting — fetch counts on load, sort shelves, handle clicks
+    (function () {
+      var votesMap = {};
+      var myVotes  = [];
+
+      function sortShelves() {
+        document.querySelectorAll('.shelf').forEach(function (shelf) {
+          var cards = Array.from(shelf.querySelectorAll('.game-box'));
+          cards.sort(function (a, b) {
+            var aBtn = a.querySelector('.game-box-vote');
+            var bBtn = b.querySelector('.game-box-vote');
+            return (bBtn ? (votesMap[bBtn.dataset.game] || 0) : 0) -
+                   (aBtn ? (votesMap[aBtn.dataset.game] || 0) : 0);
+          });
+          cards.forEach(function (card) { shelf.appendChild(card); });
+        });
+      }
+
+      function applyVotes() {
+        document.querySelectorAll('.game-box-vote').forEach(function (btn) {
+          var slug = btn.dataset.game;
+          btn.querySelector('.vote-count').textContent = votesMap[slug] || 0;
+          btn.classList.toggle('voted', myVotes.indexOf(slug) >= 0);
+        });
+        sortShelves();
+      }
+
+      fetch('/api/game_votes')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          votesMap = d.votes    || {};
+          myVotes  = d.my_votes || [];
+          applyVotes();
+        })
+        .catch(function () {});
+
+      document.querySelectorAll('.game-box-vote').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var slug     = btn.dataset.game;
+          var countEl  = btn.querySelector('.vote-count');
+          var prevCount = countEl.textContent;
+
+          fetch('/api/game_votes', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body:    JSON.stringify({ game_slug: slug })
+          })
+            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+            .then(function (res) {
+              if (res.ok) {
+                votesMap[slug] = res.data.count;
+                if (res.data.voted) {
+                  if (myVotes.indexOf(slug) < 0) myVotes.push(slug);
+                } else {
+                  myVotes = myVotes.filter(function (s) { return s !== slug; });
+                }
+                applyVotes();
+              } else {
+                // Show error briefly, then restore
+                btn.textContent = res.data.error || 'Log in to vote';
+                setTimeout(function () {
+                  btn.innerHTML = '&#9829; <span class="vote-count">' + prevCount + '</span>';
+                }, 2000);
+              }
+            })
+            .catch(function () {});
+        });
+      });
+    })();
+  </script>
 </body>
 
 </html>
