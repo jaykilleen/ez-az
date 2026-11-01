@@ -61,6 +61,9 @@
   function openModal() {
     if (document.getElementById('ezaz-bug-overlay')) return;
 
+    // Trigger the game's own Escape handler so it pauses before the modal appears
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+
     var overlay = document.createElement('div');
     overlay.id = 'ezaz-bug-overlay';
     overlay.style.cssText = [
