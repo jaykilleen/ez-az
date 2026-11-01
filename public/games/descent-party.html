@@ -1185,7 +1185,9 @@ GameInstance.prototype.drawNameTag = function(ctx) {
   ctx.textBaseline = 'top';
   ctx.fillStyle = this.charData.colour;
   var label = this.charData.name + (this.isBot ? ' BOT' : '');
-  ctx.fillText(label, 10, 10);
+  // Top quadrants need extra clearance for the store banner (~52 canvas px)
+  var y = this.qy === 0 ? 56 : 10;
+  ctx.fillText(label, 10, y);
 };
 
 // ===== AUDIO (shared, driven by P1) =====
@@ -1438,13 +1440,15 @@ function gameLoop() {
     ctx.clearRect(0, 0, W, H);
     instances.forEach(function(inst) { inst.render(ctx); });
 
-    // Quadrant dividers
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 2;
+    // Quadrant dividers (drawn after clipping is done — no clip active here)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(960, 0); ctx.lineTo(960, 1080);
-    ctx.moveTo(0, 540); ctx.lineTo(1920, 540);
+    ctx.moveTo(960, 0);   ctx.lineTo(960, 1080);
+    ctx.moveTo(0,   540); ctx.lineTo(1920, 540);
     ctx.stroke();
+    ctx.restore();
 
     // Winner banner
     if (winnerBannerTimer > 0) {
