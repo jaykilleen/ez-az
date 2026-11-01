@@ -19,7 +19,7 @@ that convention and don't have them yet; they pick it up if they're touched.
 
 | Topic | ADRs |
 |-------|------|
-| **TV / Zone / phone controller** | 001, 005, 010 |
+| **TV / Zone / phone controller** | 001, 005, 010, 021 |
 | **Player identity & sessions** | 002 |
 | **Trivia** | 003 |
 | **Descent** | 004 |
@@ -34,6 +34,8 @@ that convention and don't have them yet; they pick it up if they're touched.
 | **Deployment & infrastructure** | 019, 020 |
 | **Leaderboards & scores** | 014, 015, 017 |
 | **Puzzle level generation** | 017 |
+| **Phone-as-display games** | 021 |
+| **Mammoth Games** | 021 |
 
 ## All ADRs (chronological)
 
@@ -59,11 +61,12 @@ that convention and don't have them yet; they pick it up if they're touched.
 | 018 | DB-Backed Store Hours and Admin Magic-Link Login | Accepted | 2026-10-21 |
 | 019 | Kamal Is the Sole Deployment System | Accepted | 2026-10-21 |
 | 020 | Ruby Is Pinned to 3.4.12, and the e2e Job Is Pinned to ubuntu-24.04 | Accepted | 2026-10-25 |
+| 021 | Mammoth Games: Phone-as-Display Architecture and Server-Side Bot AI | Accepted | 2026-11-01 |
 
 ## Maintenance
 
 When adding a new ADR:
-1. Use the next number in sequence (currently next: **021**)
+1. Use the next number in sequence (currently next: **022**)
 2. Add `Triggers:` and `Topics:` near the top
 3. Add a row to the chronological table above
 4. Add the ADR number to relevant topic rows above
