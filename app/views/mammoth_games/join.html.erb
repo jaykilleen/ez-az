@@ -480,7 +480,23 @@
       if (!sub) {
         sub = ArcadeCable.subscribe('MammothGamesChannel', myCode, { received: onMessage });
         ArcadeCable.attachExit(document.getElementById('exitBtn'), function () { return sub; }, { href: '/mammoth-games/join' });
-        startCtrl = ArcadeCable.hostStart(startBtn, function () { return sub; });
+        startBtn.style.display = 'none';
+        startCtrl = {
+          update: function (isHost, ph) {
+            startBtn.style.display = (isHost && (!ph || ph === 'lobby')) ? '' : 'none';
+          }
+        };
+        var doStart = function (e) {
+          if (e && e.preventDefault) e.preventDefault();
+          if (!sub) return;
+          var botCard  = document.querySelector('.bot-card.selected');
+          var bots     = botCard ? parseInt(botCard.dataset.bots, 10) : 0;
+          var aCard    = document.querySelector('.arena-card.selected:not(.soon)');
+          var arena    = aCard ? (aCard.dataset.arena || 'forest') : 'forest';
+          sub.send('start_game', { bots: bots, arena: arena });
+        };
+        startBtn.addEventListener('click', doStart);
+        startBtn.addEventListener('touchend', doStart, { passive: false });
       }
       // Give WebSocket time to connect
       setTimeout(function () {

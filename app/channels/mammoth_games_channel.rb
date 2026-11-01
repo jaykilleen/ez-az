@@ -52,17 +52,19 @@ class MammothGamesChannel < ApplicationCable::Channel
   end
 
   # Assign roles, spawn everyone in a ring, add bots, then fire game_started.
-  def start_game(_data = {})
+  # Bot count and arena are passed directly in the message (more reliable than
+  # relying on the separate set_bots/set_arena pre-calls being stored).
+  def start_game(data = {})
     s = session
     return unless s && s[:phase] == "lobby"
     return unless host?
 
+    bot_count = (data["bots"] || s[:pending_bots] || 0).to_i.clamp(0, 3)
+    arena     = data["arena"].presence || s[:pending_arena] || "forest"
     now = Time.current.to_f
     sessions_mu.synchronize do
       s[:phase] = "playing"
 
-      # Create bot slots
-      bot_count = (s[:pending_bots] || 0).clamp(0, 3)
       bot_count.times do |i|
         s[:players][BOT_SLOT_BASE + i] = {
           name:              BOT_NAMES[i],
@@ -103,9 +105,10 @@ class MammothGamesChannel < ApplicationCable::Channel
     broadcast_game(
       type:           "game_started",
       power_up_spots: power_up_state(s),
-      arena:          s[:pending_arena] || "forest",
-      bots:           (s[:pending_bots] || 0)
+      arena:          arena,
+      bots:           bot_count
     )
+    broadcast_positions(s)
   end
 
   # Phone: report current position. Server validates, ticks bots, checks tags.
