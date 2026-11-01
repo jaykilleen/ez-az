@@ -227,6 +227,20 @@ Zone Screen states: `claim` · `shelf` · `lobby` · `waiting` · `buzzer` · `w
 - Dev server runs on port 5003 (set by `config/puma.rb`; port 3000 is reserved for TXTavern)
 - No Turbo, no Stimulus -- this is not a standard Rails app; the frontend is vanilla JS and Canvas
 
+## Commands
+
+All EZ-AZ slash commands are prefixed `ez-az-` so they're clearly project-specific.
+Use these instead of generic equivalents — they carry EZ-AZ context and run the right checks.
+
+| Command | When to use |
+| ------- | ----------- |
+| `/ez-az-build-game` | Starting a new game. Runs the full design gate → build → registration → Phone Contract checklist. |
+| `/ez-az-audit-game <slug>` | Before deploying any new or updated game. Checks every registration point, artwork, standard features, and TV/Phone Contract clauses. |
+| `/ez-az-deploy` | Shipping to production. Runs tests, then dispatches push → GitHub Actions → polls `/api/version` live. |
+| `/ez-az-autobuild` | Unattended build path (background). Pushes to main and monitors without blocking the session. |
+
+**Rule:** always run `/ez-az-audit-game` before `/ez-az-deploy` when a game changes.
+
 ## Development
 
 Start the server: `bin/rails server -p 5003`

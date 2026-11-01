@@ -3667,6 +3667,93 @@
   </script>
 
   <script>
+    // Mammoth Games cover — dark forest, IT player (blue) chasing runners (red)
+    (function () {
+      var canvas = document.getElementById('mammothGamesCover');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = canvas.width, H = canvas.height;
+
+      var TITLE_H = 44;
+      var GAME_H  = H - TITLE_H;
+
+      // Forest background
+      var bg = ctx.createLinearGradient(0, 0, 0, GAME_H);
+      bg.addColorStop(0, '#0a1a06'); bg.addColorStop(1, '#1e3a14');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, GAME_H);
+
+      // Faint grid (mirrors the arena)
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+      for (var gx = 0; gx < W; gx += 30) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, GAME_H); ctx.stroke(); }
+      for (var gy = 0; gy < GAME_H; gy += 30) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+      // Trees around the edges
+      [
+        { x: 22,  y: 55,  r: 22 }, { x: 198, y: 75,  r: 20 },
+        { x: 50,  y: 175, r: 18 }, { x: 180, y: 188, r: 22 },
+        { x: 18,  y: 210, r: 16 }, { x: 202, y: 148, r: 16 },
+        { x: 80,  y: 30,  r: 14 }, { x: 158, y: 28,  r: 16 },
+        { x: 110, y: 220, r: 14 }
+      ].forEach(function (t) {
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.beginPath(); ctx.ellipse(t.x + 4, t.y + t.r * 0.3, t.r * 0.85, t.r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#3a1a04'; ctx.fillRect(t.x - 3, t.y, 6, t.r * 0.5);
+        ctx.fillStyle = '#1a4a0e';
+        ctx.beginPath(); ctx.arc(t.x, t.y - 4, t.r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(60,140,30,0.28)';
+        ctx.beginPath(); ctx.arc(t.x - 4, t.y - 8, t.r * 0.55, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // Power-up spots
+      [
+        { x: 95,  y: 105, c: '#ffdd00', icon: '⚡' },
+        { x: 125, y: 130, c: '#00ccff', icon: '💨' },
+        { x: 88,  y: 148, c: '#ff9900', icon: '🕳' }
+      ].forEach(function (p) {
+        ctx.save();
+        ctx.shadowBlur = 14; ctx.shadowColor = p.c;
+        ctx.fillStyle = p.c;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(p.icon, p.x, p.y);
+      });
+
+      // Runners (red border) — fleeing
+      [{ x: 72, y: 155 }, { x: 148, y: 95 }, { x: 155, y: 168 }].forEach(function (r) {
+        ctx.save();
+        ctx.shadowBlur = 10; ctx.shadowColor = '#ff4444';
+        ctx.fillStyle = '#cceecc';
+        ctx.beginPath(); ctx.arc(r.x, r.y, 11, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.restore();
+      });
+
+      // IT player (blue border, white fill, larger) — center
+      ctx.save();
+      ctx.shadowBlur = 22; ctx.shadowColor = '#4488ff';
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(110, 125, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#4488ff'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.restore();
+      ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center'; ctx.fillStyle = '#4488ff';
+      ctx.fillText('IT?', 110, 106);
+
+      // Title bar
+      ctx.fillStyle = '#060e04'; ctx.fillRect(0, GAME_H, W, TITLE_H);
+      ctx.fillStyle = 'rgba(109,255,138,0.3)'; ctx.fillRect(0, GAME_H, W, 2);
+      ctx.save();
+      ctx.shadowColor = '#6dff8a'; ctx.shadowBlur = 14;
+      ctx.fillStyle = '#6dff8a';
+      ctx.font = 'bold 10px "Press Start 2P", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('MAMMOTH', W / 2, GAME_H + 16);
+      ctx.fillText('GAMES', W / 2, GAME_H + 32);
+      ctx.restore();
+    }());
+  </script>
+
+  <script>
     // Az speaks when you click his head
     (function() {
       const azLines = [
