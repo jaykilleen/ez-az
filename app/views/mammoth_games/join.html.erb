@@ -479,7 +479,7 @@
 
       if (!sub) {
         sub = ArcadeCable.subscribe('MammothGamesChannel', myCode, { received: onMessage });
-        ArcadeCable.attachExit(document.getElementById('exitBtn'), function () { return sub; });
+        ArcadeCable.attachExit(document.getElementById('exitBtn'), function () { return sub; }, { href: '/mammoth-games/join' });
         startCtrl = ArcadeCable.hostStart(startBtn, function () { return sub; });
       }
       // Give WebSocket time to connect
@@ -579,7 +579,7 @@
           break;
 
         case 'left':
-          window.location.href = '/';
+          window.location.href = '/mammoth-games/join';
           break;
       }
     }
@@ -649,7 +649,7 @@
     });
     document.getElementById('leaveBtn').addEventListener('click', function () {
       if (sub) sub.send('leave', {});
-      window.location.href = '/';
+      window.location.href = '/mammoth-games/join';
     });
 
     // Canvas

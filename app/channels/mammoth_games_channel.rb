@@ -17,6 +17,7 @@ class MammothGamesChannel < ApplicationCable::Channel
   PU_COOLDOWN      = 30.0
   TRAP_LIFETIME    = 60.0
   GRACE_PERIOD     = 3.0
+  PLAYER_SPD       = 240.0
   BOT_SLOT_BASE    = 1000
   BOT_NAMES        = %w[MAMMOTH BEAST TITAN SHADOW].freeze
 
