@@ -36,7 +36,7 @@ class MammothGamesChannel < ApplicationCable::Channel
   end
 
   # Host sets the arena before starting (stored in session, broadcast at start).
-  def set_arena(data = {})
+  def set_arena(data)
     return unless host?
     s = session
     return unless s
@@ -44,7 +44,7 @@ class MammothGamesChannel < ApplicationCable::Channel
   end
 
   # Host sets the bot count before starting.
-  def set_bots(data = {})
+  def set_bots(data)
     return unless host?
     s = session
     return unless s
@@ -54,7 +54,7 @@ class MammothGamesChannel < ApplicationCable::Channel
   # Assign roles, spawn everyone in a ring, add bots, then fire game_started.
   # Bot count and arena are passed directly in the message (more reliable than
   # relying on the separate set_bots/set_arena pre-calls being stored).
-  def start_game(data = {})
+  def start_game(data)
     s = session
     return unless s && s[:phase] == "lobby"
     return unless host?
