@@ -35,24 +35,52 @@
   <p style="color:#555;font-size:13px;margin-bottom:8px">Az lost something deep below the store.</p>
   <p style="color:#555;font-size:13px;margin-bottom:20px">Four guides. One guitar. First one there wins.</p>
   <div style="display:flex;gap:24px;margin-bottom:20px">
-    <div style="background:rgba(160,160,160,0.08);border:1px solid #333;border-radius:10px;padding:14px 20px;text-align:left">
+    <div id="slot0card" style="background:rgba(160,160,160,0.08);border:1px solid #333;border-radius:10px;padding:14px 20px;text-align:left">
       <div style="color:#a0a0a0;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P1 — SLATE</div>
-      <div style="color:#555;font-size:11px;line-height:1.8">Arrow keys to move<br>Shift / Space to sprint</div>
+      <div id="slot0status" style="color:#555;font-size:11px;line-height:1.8">Arrow keys to move<br>Shift / Space to sprint</div>
     </div>
-    <div style="background:rgba(0,255,204,0.06);border:1px solid #1a5a5a;border-radius:10px;padding:14px 20px;text-align:left">
+    <div id="slot1card" style="background:rgba(0,255,204,0.06);border:1px solid #1a5a5a;border-radius:10px;padding:14px 20px;text-align:left">
       <div style="color:#00ffcc;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P2 — PIXEL</div>
-      <div style="color:#555;font-size:11px;line-height:1.8">WASD to move<br>Q to sprint</div>
+      <div id="slot1status" style="color:#555;font-size:11px;line-height:1.8">WASD to move<br>Q to sprint</div>
     </div>
-    <div style="background:rgba(68,204,102,0.06);border:1px solid #1a4a1a;border-radius:10px;padding:14px 20px;text-align:left">
+    <div id="slot2card" style="background:rgba(68,204,102,0.06);border:1px solid #1a4a1a;border-radius:10px;padding:14px 20px;text-align:left">
       <div style="color:#44cc66;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P3 — FERN</div>
-      <div style="color:#555;font-size:11px;line-height:1.8">Bot</div>
+      <div id="slot2status" style="color:#555;font-size:11px;line-height:1.8">Bot</div>
     </div>
-    <div style="background:rgba(170,136,255,0.06);border:1px solid #2a1a5a;border-radius:10px;padding:14px 20px;text-align:left">
+    <div id="slot3card" style="background:rgba(170,136,255,0.06);border:1px solid #2a1a5a;border-radius:10px;padding:14px 20px;text-align:left">
       <div style="color:#aa88ff;font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px">P4 — ECHO</div>
-      <div style="color:#555;font-size:11px;line-height:1.8">Bot</div>
+      <div id="slot3status" style="color:#555;font-size:11px;line-height:1.8">Bot</div>
     </div>
   </div>
-  <button class="btn" onclick="startPartyGame()">Play (or Space)</button>
+  <div id="joinRow" style="display:flex;align-items:center;gap:18px;margin-bottom:16px;background:rgba(255,255,255,0.03);border:1px solid #2a2018;border-radius:10px;padding:12px 18px">
+    <div id="qrWrap" style="width:80px;height:80px;flex-shrink:0"></div>
+    <div>
+      <div style="color:#555;font-size:10px;letter-spacing:0.1em;margin-bottom:4px">JOIN ON PHONE</div>
+      <div id="joinCodeDisplay" style="color:#a0a0a0;font-size:22px;font-weight:900;letter-spacing:0.3em;font-family:'Press Start 2P',monospace"></div>
+      <div style="color:#333;font-size:10px;margin-top:4px">descent-party/join</div>
+    </div>
+  </div>
+  <div style="margin:14px 0;text-align:center;font-size:12px;color:#888">
+    <div style="margin-bottom:10px">
+      <span style="color:#555;font-size:10px;letter-spacing:1px">FLOOR SYNC</span><br>
+      <label style="cursor:pointer;margin-right:14px">
+        <input type="radio" name="tvFloorSync" value="independent" checked style="accent-color:#ffe44d"> Independent
+      </label>
+      <label style="cursor:pointer">
+        <input type="radio" name="tvFloorSync" value="all-advance" style="accent-color:#ffe44d"> All Advance
+      </label>
+    </div>
+    <div style="margin-bottom:14px">
+      <span style="color:#555;font-size:10px;letter-spacing:1px">WIN CONDITION</span><br>
+      <label style="cursor:pointer;margin-right:14px">
+        <input type="radio" name="tvWinCondition" value="race" checked style="accent-color:#ffe44d"> Race to Guitar
+      </label>
+      <label style="cursor:pointer">
+        <input type="radio" name="tvWinCondition" value="time-limit" style="accent-color:#ffe44d"> 3-Min Depth
+      </label>
+    </div>
+  </div>
+  <button class="btn" onclick="tvStartGame()">Play (or Space)</button>
   <button class="btn-quit" onclick="window.location.href='/'">← Store</button>
 </div>
 
@@ -71,6 +99,7 @@
 </div>
 </div>
 
+<script src="/arcade-tv.js"></script>
 <script>
 // ===== SHARED CONSTANTS =====
 var canvas = document.getElementById('game');
@@ -325,6 +354,7 @@ function GameInstance(charIdx, qx, qy, isBot) {
   this.finished = false;
   this.finishTime = 0;
   this.finishWallTime = 0;
+  this.floorArrivalTime = 0;
   this.counted = false;
 
   this.botPath = [];
@@ -503,6 +533,7 @@ GameInstance.prototype.showFloorIntro = function() {
   this.buildFloor(this.currentFloor);
   this.floorIntroTimer = 150;
   this.floorIntroFade = 0;
+  this.floorArrivalTime = Date.now();
 };
 
 GameInstance.prototype.beginPlaying = function() {
@@ -637,9 +668,20 @@ GameInstance.prototype.update = function() {
     if (this.currentFloor === 7) {
       this.startDiscovery();
     } else {
-      if (audioCtx && !this.isBot) playStairsSound();
-      this.currentFloor++;
-      this.showFloorIntro();
+      if (FLOOR_SYNC === 'all-advance') {
+        var nextFloor = this.currentFloor + 1;
+        instances.forEach(function(inst) {
+          if (!inst.finished && inst.currentFloor < nextFloor) {
+            if (audioCtx && !inst.isBot) playStairsSound();
+            inst.currentFloor = nextFloor;
+            inst.showFloorIntro();
+          }
+        });
+      } else {
+        if (audioCtx && !this.isBot) playStairsSound();
+        this.currentFloor++;
+        this.showFloorIntro();
+      }
     }
     return;
   }
@@ -1304,36 +1346,153 @@ var winner = null;
 var winnerBannerTimer = 0;
 var gamePaused = false;
 
+var FLOOR_SYNC = 'independent';   // 'independent' | 'all-advance'
+var WIN_CONDITION = 'race';       // 'race' | 'time-limit'
+var TIME_LIMIT_MS = 3 * 60 * 1000;
+var gameTimerMs = 0;
+
 var globalKeys = {};
 window.addEventListener('keydown', function(e) {
   globalKeys[e.code] = true;
-  if (gameState === 'title' && e.code === 'Space') startPartyGame();
+  if (gameState === 'title' && e.code === 'Space') tvStartGame();
   if (gameState === 'playing' && e.code === 'Escape') togglePause();
   if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
 });
 window.addEventListener('keyup', function(e) { globalKeys[e.code] = false; });
 
+// Track which slots are controlled by phones (keyed by slot index).
+// When a phone is in a slot, keyboard mapping for that slot is skipped —
+// the phone's press/release messages drive inst.keys directly instead.
+var phoneSlots = {};
+
 function mapKeys() {
   var i0 = instances[0];
-  i0.keys['ArrowLeft']  = !!globalKeys['ArrowLeft'];
-  i0.keys['ArrowRight'] = !!globalKeys['ArrowRight'];
-  i0.keys['ArrowUp']    = !!globalKeys['ArrowUp'];
-  i0.keys['ArrowDown']  = !!globalKeys['ArrowDown'];
-  i0.keys['ShiftLeft']  = !!(globalKeys['ShiftLeft'] || globalKeys['ShiftRight'] || globalKeys['Space']);
-
+  if (!phoneSlots[0]) {
+    i0.keys['ArrowLeft']  = !!globalKeys['ArrowLeft'];
+    i0.keys['ArrowRight'] = !!globalKeys['ArrowRight'];
+    i0.keys['ArrowUp']    = !!globalKeys['ArrowUp'];
+    i0.keys['ArrowDown']  = !!globalKeys['ArrowDown'];
+    i0.keys['ShiftLeft']  = !!(globalKeys['ShiftLeft'] || globalKeys['ShiftRight'] || globalKeys['Space']);
+  }
   var i1 = instances[1];
-  i1.keys['ArrowLeft']  = !!globalKeys['KeyA'];
-  i1.keys['ArrowRight'] = !!globalKeys['KeyD'];
-  i1.keys['ArrowUp']    = !!globalKeys['KeyW'];
-  i1.keys['ArrowDown']  = !!globalKeys['KeyS'];
-  i1.keys['ShiftLeft']  = !!globalKeys['KeyQ'];
+  if (!phoneSlots[1]) {
+    i1.keys['ArrowLeft']  = !!globalKeys['KeyA'];
+    i1.keys['ArrowRight'] = !!globalKeys['KeyD'];
+    i1.keys['ArrowUp']    = !!globalKeys['KeyW'];
+    i1.keys['ArrowDown']  = !!globalKeys['KeyS'];
+    i1.keys['ShiftLeft']  = !!globalKeys['KeyQ'];
+  }
 }
+
+// ---- ActionCable TV subscription ----
+// Receives press/release from phones and lobby_update for the title screen.
+(function () {
+  var gameCode = ArcadeTV.sessionCode();
+  document.getElementById('joinCodeDisplay').textContent = gameCode;
+
+  // Fetch the QR code SVG from /qr and embed it
+  (function () {
+    var url = '/qr?url=' + encodeURIComponent(window.location.origin + '/descent-party/join?code=' + gameCode);
+    fetch(url)
+      .then(function (r) { return r.text(); })
+      .then(function (svg) {
+        var wrap = document.getElementById('qrWrap');
+        if (wrap) { wrap.innerHTML = svg; var s = wrap.querySelector('svg'); if (s) { s.style.width = '80px'; s.style.height = '80px'; } }
+      })
+      .catch(function () {});
+  }());
+
+  var wsBase = window.location.origin.replace(/^http/, 'ws') + '/cable';
+  var tvCable = null, tvSub = null;
+
+  try {
+    tvCable = { _ws: null, _connect: function () {
+      var self = tvCable;
+      self._ws = new WebSocket(wsBase);
+      self._ws.onopen = function () { if (tvSub) tvSub._subscribe(); };
+      self._ws.onmessage = function (e) {
+        var msg = JSON.parse(e.data);
+        if (msg.type === 'ping' || msg.type === 'welcome' || msg.type === 'confirm_subscription') return;
+        if (tvSub && tvSub._id === msg.identifier && msg.message) handleTvMessage(msg.message);
+      };
+      self._ws.onclose = function () { setTimeout(function () { self._connect(); }, 2000); };
+    } };
+    tvCable._connect();
+
+    var params = { channel: 'DescentPartyChannel', code: gameCode, role: 'tv' };
+    tvSub = {
+      _id: JSON.stringify(params),
+      _subscribe: function () { tvCable._ws.send(JSON.stringify({ command: 'subscribe', identifier: this._id })); },
+      send: function (action, data) {
+        if (tvCable._ws && tvCable._ws.readyState === WebSocket.OPEN)
+          tvCable._ws.send(JSON.stringify({ command: 'message', identifier: this._id, data: JSON.stringify(Object.assign({ action: action }, data || {})) }));
+      }
+    };
+  } catch (e) {}
+
+  var SLOT_DEFAULT_STATUS = [
+    'Arrow keys to move<br>Shift / Space to sprint',
+    'WASD to move<br>Q to sprint',
+    'Bot',
+    'Bot'
+  ];
+
+  function handleTvMessage(msg) {
+    if (msg.type === 'lobby_update' || msg.type === 'state') {
+      var players = msg.players || [];
+      // Reset all slots to default
+      for (var i = 0; i < 4; i++) {
+        phoneSlots[i] = null;
+        var el = document.getElementById('slot' + i + 'status');
+        if (el) el.innerHTML = SLOT_DEFAULT_STATUS[i];
+        var card = document.getElementById('slot' + i + 'card');
+        if (card) card.style.opacity = '1';
+      }
+      players.forEach(function (p) {
+        var s = p.slot;
+        if (s < 0 || s > 3) return;
+        phoneSlots[s] = p.name;
+        instances[s].isBot = false;
+        var el = document.getElementById('slot' + s + 'status');
+        if (el) el.innerHTML = '<span style="color:#ffe44d">' + p.name + '</span><br><span style="color:#3a5a3a">on phone</span>';
+      });
+    } else if (msg.type === 'game_started') {
+      FLOOR_SYNC = msg.floor_sync || 'independent';
+      WIN_CONDITION = msg.win_condition || 'race';
+      if (gameState === 'title') startPartyGame();
+    } else if (msg.type === 'press') {
+      var slot = msg.slot, key = msg.key;
+      if (slot >= 0 && slot <= 3 && instances[slot]) instances[slot].keys[key] = true;
+    } else if (msg.type === 'release') {
+      var slot = msg.slot, key = msg.key;
+      if (slot >= 0 && slot <= 3 && instances[slot]) instances[slot].keys[key] = false;
+    } else if (msg.type === 'all_keys_up') {
+      var slot = msg.slot;
+      if (slot >= 0 && slot <= 3 && instances[slot]) {
+        var keys = instances[slot].keys;
+        ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft'].forEach(function (k) { keys[k] = false; });
+        phoneSlots[slot] = null;
+      }
+    } else if (msg.type === 'player_left') {
+      var slot = msg.slot;
+      if (slot >= 0 && slot <= 3) {
+        phoneSlots[slot] = null;
+        var el = document.getElementById('slot' + slot + 'status');
+        if (el) el.innerHTML = SLOT_DEFAULT_STATUS[slot];
+      }
+    }
+  }
+
+  // Expose tvSub so showResults can call game_ended
+  window._descentTvSub = function () { return tvSub; };
+}());
 
 function startPartyGame() {
   gameState = 'playing';
   gamePaused = false;
   winner = null;
   winnerBannerTimer = 0;
+  gameTimerMs = TIME_LIMIT_MS;
   document.getElementById('titleScreen').style.display = 'none';
   document.getElementById('resultsScreen').style.display = 'none';
   document.getElementById('pauseScreen').style.display = 'none';
@@ -1361,6 +1520,19 @@ function startPartyGame() {
   startAmbient();
 }
 
+function tvStartGame() {
+  var floorSync = (document.querySelector('input[name="tvFloorSync"]:checked') || {}).value || 'independent';
+  var winCond   = (document.querySelector('input[name="tvWinCondition"]:checked') || {}).value || 'race';
+  var sub = window._descentTvSub && window._descentTvSub();
+  if (sub) {
+    sub.send('start_game', { floor_sync: floorSync, win_condition: winCond });
+  } else {
+    FLOOR_SYNC    = floorSync;
+    WIN_CONDITION = winCond;
+    startPartyGame();
+  }
+}
+
 function togglePause() {
   if (!gamePaused) {
     gamePaused = true;
@@ -1385,6 +1557,7 @@ function resumeGame() {
 
 function checkWinCondition() {
   if (gameState !== 'playing') return;
+  if (WIN_CONDITION === 'time-limit') return; // clock ends the game, not the guitar
 
   instances.forEach(function(inst) {
     if (inst.finished && !inst.counted) {
@@ -1410,25 +1583,49 @@ function showResults() {
   gameState = 'results';
   stopAmbient();
 
-  var finished = instances.filter(function(i) { return i.finished; });
-  finished.sort(function(a, b) { return a.finishTime - b.finishTime; });
-  var unfinished = instances.filter(function(i) { return !i.finished; });
-
   var html = '';
-  finished.forEach(function(inst, idx) {
-    var medal = idx === 0 ? ' 🎸' : '';
-    html += '<div style="color:' + inst.charData.colour + ';margin-bottom:6px">' +
-      (idx + 1) + '. ' + inst.charData.name + (inst.isBot ? ' (bot)' : '') +
-      ' — ' + formatTime(inst.finishTime) + medal + '</div>';
-  });
-  if (unfinished.length > 0) {
-    html += '<div style="color:#444;margin-top:10px;font-size:12px">Did not finish:</div>';
-    unfinished.forEach(function(inst) {
-      html += '<div style="color:#333;font-size:12px">' + inst.charData.name + (inst.isBot ? ' (bot)' : '') + '</div>';
+  if (WIN_CONDITION === 'time-limit') {
+    var ranked = instances.slice().sort(function(a, b) {
+      var fa = a.finished ? 8 : a.currentFloor;
+      var fb = b.finished ? 8 : b.currentFloor;
+      if (fb !== fa) return fb - fa;
+      return (a.floorArrivalTime || 0) - (b.floorArrivalTime || 0);
     });
+    ranked.forEach(function(inst, idx) {
+      var fl = inst.finished ? 8 : inst.currentFloor;
+      var medal = idx === 0 ? ' 🏆' : '';
+      html += '<div style="color:' + inst.charData.colour + ';margin-bottom:6px">' +
+        (idx + 1) + '. ' + inst.charData.name + (inst.isBot ? ' (bot)' : '') +
+        ' — Floor ' + fl + medal + '</div>';
+    });
+  } else {
+    var finished = instances.filter(function(i) { return i.finished; });
+    finished.sort(function(a, b) { return a.finishTime - b.finishTime; });
+    var unfinished = instances.filter(function(i) { return !i.finished; });
+    finished.forEach(function(inst, idx) {
+      var medal = idx === 0 ? ' 🎸' : '';
+      html += '<div style="color:' + inst.charData.colour + ';margin-bottom:6px">' +
+        (idx + 1) + '. ' + inst.charData.name + (inst.isBot ? ' (bot)' : '') +
+        ' — ' + formatTime(inst.finishTime) + medal + '</div>';
+    });
+    if (unfinished.length > 0) {
+      html += '<div style="color:#444;margin-top:10px;font-size:12px">Did not finish:</div>';
+      unfinished.forEach(function(inst) {
+        html += '<div style="color:#333;font-size:12px">' + inst.charData.name + (inst.isBot ? ' (bot)' : '') + '</div>';
+      });
+    }
   }
   document.getElementById('resultsList').innerHTML = html;
   document.getElementById('resultsScreen').style.display = 'flex';
+
+  // Notify phones that the game is done so they return to lobby
+  var sub = window._descentTvSub && window._descentTvSub();
+  if (sub) {
+    var results = instances.map(function (inst) {
+      return { name: inst.charData.name, finished: inst.finished, time: inst.finishTime };
+    });
+    sub.send('game_ended', { results: results });
+  }
 }
 
 function gameLoop() {
@@ -1436,6 +1633,14 @@ function gameLoop() {
     mapKeys();
     instances.forEach(function(inst) { inst.update(); });
     checkWinCondition();
+
+    if (WIN_CONDITION === 'time-limit') {
+      gameTimerMs -= 1000 / 60;
+      if (gameTimerMs <= 0) {
+        gameTimerMs = 0;
+        showResults();
+      }
+    }
 
     ctx.clearRect(0, 0, W, H);
     instances.forEach(function(inst) { inst.render(ctx); });
@@ -1449,6 +1654,32 @@ function gameLoop() {
     ctx.moveTo(0,   540); ctx.lineTo(1920, 540);
     ctx.stroke();
     ctx.restore();
+
+    // Timer overlay (time-limit mode)
+    if (WIN_CONDITION === 'time-limit') {
+      var secsLeft = Math.max(0, Math.ceil(gameTimerMs / 1000));
+      var mins = Math.floor(secsLeft / 60);
+      var secs = secsLeft % 60;
+      var timerStr = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      var urgent = secsLeft <= 10;
+      ctx.save();
+      ctx.font = '16px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      var tw = ctx.measureText(timerStr).width + 24;
+      ctx.fillStyle = urgent ? 'rgba(180,20,20,0.8)' : 'rgba(0,0,0,0.65)';
+      var cx = W / 2, cy = H / 2;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(cx - tw / 2, cy - 14, tw, 28, 6);
+        ctx.fill();
+      } else {
+        ctx.fillRect(cx - tw / 2, cy - 14, tw, 28);
+      }
+      ctx.fillStyle = urgent ? '#ff6666' : '#aaa';
+      ctx.fillText(timerStr, cx, cy);
+      ctx.restore();
+    }
 
     // Winner banner
     if (winnerBannerTimer > 0) {

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Descent Party</title>
+  <link rel="stylesheet" href="/ez-az-shell.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0805; color: #fff;
+      font-family: var(--ez-font, 'Courier New', monospace);
+      overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    /* ---- Join screen ---- */
+    #screenJoin { justify-content: flex-start; padding-top: 54px; }
+    .join-inner {
+      width: 100%; max-width: 400px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .game-title {
+      font-size: 22px; font-weight: 900; letter-spacing: 0.12em;
+      color: #a0a0a0; text-align: center;
+    }
+    .game-sub { font-size: 10px; color: #3a3530; text-align: center; letter-spacing: 0.08em; }
+    .section-label { font-size: 10px; letter-spacing: 0.12em; color: #3a3530; text-transform: uppercase; }
+    .code-input {
+      width: 100%; padding: 14px 16px; background: #111008; border: 2px solid #2a2018;
+      border-radius: 8px; color: #a0a0a0; font-family: inherit;
+      font-size: 22px; font-weight: 700; letter-spacing: 0.2em; text-align: center;
+      text-transform: uppercase; outline: none;
+    }
+    .code-input:focus { border-color: #a0a0a0; }
+    .name-input {
+      width: 100%; padding: 14px 16px; background: #111008; border: 2px solid #2a2018;
+      border-radius: 8px; color: #fff; font-family: inherit;
+      font-size: 18px; font-weight: 700; letter-spacing: 0.1em; text-align: center;
+      text-transform: uppercase; outline: none;
+    }
+    .name-input:focus { border-color: #a0a0a0; }
+    .join-btn {
+      width: 100%; padding: 16px; background: #a0a0a0; border: none;
+      border-radius: 10px; color: #0a0805; font-family: inherit;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.14em;
+      cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+    }
+    .join-btn:disabled { opacity: 0.3; pointer-events: none; }
+    .join-btn:active { transform: scale(0.97); }
+    .error-msg { font-size: 12px; color: #ff6b6b; text-align: center; min-height: 18px; }
+
+    /* ---- Lobby screen ---- */
+    #screenLobby { justify-content: flex-start; padding-top: 54px; }
+    .lobby-inner {
+      width: 100%; max-width: 400px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .lobby-code-badge { text-align: center; font-size: 11px; color: #3a3530; letter-spacing: 0.1em; }
+    .lobby-code-badge span { display: block; font-size: 30px; color: #a0a0a0; font-weight: 900; letter-spacing: 0.3em; }
+    .lobby-you { text-align: center; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.08em; }
+    .lobby-players { display: flex; flex-direction: column; gap: 8px; }
+    .lobby-player-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #111008;
+      border-radius: 8px; border: 1px solid #2a2018;
+    }
+    .lobby-player-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .lobby-player-name { font-size: 14px; font-weight: 700; letter-spacing: 0.08em; }
+    .lobby-host-tag { font-size: 10px; color: #3a3530; margin-left: auto; }
+    .lobby-waiting { text-align: center; font-size: 12px; color: #3a3530; letter-spacing: 0.06em; }
+    .start-btn {
+      width: 100%; padding: 16px; background: #ffe44d; border: none;
+      border-radius: 10px; color: #1a1000; font-family: inherit;
+      font-size: 16px; font-weight: 900; letter-spacing: 0.14em; cursor: pointer;
+    }
+    .start-btn:active { transform: scale(0.97); }
+
+    /* ---- D-pad screen ---- */
+    #screenPad { position: relative; justify-content: center; }
+    #charBadge {
+      position: absolute; top: 54px; left: 50%; transform: translateX(-50%);
+      text-align: center; pointer-events: none;
+    }
+    #charName {
+      font-size: 11px; font-weight: 900; letter-spacing: 0.2em;
+      padding: 4px 14px; border-radius: 20px;
+    }
+    #dpad {
+      width: 210px; height: 210px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 6px; touch-action: none;
+    }
+    .dpad-btn {
+      border-radius: 12px; background: rgba(160,160,160,0.12);
+      border: 2px solid rgba(160,160,160,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; cursor: pointer;
+      transition: background 0.08s;
+    }
+    .dpad-btn.held { background: rgba(160,160,160,0.35); border-color: rgba(160,160,160,0.6); }
+    .dpad-btn.empty { background: transparent; border-color: transparent; pointer-events: none; }
+    #btnSprint {
+      font-size: 9px; letter-spacing: 0.06em;
+      background: rgba(255,228,77,0.12); border-color: rgba(255,228,77,0.25);
+    }
+    #btnSprint.held { background: rgba(255,228,77,0.35); border-color: rgba(255,228,77,0.7); }
+
+    /* ---- Waiting screen ---- */
+    #screenWaiting { justify-content: center; text-align: center; padding: 40px 20px; gap: 18px; }
+    .waiting-title { font-size: 20px; font-weight: 900; color: #a0a0a0; letter-spacing: 0.1em; }
+    .waiting-text { font-size: 14px; color: #3a3530; letter-spacing: 0.08em; }
+  </style>
+</head>
+<body>
+  <div class="ezaz-store-banner"><a href="/">EZ-AZ</a></div>
+  <button class="ezaz-exit-btn" id="exitBtn">EXIT</button>
+
+  <!-- JOIN -->
+  <div class="screen active" id="screenJoin">
+    <div class="join-inner">
+      <div class="game-title">DESCENT PARTY</div>
+      <div class="game-sub">BY JAYKILL</div>
+
+      <div class="section-label">Game code</div>
+      <input class="code-input" id="codeInput" type="text" maxlength="4"
+             placeholder="XXXX" autocomplete="off" autocorrect="off"
+             autocapitalize="characters" spellcheck="false">
+
+      <div class="section-label">Your name</div>
+      <input class="name-input" id="nameInput" type="text" maxlength="12"
+             placeholder="ENTER NAME" autocomplete="off" autocorrect="off"
+             autocapitalize="characters" spellcheck="false">
+
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="join-btn" id="joinBtn" disabled>JOIN GAME</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="screen" id="screenLobby">
+    <div class="lobby-inner">
+      <div class="game-title">DESCENT PARTY</div>
+      <div class="lobby-code-badge">GAME CODE<span id="lobbyCode"></span></div>
+      <div class="lobby-you" id="lobbyYou"></div>
+      <div class="lobby-players" id="lobbyPlayers"></div>
+      <div class="lobby-waiting" id="lobbyWait">Waiting for the TV to start...</div>
+      <!-- Options — visible to host only -->
+      <div id="hostOptions" style="display:none;margin:4px 0">
+        <div style="margin-bottom:12px">
+          <div style="color:#3a3530;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Floor Sync</div>
+          <label style="display:block;cursor:pointer;margin-bottom:8px;font-size:13px">
+            <input type="radio" name="floorSync" value="independent" checked style="accent-color:#ffe44d"> Independent
+          </label>
+          <label style="display:block;cursor:pointer;font-size:13px">
+            <input type="radio" name="floorSync" value="all-advance" style="accent-color:#ffe44d"> All Advance
+          </label>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="color:#3a3530;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Win Condition</div>
+          <label style="display:block;cursor:pointer;margin-bottom:8px;font-size:13px">
+            <input type="radio" name="winCondition" value="race" checked style="accent-color:#ffe44d"> Race to Guitar
+          </label>
+          <label style="display:block;cursor:pointer;font-size:13px">
+            <input type="radio" name="winCondition" value="time-limit" style="accent-color:#ffe44d"> 3-Min Depth
+          </label>
+        </div>
+      </div>
+      <button class="start-btn" id="startBtn" style="display:none">START GAME</button>
+    </div>
+  </div>
+
+  <!-- D-PAD -->
+  <div class="screen" id="screenPad">
+    <div id="charBadge">
+      <div id="charName">GUIDE</div>
+    </div>
+    <div id="dpad">
+      <div class="dpad-btn empty"></div>
+      <div class="dpad-btn" id="btnUp">▲</div>
+      <div class="dpad-btn empty"></div>
+      <div class="dpad-btn" id="btnLeft">◀</div>
+      <div class="dpad-btn" id="btnSprint">SPRINT</div>
+      <div class="dpad-btn" id="btnRight">▶</div>
+      <div class="dpad-btn empty"></div>
+      <div class="dpad-btn" id="btnDown">▼</div>
+      <div class="dpad-btn empty"></div>
+    </div>
+  </div>
+
+  <!-- WAITING (game finished) -->
+  <div class="screen" id="screenWaiting">
+    <div class="waiting-title">WELL DONE!</div>
+    <div class="waiting-text">Waiting for results on the TV...</div>
+  </div>
+
+  <script src="/arcade-cable.js"></script>
+  <script>
+  (function () {
+    var CHAR_COLOURS = ['#a0a0a0', '#00ffcc', '#44cc66', '#aa88ff'];
+    var CHAR_NAMES   = ['SLATE',   'PIXEL',   'FERN',    'ECHO'];
+
+    var myCode = new URLSearchParams(location.search).get('code') || '';
+    var mySlot = null, myName = '', myIsHost = false;
+    var sub = null;
+
+    var codeInput    = document.getElementById('codeInput');
+    var nameInput    = document.getElementById('nameInput');
+    var joinBtn      = document.getElementById('joinBtn');
+    var errorMsg     = document.getElementById('errorMsg');
+    var lobbyCode    = document.getElementById('lobbyCode');
+    var lobbyYou     = document.getElementById('lobbyYou');
+    var lobbyPlayers = document.getElementById('lobbyPlayers');
+    var startBtn     = document.getElementById('startBtn');
+    var charName     = document.getElementById('charName');
+
+    if (myCode) { codeInput.value = myCode; checkReady(); }
+
+    codeInput.addEventListener('input', function () {
+      codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      myCode = codeInput.value;
+      checkReady();
+    });
+    nameInput.addEventListener('input', function () {
+      nameInput.value = nameInput.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+      checkReady();
+    });
+    function checkReady() {
+      joinBtn.disabled = !(codeInput.value.length === 4 && nameInput.value.trim().length > 0);
+    }
+
+    joinBtn.addEventListener('click', function () {
+      var name = nameInput.value.trim();
+      if (!name || codeInput.value.length !== 4) return;
+      myName = name;
+      errorMsg.textContent = '';
+      joinBtn.disabled = true;
+      if (!sub) {
+        sub = ArcadeCable.subscribe('DescentPartyChannel', myCode, { received: onMessage });
+        ArcadeCable.attachExit(document.getElementById('exitBtn'), function () { return sub; },
+          { href: '/descent-party/join' });
+      }
+      setTimeout(function () {
+        if (sub) sub.send('join', { name: myName });
+      }, 400);
+    });
+
+    startBtn.addEventListener('click', doStart);
+    startBtn.addEventListener('touchend', function (e) { e.preventDefault(); doStart(); }, { passive: false });
+    function doStart() {
+      if (!sub) return;
+      var floorSync    = (document.querySelector('input[name="floorSync"]:checked')    || {}).value || 'independent';
+      var winCondition = (document.querySelector('input[name="winCondition"]:checked') || {}).value || 'race';
+      sub.send('start_game', { floor_sync: floorSync, win_condition: winCondition });
+    }
+
+    function showScreen(name) {
+      ['Join','Lobby','Pad','Waiting'].forEach(function (s) {
+        document.getElementById('screen'+s).classList.toggle('active', s === name);
+      });
+    }
+
+    function onMessage(msg) {
+      switch (msg.type) {
+        case 'state':
+          if (msg.phase === 'playing' && mySlot !== null) showPad();
+          break;
+        case 'joined':
+          mySlot   = msg.slot;
+          myIsHost = msg.host;
+          lobbyCode.textContent = myCode;
+          lobbyYou.textContent = myName + (myIsHost ? ' (host)' : '');
+          startBtn.style.display = myIsHost ? '' : 'none';
+          document.getElementById('hostOptions').style.display = myIsHost ? '' : 'none';
+          showScreen('Lobby');
+          break;
+        case 'join_error':
+          errorMsg.textContent = msg.message || 'Could not join';
+          joinBtn.disabled = false;
+          break;
+        case 'lobby_update':
+          updateLobbyList(msg.players, msg.host_slot);
+          var isNowHost = myIsHost && msg.host_slot === mySlot;
+          startBtn.style.display = isNowHost ? '' : 'none';
+          document.getElementById('hostOptions').style.display = isNowHost ? '' : 'none';
+          break;
+        case 'game_started':
+          showPad();
+          break;
+        case 'game_over':
+          releaseAllKeys();
+          showScreen('Waiting');
+          break;
+        case 'session_reset':
+          releaseAllKeys();
+          showScreen('Lobby');
+          break;
+        case 'left':
+          window.location.href = '/descent-party/join';
+          break;
+      }
+    }
+
+    function showPad() {
+      var col = mySlot !== null ? CHAR_COLOURS[mySlot] : '#a0a0a0';
+      charName.textContent = mySlot !== null ? CHAR_NAMES[mySlot] : 'GUIDE';
+      charName.style.color = col;
+      charName.style.border = '2px solid ' + col;
+      charName.style.borderRadius = '20px';
+      showScreen('Pad');
+    }
+
+    function updateLobbyList(playerList, hostSlot) {
+      lobbyPlayers.innerHTML = '';
+      (playerList || []).forEach(function (p) {
+        var row  = document.createElement('div'); row.className = 'lobby-player-row';
+        var dot  = document.createElement('div'); dot.className = 'lobby-player-dot';
+        dot.style.background = CHAR_COLOURS[p.slot] || '#a0a0a0';
+        var name = document.createElement('div'); name.className = 'lobby-player-name';
+        name.textContent = p.name + ' (' + (CHAR_NAMES[p.slot] || 'P' + (p.slot + 1)) + ')';
+        row.appendChild(dot); row.appendChild(name);
+        if (p.slot === hostSlot) {
+          var tag = document.createElement('div'); tag.className = 'lobby-host-tag';
+          tag.textContent = 'HOST'; row.appendChild(tag);
+        }
+        lobbyPlayers.appendChild(row);
+      });
+    }
+
+    // ---- D-pad held-direction input ----
+    var BTN_MAP = {
+      btnUp:     'ArrowUp',
+      btnDown:   'ArrowDown',
+      btnLeft:   'ArrowLeft',
+      btnRight:  'ArrowRight',
+      btnSprint: 'ShiftLeft'
+    };
+
+    function sendPress(key, el)   { if (el) el.classList.add('held');    if (sub) sub.send('press',   { key: key }); }
+    function sendRelease(key, el) { if (el) el.classList.remove('held'); if (sub) sub.send('release', { key: key }); }
+    function releaseAllKeys() {
+      Object.keys(BTN_MAP).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('held');
+      });
+    }
+
+    Object.keys(BTN_MAP).forEach(function (id) {
+      var el = document.getElementById(id);
+      var key = BTN_MAP[id];
+      if (!el) return;
+      el.addEventListener('touchstart',  function (e) { e.preventDefault(); sendPress(key, el); }, { passive: false });
+      el.addEventListener('touchend',    function (e) { e.preventDefault(); sendRelease(key, el); }, { passive: false });
+      el.addEventListener('touchcancel', function (e) { e.preventDefault(); sendRelease(key, el); }, { passive: false });
+      el.addEventListener('mousedown',   function () { sendPress(key, el); });
+      el.addEventListener('mouseup',     function () { sendRelease(key, el); });
+      el.addEventListener('mouseleave',  function (e) { if (e.buttons > 0) sendRelease(key, el); });
+    });
+  }());
+  </script>
+</body>
+</html>

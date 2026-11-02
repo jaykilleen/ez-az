@@ -35,6 +35,8 @@ Rails.application.routes.draw do
 
   get '/mammoth-games/join', to: 'mammoth_games#join'
 
+  get '/descent-party/join', to: 'descent_party#join'
+
   # QR code SVG for static-file TV games (Snake Pit, Dino Jump, Golden Goal).
   get '/qr', to: 'qr#show'
 
